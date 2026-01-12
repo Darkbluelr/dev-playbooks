@@ -58,10 +58,10 @@ Before execution, you **must** search for configuration in the following order (
 
 ### Standard Process
 
-1) First read and follow: `_shared/references/通用守门协议.md`
-2) Specification part: Output Requirements/Scenarios per `references/规格变更提示词.md`
-3) Contract part: Output contract plan per `references/契约与数据定义提示词.md`
-4) **Implicit change detection (as needed)**: `references/隐式变更检测提示词.md`
+1) First read and follow: `_shared/references/universal-gating-protocol.md`
+2) Specification part: Output Requirements/Scenarios per `references/spec-change-prompt.md`
+3) Contract part: Output contract plan per `references/contract-and-data-definition-prompt.md`
+4) **Implicit change detection (as needed)**: `references/implicit-change-detection-prompt.md`
 
 ### Output Structure (Single Output)
 

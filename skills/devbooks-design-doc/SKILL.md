@@ -76,8 +76,8 @@ The following change types **require** updating corresponding documentation:
 
 ## Execution Method
 
-1) First read and follow: `_shared/references/通用守门协议.md` (verifiability + structural quality gates).
-2) Strictly follow complete prompt output: `references/设计文档提示词.md`.
+1) First read and follow: `_shared/references/universal-gating-protocol.md` (verifiability + structural quality gates).
+2) Strictly follow complete prompt output: `references/design-doc-prompt.md`.
 
 ---
 

@@ -111,8 +111,8 @@ if [[ ! -f "$handoff_file" ]]; then
   exit 1
 fi
 
-# Check for confirmation section
-if ! grep -qE "确认签名|确认|Confirmation|Confirm" "$handoff_file" 2>/dev/null; then
+# Check for a confirmation section (best effort)
+if ! grep -qiE "confirmation|confirm|sign[- ]?off|acknowledg(e|ment)|approval" "$handoff_file" 2>/dev/null; then
   echo "error: handoff.md missing confirmation section" >&2
   exit 1
 fi

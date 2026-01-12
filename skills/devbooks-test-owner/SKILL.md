@@ -118,11 +118,11 @@ Prevent large outputs from polluting context:
 
 ## Execution Method
 
-1) First read and follow: `_shared/references/通用守门协议.md` (Verifiability + Structural Quality Gates).
-2) Read methodology reference: `references/测试驱动.md` (read when needed).
-3) Read test layering guide: `references/测试分层策略.md`.
-4) Strictly follow the complete prompt: `references/测试代码提示词.md`.
-5) Templates (as needed): `references/9 变更验证与追溯模板.md`.
+1) First read and follow: `_shared/references/universal-gating-protocol.md` (Verifiability + Structural Quality Gates).
+2) Read methodology reference: `references/test-driven-development.md` (read when needed).
+3) Read test layering guide: `references/test-layering-strategy.md`.
+4) Strictly follow the complete prompt: `references/test-code-prompt.md`.
+5) Templates (as needed): `references/9-change-verification-traceability-template.md`.
 
 ---
 

@@ -29,8 +29,8 @@ Before execution, **must** search for configuration in the following order (stop
 
 ## Reference Skeleton (Read as Needed)
 
-- Workflow: `references/提案对辩工作流.md`
-- Template: `references/11 提案对辩模板.md`
+- Workflow: `references/proposal-debate-workflow.md`
+- Template: `references/11-proposal-debate-template.md`
 
 ## Optional Check Script
 

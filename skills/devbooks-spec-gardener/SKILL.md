@@ -29,7 +29,7 @@ Before execution, **must** search for configuration in the following order (stop
 
 ## Execution Method
 
-1) First read and follow: `_shared/references/universal-gate-protocol.md` (verifiability + structural quality gates).
+1) First read and follow: `_shared/references/universal-gating-protocol.md` (verifiability + structural quality gates).
 2) Strictly execute the complete prompt: `references/spec-gardener-prompt.md`.
 
 ---

@@ -77,9 +77,9 @@ The `## Architecture Guardrails` section in `c4.md` must include:
 
 ## Execution Method
 
-1) First read and follow: `_shared/references/通用守门协议.md` (verifiability + structural quality gating).
-2) Strictly follow the complete prompt output: `references/C4架构地图提示词.md`.
-3) Reference the layering constraints checklist: `references/分层约束检查清单.md`.
+1) First read and follow: `_shared/references/universal-gating-protocol.md` (verifiability + structural quality gating).
+2) Strictly follow the complete prompt output: `references/c4-architecture-map-prompt.md`.
+3) Reference the layering constraints checklist: `references/layered-constraint-checklist.md`.
 
 ---
 

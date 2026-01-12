@@ -1,12 +1,12 @@
 #!/bin/bash
-# DevBooks COD 模型增量更新脚本
-# 用途：持久化并增量更新代码地图产物（模块依赖图、热点、领域概念）
+# DevBooks COD incremental update script
+# Purpose: persist and incrementally update code-map artifacts (module graph, hotspots, key concepts)
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# 颜色输出
+# Colored output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -17,7 +17,7 @@ echo_info() { echo -e "${GREEN}[COD]${NC} $1"; }
 echo_warn() { echo -e "${YELLOW}[COD]${NC} $1"; }
 echo_error() { echo -e "${RED}[COD]${NC} $1"; }
 
-# 参数解析
+# Argument parsing
 PROJECT_ROOT="."
 TRUTH_ROOT=""
 FORCE=false
@@ -30,22 +30,22 @@ while [[ $# -gt 0 ]]; do
         --force) FORCE=true; shift ;;
         --quiet) QUIET=true; shift ;;
         -h|--help)
-            echo "用法: cod-update.sh [options]"
+            echo "Usage: cod-update.sh [options]"
             echo ""
             echo "Options:"
-            echo "  --project-root <dir>  项目根目录 (默认: .)"
-            echo "  --truth-root <dir>    真理目录 (自动检测)"
-            echo "  --force               强制全量更新"
-            echo "  --quiet               静默模式"
+            echo "  --project-root <dir>  Project root (default: .)"
+            echo "  --truth-root <dir>    Truth root (auto-detected)"
+            echo "  --force               Force full refresh"
+            echo "  --quiet               Quiet mode"
             exit 0
             ;;
-        *) echo_error "未知参数: $1"; exit 1 ;;
+        *) echo_error "Unknown argument: $1"; exit 1 ;;
     esac
 done
 
 cd "$PROJECT_ROOT"
 
-# 自动检测 truth-root
+# Auto-detect truth root
 if [ -z "$TRUTH_ROOT" ]; then
     if [ -f "dev-playbooks/project.md" ]; then
         TRUTH_ROOT="dev-playbooks/specs"
@@ -56,28 +56,28 @@ if [ -z "$TRUTH_ROOT" ]; then
     fi
 fi
 
-# 确保目录存在
+# Ensure directories exist
 mkdir -p "$TRUTH_ROOT/architecture"
 mkdir -p "$TRUTH_ROOT/_meta"
 mkdir -p ".devbooks/cache/cod"
 
-# 缓存文件路径
+# Cache file paths
 CACHE_DIR=".devbooks/cache/cod"
 HASH_FILE="$CACHE_DIR/source-hash.txt"
 ARCHITECTURE_CACHE="$CACHE_DIR/architecture.json"
 HOTSPOTS_CACHE="$CACHE_DIR/hotspots.json"
 CONCEPTS_CACHE="$CACHE_DIR/concepts.json"
 
-# 计算源文件 hash（用于检测变更）
+# Compute a source hash (for change detection)
 calculate_source_hash() {
-    # 只计算源代码文件的 hash，忽略 node_modules 等
+    # Hash source files only; ignore node_modules and build outputs.
     find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \
         -o -name "*.py" -o -name "*.go" -o -name "*.rs" -o -name "*.java" \) \
         ! -path "*/node_modules/*" ! -path "*/.git/*" ! -path "*/dist/*" ! -path "*/build/*" \
         -exec md5sum {} \; 2>/dev/null | sort | md5sum | cut -d' ' -f1
 }
 
-# 检查是否需要更新
+# Check whether an update is needed
 needs_update() {
     if [ "$FORCE" = true ]; then
         return 0
@@ -94,7 +94,7 @@ needs_update() {
         return 0
     fi
 
-    # 检查产物是否存在
+    # Ensure artifacts exist
     if [ ! -f "$TRUTH_ROOT/architecture/module-graph.md" ]; then
         return 0
     fi
@@ -102,19 +102,19 @@ needs_update() {
     return 1
 }
 
-# 使用 CKB MCP 获取架构（如果可用）
+# Try to use CKB MCP for architecture (if available)
 fetch_architecture_via_mcp() {
-    # 检查 CKB 是否可用（通过检查 index.scip）
+    # Check whether CKB is usable (via index.scip presence)
     if [ ! -f "index.scip" ]; then
-        echo_warn "SCIP 索引不存在，跳过图基架构分析"
+        echo_warn "SCIP index not found; skipping graph-based architecture analysis"
         return 1
     fi
 
-    # 这里无法直接调用 MCP，但可以检查缓存
+    # We cannot call MCP directly here; fall back to cache checks.
     if [ -f "$ARCHITECTURE_CACHE" ]; then
         local cache_age=$(( ($(date +%s) - $(stat -f%m "$ARCHITECTURE_CACHE" 2>/dev/null || stat -c%Y "$ARCHITECTURE_CACHE" 2>/dev/null)) ))
-        if [ $cache_age -lt 3600 ]; then  # 1小时内的缓存有效
-            echo_info "使用缓存的架构数据"
+        if [ $cache_age -lt 3600 ]; then  # cache valid for 1 hour
+            echo_info "Using cached architecture data"
             return 0
         fi
     fi
@@ -122,24 +122,24 @@ fetch_architecture_via_mcp() {
     return 1
 }
 
-# 基于文件系统生成模块依赖图（降级方案）
+# Generate module dependency graph from filesystem (fallback)
 generate_module_graph_fallback() {
     local output="$TRUTH_ROOT/architecture/module-graph.md"
     local temp_file=$(mktemp)
 
-    echo_info "生成模块依赖图（文件系统分析）..."
+    echo_info "Generating module dependency graph (filesystem analysis)..."
 
     cat > "$temp_file" << 'EOF'
-# 模块依赖图
+# Module Dependency Graph
 
-> 自动生成于 $(date +%Y-%m-%d)，基于文件系统分析
+> Auto-generated on $(date +%Y-%m-%d) via filesystem analysis
 
-## 目录结构
+## Directory structure
 
 ```
 EOF
 
-    # 生成目录树
+    # Directory tree
     if command -v tree &> /dev/null; then
         tree -d -L 3 -I 'node_modules|.git|dist|build|__pycache__|.venv|vendor' >> "$temp_file" 2>/dev/null || true
     else
@@ -152,13 +152,13 @@ EOF
     echo '```' >> "$temp_file"
     echo "" >> "$temp_file"
 
-    # 分析导入关系
-    echo "## 主要依赖关系" >> "$temp_file"
+    # Import/dependency analysis
+    echo "## Primary dependencies" >> "$temp_file"
     echo "" >> "$temp_file"
-    echo "| 模块 | 依赖数 | 被依赖数 |" >> "$temp_file"
+    echo "| Module | Imports | Exports/References |" >> "$temp_file"
     echo "|------|--------|----------|" >> "$temp_file"
 
-    # TypeScript/JavaScript 项目
+    # TypeScript/JavaScript projects
     if [ -f "package.json" ]; then
         for dir in src lib app; do
             if [ -d "$dir" ]; then
@@ -169,7 +169,7 @@ EOF
         done
     fi
 
-    # Python 项目
+    # Python projects
     if [ -f "pyproject.toml" ] || [ -f "setup.py" ]; then
         for dir in src lib app; do
             if [ -d "$dir" ]; then
@@ -182,43 +182,43 @@ EOF
     echo "" >> "$temp_file"
     echo "---" >> "$temp_file"
     echo "" >> "$temp_file"
-    echo "> 提示：运行 \`devbooks-index-bootstrap\` 生成 SCIP 索引以获得更精确的依赖分析" >> "$temp_file"
+    echo "> Tip: run \`devbooks-index-bootstrap\` to generate a SCIP index for more accurate dependency analysis" >> "$temp_file"
 
-    # 只在内容变化时更新
+    # Update only when content changes
     if [ -f "$output" ]; then
         if ! diff -q "$temp_file" "$output" > /dev/null 2>&1; then
             mv "$temp_file" "$output"
-            echo_info "模块依赖图已更新: $output"
+            echo_info "Module dependency graph updated: $output"
         else
             rm "$temp_file"
-            [ "$QUIET" = false ] && echo_info "模块依赖图无变化"
+            [ "$QUIET" = false ] && echo_info "Module dependency graph unchanged"
         fi
     else
         mv "$temp_file" "$output"
-        echo_info "模块依赖图已创建: $output"
+        echo_info "Module dependency graph created: $output"
     fi
 }
 
-# 生成热点文件报告
+# Generate hotspot report
 generate_hotspots() {
     local output="$TRUTH_ROOT/architecture/hotspots.md"
     local temp_file=$(mktemp)
 
-    echo_info "生成技术债热点..."
+    echo_info "Generating tech-debt hotspots..."
 
     cat > "$temp_file" << EOF
-# 技术债热点
+# Tech-Debt Hotspots
 
-> 自动生成于 $(date +%Y-%m-%d)
-> 热点分数 = 变更频率 × 复杂度估算
+> Auto-generated on $(date +%Y-%m-%d)
+> Hotspot score = change frequency × complexity proxy
 
-## 高频变更文件（近 30 天）
+## Frequently changed files (last 30 days)
 
-| 文件 | 变更次数 | 行数 | 风险等级 |
-|------|----------|------|----------|
+| File | Changes | LOC | Risk |
+|------|--------:|----:|------|
 EOF
 
-    # 使用 Git 历史分析
+    # Git history analysis
     if [ -d ".git" ]; then
         git log --since="30 days ago" --name-only --pretty=format: 2>/dev/null | \
             grep -v '^$' | \
@@ -237,13 +237,13 @@ EOF
                 fi
             done >> "$temp_file"
     else
-        echo "| (无 Git 历史) | - | - | - |" >> "$temp_file"
+        echo "| (no Git history) | - | - | - |" >> "$temp_file"
     fi
 
     echo "" >> "$temp_file"
-    echo "## 大文件（潜在复杂度）" >> "$temp_file"
+    echo "## Large files (complexity proxy)" >> "$temp_file"
     echo "" >> "$temp_file"
-    echo "| 文件 | 行数 |" >> "$temp_file"
+    echo "| File | LOC |" >> "$temp_file"
     echo "|------|------|" >> "$temp_file"
 
     find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.py" -o -name "*.go" \) \
@@ -254,42 +254,42 @@ EOF
             echo "| \`$file\` | $lines |"
         done >> "$temp_file"
 
-    # 只在内容变化时更新
+    # Update only when content changes
     if [ -f "$output" ]; then
-        # 比较时忽略日期行
+        # Ignore date header lines for diff
         if ! diff <(tail -n +4 "$temp_file") <(tail -n +4 "$output") > /dev/null 2>&1; then
             mv "$temp_file" "$output"
-            echo_info "热点报告已更新: $output"
+            echo_info "Hotspot report updated: $output"
         else
             rm "$temp_file"
-            [ "$QUIET" = false ] && echo_info "热点报告无变化"
+            [ "$QUIET" = false ] && echo_info "Hotspot report unchanged"
         fi
     else
         mv "$temp_file" "$output"
-        echo_info "热点报告已创建: $output"
+        echo_info "Hotspot report created: $output"
     fi
 }
 
-# 生成领域概念（基于命名分析）
+# Generate key concepts (naming-based heuristic)
 generate_key_concepts() {
     local output="$TRUTH_ROOT/_meta/key-concepts.md"
     local temp_file=$(mktemp)
 
-    echo_info "生成领域概念..."
+    echo_info "Generating key concepts..."
 
     cat > "$temp_file" << EOF
-# 领域概念（Key Concepts）
+# Key Concepts
 
-> 自动生成于 $(date +%Y-%m-%d)
-> 基于代码命名模式分析
+> Auto-generated on $(date +%Y-%m-%d)
+> Derived from code naming patterns
 
-## 核心类/接口
+## Core classes/interfaces
 
-| 概念 | 出现次数 | 典型位置 |
-|------|----------|----------|
+| Concept | Occurrences | Example location |
+|---------|------------:|------------------|
 EOF
 
-    # 提取 PascalCase 命名（类名）
+    # Extract PascalCase names (class-like)
     grep -rho '\b[A-Z][a-z]*[A-Z][a-zA-Z]*\b' \
         --include="*.ts" --include="*.tsx" --include="*.js" --include="*.py" --include="*.go" \
         . 2>/dev/null | \
@@ -301,12 +301,12 @@ EOF
         done >> "$temp_file"
 
     echo "" >> "$temp_file"
-    echo "## 常见动词（操作）" >> "$temp_file"
+    echo "## Common verbs (operations)" >> "$temp_file"
     echo "" >> "$temp_file"
-    echo "| 动词 | 出现次数 |" >> "$temp_file"
-    echo "|------|----------|" >> "$temp_file"
+    echo "| Verb | Occurrences |" >> "$temp_file"
+    echo "|------|------------:|" >> "$temp_file"
 
-    # 提取函数名中的动词
+    # Extract verbs from function-like names
     grep -rho '\b\(get\|set\|create\|update\|delete\|fetch\|save\|load\|process\|handle\|validate\)[A-Za-z]*\b' \
         --include="*.ts" --include="*.js" --include="*.py" \
         . 2>/dev/null | \
@@ -317,27 +317,27 @@ EOF
             echo "| \`$verb\` | $count |"
         done >> "$temp_file"
 
-    # 只在内容变化时更新
+    # Update only when content changes
     if [ -f "$output" ]; then
         if ! diff <(tail -n +4 "$temp_file") <(tail -n +4 "$output") > /dev/null 2>&1; then
             mv "$temp_file" "$output"
-            echo_info "领域概念已更新: $output"
+            echo_info "Key concepts updated: $output"
         else
             rm "$temp_file"
-            [ "$QUIET" = false ] && echo_info "领域概念无变化"
+            [ "$QUIET" = false ] && echo_info "Key concepts unchanged"
         fi
     else
         mv "$temp_file" "$output"
-        echo_info "领域概念已创建: $output"
+        echo_info "Key concepts created: $output"
     fi
 }
 
-# 主流程
+# Main flow
 main() {
     if needs_update; then
-        echo_info "检测到代码变更，更新 COD 产物..."
+        echo_info "Code changes detected; updating COD artifacts..."
 
-        # 尝试使用 MCP，否则降级
+        # Try MCP/cache first; fall back to filesystem analysis
         if ! fetch_architecture_via_mcp; then
             generate_module_graph_fallback
         fi
@@ -345,12 +345,12 @@ main() {
         generate_hotspots
         generate_key_concepts
 
-        # 保存新的 hash
+        # Save new hash
         calculate_source_hash > "$HASH_FILE"
 
-        echo_info "COD 产物更新完成"
+        echo_info "COD artifact update complete"
     else
-        [ "$QUIET" = false ] && echo_info "代码无变更，跳过更新"
+        [ "$QUIET" = false ] && echo_info "No code changes detected; skipping update"
     fi
 }
 

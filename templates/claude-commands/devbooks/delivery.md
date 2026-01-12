@@ -4,16 +4,17 @@ skill: devbooks-delivery-workflow
 
 # /devbooks:delivery
 
-触发 Skill：`devbooks-delivery-workflow`
+Triggers Skill: `devbooks-delivery-workflow`
 
-## 用途
+## Purpose
 
-把一次变更跑成可追溯闭环（Design→Plan→Trace→Verify→Implement→Archive），明确 DoD、追溯矩阵与角色隔离。
+Run a change as a traceable closed loop (Design → Plan → Trace → Verify → Implement → Archive), with explicit DoD, traceability matrix, and role isolation.
 
-## 典型使用场景
+## Typical use cases
 
-- 需要完整的交付验收流程
-- 生成追溯矩阵和 DoD 检查
-- 确保变更包符合关账标准
+- You need an end-to-end delivery/acceptance workflow
+- Generate traceability matrix and DoD checks
+- Ensure the change package meets archive readiness criteria
 
-请点名使用 `devbooks-delivery-workflow` 执行相应任务。
+Explicitly use `devbooks-delivery-workflow` to execute the workflow.
+

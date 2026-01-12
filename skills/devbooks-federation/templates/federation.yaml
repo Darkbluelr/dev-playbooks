@@ -1,35 +1,35 @@
-# DevBooks 跨仓库联邦配置模板
-# 用途：定义多仓库项目的依赖关系和分析边界
+# DevBooks cross-repo federation config template
+# Purpose: define multi-repo dependencies and impact-analysis boundaries
 #
-# 安装方式：
+# Install:
 #   cp this-file .devbooks/federation.yaml
-#   # 或
+#   # or
 #   cp this-file dev-playbooks/federation.yaml
 #
-# 使用方式：
-#   - devbooks-impact-analysis 会自动检测此文件并分析跨仓边界
-#   - guardrail-check.sh --check-federation 会验证联邦约束
+# Usage:
+#   - devbooks-impact-analysis auto-detects this file and analyzes cross-repo boundaries
+#   - guardrail-check.sh --check-federation verifies federation constraints
 
-# 联邦配置版本
+# Federation config version
 version: "1.0"
 
-# 当前仓库信息
+# Current repository info
 current:
   name: "my-service"
   type: "service"  # service | library | shared | monorepo-package
   owner: "team-a"
 
-# 上游依赖（我依赖的仓库）
+# Upstream dependencies (repos this repo depends on)
 upstreams:
   - name: "shared-types"
     repo: "org/shared-types"
-    # 可选：指定依赖的具体模块或 API
+    # Optional: specify the exact modules/APIs depended on
     contracts:
       - "src/types/user.ts"
       - "src/types/order.ts"
-    # 版本约束
+    # Version constraint
     version: "^2.0.0"
-    # 变更通知配置
+    # Change notification
     notify_on_change: true
 
   - name: "auth-sdk"
@@ -38,11 +38,11 @@ upstreams:
       - "src/client.ts"
     version: ">=1.5.0"
 
-# 下游消费者（依赖我的仓库）
+# Downstream consumers (repos that depend on this repo)
 downstreams:
   - name: "web-app"
     repo: "org/web-app"
-    # 我暴露给它的契约
+    # Contracts exposed to this consumer
     contracts:
       - "src/api/v1/**"
       - "src/events/published.ts"
@@ -52,38 +52,38 @@ downstreams:
     contracts:
       - "src/api/v1/**"
 
-# 联邦规则
+# Federation rules
 rules:
-  # 契约变更规则
+  # Contract change rules
   contract_change:
-    # 需要通知下游的变更类型
+    # Change types that must notify downstream consumers
     notify_types:
-      - breaking    # 破坏性变更
-      - deprecation # 废弃通知
-    # 通知方式
+      - breaking    # breaking changes
+      - deprecation # deprecation notices
+    # Notification channels
     notify_channels:
-      - github_issue  # 在下游仓库创建 Issue
-      - slack         # 发送 Slack 通知（需配置 webhook）
+      - github_issue  # create an issue in downstream repos
+      - slack         # send Slack notification (requires webhook)
 
-  # 版本兼容性
+  # Version compatibility
   compatibility:
-    # 最少支持的历史版本数
+    # Minimum number of prior versions to support
     min_supported_versions: 2
-    # 废弃到移除的最短周期（天）
+    # Minimum days from deprecation to removal
     deprecation_period_days: 30
 
-  # 影响分析边界
+  # Impact analysis boundary
   impact_analysis:
-    # 分析深度（跨几个仓库）
+    # Max analysis depth (how many repos deep)
     max_depth: 2
-    # 是否包含测试代码
+    # Whether to include test code
     include_tests: false
 
-# 本地开发配置（可选）
+# Local development (optional)
 local_dev:
-  # 本地仓库路径映射
+  # Local repository path mapping
   paths:
     shared-types: "../shared-types"
     auth-sdk: "../auth-sdk"
-  # 是否使用本地 link
+  # Whether to use local linking
   use_local_links: true

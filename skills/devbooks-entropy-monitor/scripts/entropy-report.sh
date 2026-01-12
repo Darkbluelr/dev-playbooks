@@ -6,7 +6,7 @@ set -euo pipefail
 # ============================================================================
 # Generates a human-readable markdown report from entropy metrics.
 #
-# Reference: 《人月神话》第16章"没有银弹" — 控制复杂性是软件开发的关键
+# Reference: The Mythical Man-Month, Ch. 16 “No Silver Bullet” — controlling complexity is key
 # ============================================================================
 
 usage() {
@@ -175,88 +175,88 @@ health_status() {
 # ============================================================================
 
 cat > "$output_file" << EOF
-# 系统熵度量报告 / System Entropy Report
+# System Entropy Report
 
-> 生成时间: ${timestamp}
-> 项目路径: ${project}
-> 分析周期: ${days} 天
+> Generated at: ${timestamp}
+> Project: ${project}
+> Analysis window: ${days} days
 
 ---
 
-## 概览 / Overview
+## Overview
 
-| 维度 | 健康状态 | 主要指标 |
+| Dimension | Health | Key metric |
 |------|---------|---------|
-| 结构熵 | $(health_status "$file_p95" "$t_file_p95" "lt") | 文件行数 P95: ${file_p95} |
-| 变更熵 | $(health_status "$hotspot_ratio" "$t_hotspot" "lt") | 热点文件占比: ${hotspot_ratio} |
-| 测试熵 | $(health_status "$test_code_ratio" "$t_test_ratio" "gt") | 测试/代码比: ${test_code_ratio} |
-| 依赖熵 | $(health_status "$outdated_ratio" "$t_outdated" "lt") | 过期依赖占比: ${outdated_ratio} |
+| Structural entropy | $(health_status "$file_p95" "$t_file_p95" "lt") | File LOC P95: ${file_p95} |
+| Change entropy | $(health_status "$hotspot_ratio" "$t_hotspot" "lt") | Hotspot ratio: ${hotspot_ratio} |
+| Test entropy | $(health_status "$test_code_ratio" "$t_test_ratio" "gt") | Test/code ratio: ${test_code_ratio} |
+| Dependency entropy | $(health_status "$outdated_ratio" "$t_outdated" "lt") | Outdated ratio: ${outdated_ratio} |
 
-**健康维度**: ${healthy_count}/4 | **告警数**: ${alert_count}
+**Healthy dimensions**: ${healthy_count}/4 | **Alerts**: ${alert_count}
 
 ---
 
-## A) 结构熵 / Structural Entropy
+## A) Structural Entropy
 
-> 来源: 静态代码分析
+> Source: static code analysis
 
-| 指标 | 当前值 | 阈值 | 状态 |
+| Metric | Value | Threshold | Status |
 |------|-------|------|------|
-| 文件行数 P95 | ${file_p95} | < ${t_file_p95} | $(health_status "$file_p95" "$t_file_p95" "lt") |
-| 文件行数均值 | ${file_mean} | - | ⚪ |
-| 圈复杂度均值 | ${complexity_mean} | < 10 | ⚪ |
-| 圈复杂度 P95 | ${complexity_p95} | < 20 | ⚪ |
+| File LOC P95 | ${file_p95} | < ${t_file_p95} | $(health_status "$file_p95" "$t_file_p95" "lt") |
+| File LOC mean | ${file_mean} | - | ⚪ |
+| Cyclomatic complexity mean | ${complexity_mean} | < 10 | ⚪ |
+| Cyclomatic complexity P95 | ${complexity_p95} | < 20 | ⚪ |
 
-**建议**: 关注 P95 以上的大文件，考虑拆分。
+**Recommendation**: investigate large P95 files and consider splitting them.
 
 ---
 
-## B) 变更熵 / Change Entropy
+## B) Change Entropy
 
-> 来源: Git 历史分析 (过去 ${days} 天)
+> Source: git history analysis (last ${days} days)
 
-| 指标 | 当前值 | 阈值 | 状态 |
+| Metric | Value | Threshold | Status |
 |------|-------|------|------|
-| 热点文件数 | ${hotspot_count} / ${total_files} | - | ⚪ |
-| 热点文件占比 | ${hotspot_ratio} | < ${t_hotspot} | $(health_status "$hotspot_ratio" "$t_hotspot" "lt") |
+| Hotspot files | ${hotspot_count} / ${total_files} | - | ⚪ |
+| Hotspot ratio | ${hotspot_ratio} | < ${t_hotspot} | $(health_status "$hotspot_ratio" "$t_hotspot" "lt") |
 
-**热点定义**: 在分析周期内被修改超过 5 次的文件
+**Hotspot definition**: files modified more than 5 times within the analysis window
 
-**建议**: 高频修改的文件可能需要重构或拆分。
+**Recommendation**: frequently changed files often need refactoring or decomposition.
 
 ---
 
-## C) 测试熵 / Test Entropy
+## C) Test Entropy
 
-> 来源: 测试文件统计
+> Source: test file statistics
 
-| 指标 | 当前值 | 阈值 | 状态 |
+| Metric | Value | Threshold | Status |
 |------|-------|------|------|
-| 测试代码行数 | ${test_lines} | - | ⚪ |
-| 生产代码行数 | ${code_lines} | - | ⚪ |
-| 测试/代码比 | ${test_code_ratio} | > ${t_test_ratio} | $(health_status "$test_code_ratio" "$t_test_ratio" "gt") |
-| Flaky 测试占比 | ${flaky_ratio} | < 0.01 | ⚪ |
-| 代码覆盖率 | ${coverage} | > 0.7 | ⚪ |
+| Test LOC | ${test_lines} | - | ⚪ |
+| Production LOC | ${code_lines} | - | ⚪ |
+| Test/code ratio | ${test_code_ratio} | > ${t_test_ratio} | $(health_status "$test_code_ratio" "$t_test_ratio" "gt") |
+| Flaky ratio | ${flaky_ratio} | < 0.01 | ⚪ |
+| Coverage | ${coverage} | > 0.7 | ⚪ |
 
-**建议**: 测试/代码比低于 0.5 时，应优先补充测试。
+**Recommendation**: if test/code ratio is below 0.5, prioritize adding tests.
 
 ---
 
-## D) 依赖熵 / Dependency Entropy
+## D) Dependency Entropy
 
-> 来源: 依赖分析
+> Source: dependency analysis
 
-| 指标 | 当前值 | 阈值 | 状态 |
+| Metric | Value | Threshold | Status |
 |------|-------|------|------|
-| 过期依赖数 | ${outdated} / ${total_deps} | - | ⚪ |
-| 过期依赖占比 | ${outdated_ratio} | < ${t_outdated} | $(health_status "$outdated_ratio" "$t_outdated" "lt") |
-| 安全漏洞数 | ${vulnerabilities} | = 0 | $(health_status "$vulnerabilities" "0" "lt") |
+| Outdated deps | ${outdated} / ${total_deps} | - | ⚪ |
+| Outdated ratio | ${outdated_ratio} | < ${t_outdated} | $(health_status "$outdated_ratio" "$t_outdated" "lt") |
+| Vulnerabilities | ${vulnerabilities} | = 0 | $(health_status "$vulnerabilities" "0" "lt") |
 
-**建议**: 定期更新依赖，优先修复安全漏洞。
+**Recommendation**: update dependencies regularly and prioritize security fixes.
 
 ---
 
-## 告警详情 / Alerts
+## Alerts
 
 EOF
 
@@ -264,40 +264,40 @@ EOF
 if [[ "$alert_count" -gt 0 ]]; then
   jq -r '.alerts[] | "- **[\(.level | ascii_upcase)]** \(.dimension): \(.message)"' "$input_file" >> "$output_file"
 else
-  echo "无告警 ✅" >> "$output_file"
+  echo "No alerts ✅" >> "$output_file"
 fi
 
 cat >> "$output_file" << EOF
 
 ---
 
-## 趋势分析 / Trend Analysis
+## Trend Analysis
 
-> 需要多次采集数据后才能生成趋势图
+> Trend charts require multiple data points over time
 
-查看历史数据: \`${entropy_dir}/history.json\`
+View historical data: \`${entropy_dir}/history.json\`
 
 ---
 
-## 行动建议 / Recommended Actions
+## Recommended Actions
 
 EOF
 
 # Generate recommendations based on alerts
 if [[ "$alert_count" -gt 0 ]]; then
-  echo "1. 处理上述告警中的高优先级问题" >> "$output_file"
-  echo "2. 运行 \`change-check.sh\` 确保变更包完整性" >> "$output_file"
-  echo "3. 考虑使用 \`devbooks-proposal-author\` 发起重构提案" >> "$output_file"
+  echo "1. Address high-priority items in the alerts above" >> "$output_file"
+  echo "2. Run \`change-check.sh\` to verify change package integrity" >> "$output_file"
+  echo "3. Consider using \`devbooks-proposal-author\` to start a refactoring proposal" >> "$output_file"
 else
-  echo "当前无需紧急行动，建议定期监控熵指标变化。" >> "$output_file"
+  echo "No urgent action required; monitor entropy trends regularly." >> "$output_file"
 fi
 
 cat >> "$output_file" << EOF
 
 ---
 
-*报告由 entropy-report.sh 自动生成*
-*参考: 《人月神话》第16章"没有银弹"*
+*Report generated by entropy-report.sh*
+*Reference: The Mythical Man-Month, Ch. 16 “No Silver Bullet”*
 EOF
 
 echo "ok: report generated: ${output_file}"

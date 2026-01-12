@@ -4,16 +4,17 @@ skill: devbooks-code-review
 
 # /devbooks:review
 
-触发 Skill：`devbooks-code-review`
+Triggers Skill: `devbooks-code-review`
 
-## 用途
+## Purpose
 
-以 Reviewer 角色做可读性/一致性/依赖健康/坏味道审查，只输出审查意见与可执行建议，不讨论业务正确性。
+Act as Reviewer: review readability/consistency/dependency health/code smells; output review notes and actionable suggestions only; do not assess business correctness.
 
-## 典型使用场景
+## Typical use cases
 
-- 代码实现完成后需要评审
-- 检查代码质量和一致性
-- 识别依赖风险和坏味道
+- Review after implementation
+- Check code quality and consistency
+- Identify dependency risks and code smells
 
-请点名使用 `devbooks-code-review` 执行相应任务。
+Explicitly use `devbooks-code-review` to execute the workflow.
+

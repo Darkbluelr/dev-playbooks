@@ -29,8 +29,8 @@ Before execution, you **must** search for configuration in the following order (
 
 ## Execution Method
 
-1) First read and follow: `_shared/references/通用守门协议.md` (Verifiability + Structural Quality Gating).
-2) Strictly output rulings according to the complete prompt: `references/提案裁决提示词.md`.
+1) First read and follow: `_shared/references/universal-gating-protocol.md` (Verifiability + Structural Quality Gating).
+2) Strictly output rulings according to the complete prompt: `references/proposal-judge-prompt.md`.
 
 ---
 

@@ -1,10 +1,10 @@
 #!/bin/bash
-# DevBooks 跨仓库联邦检查脚本
-# 用途：检查变更是否涉及联邦契约，并生成影响报告
+# DevBooks federation check script
+# Purpose: detect whether changes touch federation contracts and generate an impact report
 
 set -e
 
-# 颜色输出
+# Color output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -15,7 +15,7 @@ echo_info() { echo -e "${GREEN}[Federation]${NC} $1"; }
 echo_warn() { echo -e "${YELLOW}[Federation]${NC} $1"; }
 echo_error() { echo -e "${RED}[Federation]${NC} $1"; }
 
-# 参数解析
+# Argument parsing
 PROJECT_ROOT="."
 CHANGE_FILES=""
 OUTPUT=""
@@ -28,22 +28,22 @@ while [[ $# -gt 0 ]]; do
         --output) OUTPUT="$2"; shift 2 ;;
         --quiet) QUIET=true; shift ;;
         -h|--help)
-            echo "用法: federation-check.sh [options]"
+            echo "usage: federation-check.sh [options]"
             echo ""
             echo "Options:"
-            echo "  --project-root <dir>   项目根目录 (默认: .)"
-            echo "  --change-files <list>  变更文件列表 (逗号分隔)"
-            echo "  --output <file>        输出报告路径"
-            echo "  --quiet                静默模式"
+            echo "  --project-root <dir>   Project root (default: .)"
+            echo "  --change-files <list>  Changed files (comma-separated)"
+            echo "  --output <file>        Output report path"
+            echo "  --quiet                Quiet mode"
             exit 0
             ;;
-        *) echo_error "未知参数: $1"; exit 1 ;;
+        *) echo_error "Unknown argument: $1"; exit 1 ;;
     esac
 done
 
 cd "$PROJECT_ROOT"
 
-# 查找联邦配置
+# Find federation config
 FEDERATION_CONFIG=""
 if [ -f ".devbooks/federation.yaml" ]; then
     FEDERATION_CONFIG=".devbooks/federation.yaml"
@@ -52,13 +52,13 @@ elif [ -f "dev-playbooks/federation.yaml" ]; then
 fi
 
 if [ -z "$FEDERATION_CONFIG" ]; then
-    [ "$QUIET" = false ] && echo_info "未找到联邦配置，跳过检查"
+    [ "$QUIET" = false ] && echo_info "No federation config found; skipping"
     exit 0
 fi
 
-[ "$QUIET" = false ] && echo_info "使用联邦配置: $FEDERATION_CONFIG"
+[ "$QUIET" = false ] && echo_info "Using federation config: $FEDERATION_CONFIG"
 
-# 如果没有指定变更文件，尝试从 git 获取
+# If no changed files were provided, try to read them from git
 if [ -z "$CHANGE_FILES" ]; then
     if [ -d ".git" ]; then
         CHANGE_FILES=$(git diff --cached --name-only 2>/dev/null | tr '\n' ',' | sed 's/,$//')
@@ -69,21 +69,21 @@ if [ -z "$CHANGE_FILES" ]; then
 fi
 
 if [ -z "$CHANGE_FILES" ]; then
-    [ "$QUIET" = false ] && echo_info "无变更文件，跳过检查"
+    [ "$QUIET" = false ] && echo_info "No changed files; skipping"
     exit 0
 fi
 
-[ "$QUIET" = false ] && echo_info "检查变更文件: $CHANGE_FILES"
+[ "$QUIET" = false ] && echo_info "Checking changed files: $CHANGE_FILES"
 
-# 提取契约文件（简单实现：从 YAML 提取 contracts 行）
+# Extract contract patterns (simple implementation: parse contracts lines from YAML)
 CONTRACT_PATTERNS=$(grep -E "^\s+-\s+\"" "$FEDERATION_CONFIG" 2>/dev/null | sed 's/.*"\([^"]*\)".*/\1/' | tr '\n' '|' | sed 's/|$//')
 
 if [ -z "$CONTRACT_PATTERNS" ]; then
-    [ "$QUIET" = false ] && echo_info "未定义契约文件，跳过检查"
+    [ "$QUIET" = false ] && echo_info "No contract patterns defined; skipping"
     exit 0
 fi
 
-# 检查变更是否涉及契约
+# Detect whether changes touch contracts
 CONTRACT_CHANGES=""
 IFS=',' read -ra FILES <<< "$CHANGE_FILES"
 for file in "${FILES[@]}"; do
@@ -94,51 +94,51 @@ done
 CONTRACT_CHANGES=${CONTRACT_CHANGES%,}
 
 if [ -z "$CONTRACT_CHANGES" ]; then
-    [ "$QUIET" = false ] && echo_info "变更不涉及契约文件"
+    [ "$QUIET" = false ] && echo_info "No contract files changed"
     exit 0
 fi
 
-# 发现契约变更
-echo_warn "发现契约变更: $CONTRACT_CHANGES"
+# Contract changes found
+echo_warn "Contract changes detected: $CONTRACT_CHANGES"
 
-# 生成报告
+# Generate report
 REPORT=$(cat << EOF
-# 跨仓库影响分析报告
+# Cross-repository impact analysis report
 
-> 自动生成于 $(date +%Y-%m-%d)
-> 联邦配置: $FEDERATION_CONFIG
+> Auto-generated on $(date +%Y-%m-%d)
+> Federation config: $FEDERATION_CONFIG
 
-## 契约变更
+## Contract changes
 
-以下文件涉及联邦契约：
+The following files match federation contracts:
 
 $(echo "$CONTRACT_CHANGES" | tr ',' '\n' | while read f; do echo "- \`$f\`"; done)
 
-## 建议动作
+## Recommended actions
 
-1. [ ] 确认变更类型（Breaking / Deprecation / Enhancement / Patch）
-2. [ ] 运行 \`devbooks-federation\` 进行完整跨仓库影响分析
-3. [ ] 如果是 Breaking 变更，通知下游消费者
-4. [ ] 更新 CHANGELOG
+1. [ ] Confirm change type (Breaking / Deprecation / Enhancement / Patch)
+2. [ ] Run \`devbooks-federation\` for full cross-repo impact analysis
+3. [ ] If breaking, notify downstream consumers
+4. [ ] Update CHANGELOG
 
-## 下游消费者
+## Downstream consumers
 
-$(grep -A20 "downstreams:" "$FEDERATION_CONFIG" 2>/dev/null | grep -E "^\s+-\s+name:" | sed 's/.*name:\s*"\([^"]*\)".*/- \1/' || echo "（请查看 federation.yaml）")
+$(grep -A20 "downstreams:" "$FEDERATION_CONFIG" 2>/dev/null | grep -E "^\s+-\s+name:" | sed 's/.*name:\s*"\([^"]*\)".*/- \1/' || echo "(see federation.yaml)")
 
 ---
 
-> 提示：使用 \`devbooks-federation\` Skill 进行完整分析
+> Tip: use the \`devbooks-federation\` skill for full analysis
 EOF
 )
 
-# 输出报告
+# Output report
 if [ -n "$OUTPUT" ]; then
     echo "$REPORT" > "$OUTPUT"
-    echo_info "报告已生成: $OUTPUT"
+    echo_info "Report generated: $OUTPUT"
 else
     echo ""
     echo "$REPORT"
 fi
 
-# 返回非零状态表示有契约变更
+# Return non-zero to indicate contract changes
 exit 1

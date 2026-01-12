@@ -1,31 +1,31 @@
 #!/bin/bash
-# skills/devbooks-delivery-workflow/scripts/migrate-to-devbooks-2.sh
-# OpenSpec → DevBooks 2.0 迁移脚本
+# skills/devbooks-delivery-workflow/scripts/migrate-from-openspec.sh
+# OpenSpec → DevBooks 2.0 migration script
 #
-# 将 dev-playbooks/ 目录结构迁移到 dev-playbooks/。
-# 支持幂等执行、状态检查点、引用更新。
+# Migrates `openspec/` directory structure into `dev-playbooks/`.
+# Supports idempotent execution, checkpoints, and reference updates.
 #
-# 用法：
-#   ./migrate-to-devbooks-2.sh [选项]
-#   ./migrate-to-devbooks-2.sh --help
+# Usage:
+#   ./migrate-from-openspec.sh [options]
+#   ./migrate-from-openspec.sh --help
 #
-# 退出码：
-#   0 - 迁移成功
-#   1 - 迁移失败
-#   2 - 用法错误
+# Exit codes:
+#   0 - success
+#   1 - failure
+#   2 - usage error
 
 set -euo pipefail
 
 VERSION="1.0.0"
 
-# 默认配置
+# Defaults
 project_root="."
 dry_run=false
 keep_old=false
 force=false
 checkpoint_file=""
 
-# 颜色定义
+# Color output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
@@ -34,30 +34,30 @@ NC='\033[0m'
 
 show_help() {
     cat << 'EOF'
-OpenSpec → DevBooks 2.0 迁移脚本 (migrate-to-devbooks-2.sh)
+OpenSpec → DevBooks 2.0 migration (migrate-from-openspec.sh)
 
-用法：
-  ./migrate-to-devbooks-2.sh [选项]
+usage:
+  ./migrate-from-openspec.sh [options]
 
-选项：
-  --project-root DIR  项目根目录（默认：当前目录）
-  --dry-run           模拟运行，不实际修改文件
-  --keep-old          迁移后保留 dev-playbooks/ 目录
-  --force             强制重新执行所有步骤（忽略检查点）
-  --help, -h          显示帮助
+options:
+  --project-root DIR  Project root (default: current directory)
+  --dry-run           Dry run (no filesystem changes)
+  --keep-old          Keep `openspec/` after migration
+  --force             Force re-run of all steps (ignore checkpoints)
+  --help, -h          Show help
 
-迁移步骤：
-  1. [STRUCTURE] 创建 dev-playbooks/ 目录结构
-  2. [CONTENT]   迁移 specs/ 和 changes/ 内容
-  3. [CONFIG]    创建/更新 .devbooks/config.yaml
-  4. [REFS]      更新所有文档中的路径引用
-  5. [CLEANUP]   清理（可选保留旧目录）
+steps:
+  1. [STRUCTURE] Create `dev-playbooks/` directory structure
+  2. [CONTENT]   Migrate specs/ and changes/ content
+  3. [CONFIG]    Create/update `.devbooks/config.yaml`
+  4. [REFS]      Update path references in docs/scripts
+  5. [CLEANUP]   Cleanup (optionally keep old directory)
 
-特性：
-  - 幂等执行：可安全重复运行
-  - 状态检查点：支持断点续做
-  - 引用更新：自动批量替换路径
-  - 回滚支持：配合 migrate-from-openspec.sh 使用
+features:
+  - idempotent: safe to re-run
+  - checkpoints: resume support
+  - reference updates: batch path replacement
+  - rollback: keep `openspec/` via --keep-old
 
 EOF
 }
@@ -68,7 +68,7 @@ log_error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 log_pass() { echo -e "${GREEN}[PASS]${NC} $*"; }
 log_step() { echo -e "${BLUE}[STEP]${NC} $*"; }
 
-# 检查点管理
+# Checkpoint management
 init_checkpoint() {
     checkpoint_file="${project_root}/.devbooks/.migrate-checkpoint"
     if [[ "$force" == true ]]; then
@@ -93,12 +93,12 @@ is_step_done() {
     return 1
 }
 
-# 步骤1：创建目录结构
+# Step 1: Create directory structure
 step_structure() {
-    log_step "1. 创建目录结构"
+    log_step "1. Create directory structure"
 
     if is_step_done "STRUCTURE" && [[ "$force" == false ]]; then
-        log_info "目录结构已创建（跳过）"
+        log_info "directory structure already created (skipping)"
         return 0
     fi
 
@@ -126,29 +126,29 @@ step_structure() {
     done
 
     save_checkpoint "STRUCTURE"
-    log_pass "目录结构创建完成"
+    log_pass "directory structure created"
 }
 
-# 步骤2：迁移内容
+# Step 2: Migrate content
 step_content() {
-    log_step "2. 迁移内容"
+    log_step "2. Migrate content"
 
     if is_step_done "CONTENT" && [[ "$force" == false ]]; then
-        log_info "内容已迁移（跳过）"
+        log_info "content already migrated (skipping)"
         return 0
     fi
 
     local openspec_dir="${project_root}/openspec"
 
     if [[ ! -d "$openspec_dir" ]]; then
-        log_warn "dev-playbooks/ 目录不存在，跳过内容迁移"
+        log_warn "openspec/ directory not found; skipping content migration"
         save_checkpoint "CONTENT"
         return 0
     fi
 
-    # 迁移 specs/
+    # Migrate specs/
     if [[ -d "${openspec_dir}/specs" ]]; then
-        log_info "迁移 specs/ ..."
+        log_info "migrating specs/ ..."
         if [[ "$dry_run" == true ]]; then
             log_info "[DRY-RUN] cp -r ${openspec_dir}/specs/* ${project_root}/dev-playbooks/specs/"
         else
@@ -156,9 +156,9 @@ step_content() {
         fi
     fi
 
-    # 迁移 changes/
+    # Migrate changes/
     if [[ -d "${openspec_dir}/changes" ]]; then
-        log_info "迁移 changes/ ..."
+        log_info "migrating changes/ ..."
         if [[ "$dry_run" == true ]]; then
             log_info "[DRY-RUN] cp -r ${openspec_dir}/changes/* ${project_root}/dev-playbooks/changes/"
         else
@@ -166,9 +166,9 @@ step_content() {
         fi
     fi
 
-    # 迁移 project.md
+    # Migrate project.md
     if [[ -f "${openspec_dir}/project.md" ]]; then
-        log_info "迁移 project.md ..."
+        log_info "migrating project.md ..."
         if [[ "$dry_run" == true ]]; then
             log_info "[DRY-RUN] cp ${openspec_dir}/project.md ${project_root}/dev-playbooks/project.md"
         else
@@ -177,15 +177,15 @@ step_content() {
     fi
 
     save_checkpoint "CONTENT"
-    log_pass "内容迁移完成"
+    log_pass "content migration complete"
 }
 
-# 步骤3：创建/更新配置
+# Step 3: Create/update config
 step_config() {
-    log_step "3. 创建/更新配置"
+    log_step "3. Create/update config"
 
     if is_step_done "CONFIG" && [[ "$force" == false ]]; then
-        log_info "配置已更新（跳过）"
+        log_info "config already updated (skipping)"
         return 0
     fi
 
@@ -193,15 +193,15 @@ step_config() {
     local config_file="${config_dir}/config.yaml"
 
     if [[ "$dry_run" == true ]]; then
-        log_info "[DRY-RUN] 创建/更新 ${config_file}"
+        log_info "[DRY-RUN] would create/update ${config_file}"
     else
         mkdir -p "$config_dir"
 
-        # 如果配置文件不存在或需要更新
-        if [[ ! -f "$config_file" ]] || grep -q "root: dev-playbooks/" "$config_file" 2>/dev/null; then
+        # Write when missing or not configured for dev-playbooks/
+        if [[ ! -f "$config_file" ]] || ! grep -q "root: dev-playbooks/" "$config_file" 2>/dev/null; then
             cat > "$config_file" << 'YAML'
-# DevBooks 2.0 配置
-# 由 migrate-to-devbooks-2.sh 生成
+# DevBooks 2.0 config
+# Generated by migrate-from-openspec.sh
 
 root: dev-playbooks/
 constitution: constitution.md
@@ -229,41 +229,41 @@ YAML
     fi
 
     save_checkpoint "CONFIG"
-    log_pass "配置更新完成"
+    log_pass "config update complete"
 }
 
-# 步骤4：更新引用
+# Step 4: Update references
 step_refs() {
-    log_step "4. 更新路径引用"
+    log_step "4. Update path references"
 
     if is_step_done "REFS" && [[ "$force" == false ]]; then
-        log_info "引用已更新（跳过）"
+        log_info "references already updated (skipping)"
         return 0
     fi
 
     local files_updated=0
 
-    # 查找需要更新的文件
+    # Find files to update
     while IFS= read -r file; do
         [[ -z "$file" ]] && continue
         [[ ! -f "$file" ]] && continue
 
-        # 跳过二进制文件和 .git 目录
+        # Skip binary files and .git
         [[ "$file" == *".git"* ]] && continue
         [[ "$file" == *".png" ]] && continue
         [[ "$file" == *".jpg" ]] && continue
         [[ "$file" == *".ico" ]] && continue
 
-        # 检查是否包含 dev-playbooks/ 引用
-        if grep -q "dev-playbooks/" "$file" 2>/dev/null; then
+        # Replace openspec/ -> dev-playbooks/
+        if grep -q "openspec/" "$file" 2>/dev/null; then
             if [[ "$dry_run" == true ]]; then
-                log_info "[DRY-RUN] 更新引用: $file"
+                log_info "[DRY-RUN] would update references: $file"
             else
-                # macOS 兼容的 sed
+                # macOS-compatible sed
                 if [[ "$(uname)" == "Darwin" ]]; then
-                    sed -i '' 's|dev-playbooks/|dev-playbooks/|g' "$file"
+                    sed -i '' 's|openspec/|dev-playbooks/|g' "$file"
                 else
-                    sed -i 's|dev-playbooks/|dev-playbooks/|g' "$file"
+                    sed -i 's|openspec/|dev-playbooks/|g' "$file"
                 fi
             fi
             files_updated=$((files_updated + 1))
@@ -271,45 +271,45 @@ step_refs() {
     done < <(find "${project_root}" -type f \( -name "*.md" -o -name "*.yaml" -o -name "*.yml" -o -name "*.sh" -o -name "*.ts" -o -name "*.js" -o -name "*.json" \) 2>/dev/null)
 
     save_checkpoint "REFS"
-    log_pass "已更新 ${files_updated} 个文件的引用"
+    log_pass "updated references in ${files_updated} file(s)"
 }
 
-# 步骤5：清理
+# Step 5: Cleanup
 step_cleanup() {
-    log_step "5. 清理"
+    log_step "5. Cleanup"
 
     if is_step_done "CLEANUP" && [[ "$force" == false ]]; then
-        log_info "清理已完成（跳过）"
+        log_info "cleanup already completed (skipping)"
         return 0
     fi
 
     local openspec_dir="${project_root}/openspec"
 
     if [[ "$keep_old" == true ]]; then
-        log_info "保留 dev-playbooks/ 目录（--keep-old）"
+        log_info "keeping openspec/ directory (--keep-old)"
     elif [[ -d "$openspec_dir" ]]; then
         if [[ "$dry_run" == true ]]; then
             log_info "[DRY-RUN] rm -rf $openspec_dir"
         else
-            # 创建备份
+            # Create backup
             local backup_dir="${project_root}/.devbooks/backup/openspec-$(date +%Y%m%d%H%M%S)"
             mkdir -p "$(dirname "$backup_dir")"
             mv "$openspec_dir" "$backup_dir"
-            log_info "已备份 dev-playbooks/ 到 ${backup_dir}"
+            log_info "backed up openspec/ to ${backup_dir}"
         fi
     fi
 
     save_checkpoint "CLEANUP"
-    log_pass "清理完成"
+    log_pass "cleanup complete"
 }
 
-# 验证迁移结果
+# Verify migration results
 verify_migration() {
-    log_step "验证迁移结果"
+    log_step "Verify migration results"
 
     local errors=0
 
-    # 检查目录结构
+    # Check directory structure
     local required_dirs=(
         "dev-playbooks"
         "dev-playbooks/specs"
@@ -318,29 +318,29 @@ verify_migration() {
 
     for dir in "${required_dirs[@]}"; do
         if [[ ! -d "${project_root}/${dir}" ]]; then
-            log_error "缺少目录: $dir"
+            log_error "missing directory: $dir"
             errors=$((errors + 1))
         fi
     done
 
-    # 检查配置文件
+    # Check config file
     if [[ ! -f "${project_root}/.devbooks/config.yaml" ]]; then
-        log_error "缺少配置文件: .devbooks/config.yaml"
+        log_error "missing config file: .devbooks/config.yaml"
         errors=$((errors + 1))
     fi
 
-    # 检查残留引用（仅警告）
+    # Check remaining openspec references (warning only)
     local remaining_refs
-    remaining_refs=$(grep -r "dev-playbooks/" "${project_root}" --include="*.md" --include="*.yaml" --include="*.sh" 2>/dev/null | grep -v ".devbooks/backup" | wc -l || echo "0")
+    remaining_refs=$(grep -r "openspec/" "${project_root}" --include="*.md" --include="*.yaml" --include="*.sh" 2>/dev/null | grep -v ".devbooks/backup" | wc -l || echo "0")
     if [[ "$remaining_refs" -gt 0 ]]; then
-        log_warn "仍有 ${remaining_refs} 处 dev-playbooks/ 引用"
+        log_warn "still found ${remaining_refs} reference(s) to openspec/"
     fi
 
     if [[ "$errors" -eq 0 ]]; then
-        log_pass "迁移验证通过"
+        log_pass "migration verification passed"
         return 0
     else
-        log_error "迁移验证失败，${errors} 个错误"
+        log_error "migration verification failed: ${errors} error(s)"
         return 1
     fi
 }
@@ -349,36 +349,36 @@ main() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --help|-h) show_help; exit 0 ;;
-            --version|-v) echo "migrate-to-devbooks-2.sh v${VERSION}"; exit 0 ;;
+            --version|-v) echo "migrate-from-openspec.sh v${VERSION}"; exit 0 ;;
             --project-root) project_root="${2:-.}"; shift 2 ;;
             --dry-run) dry_run=true; shift ;;
             --keep-old) keep_old=true; shift ;;
             --force) force=true; shift ;;
-            -*) log_error "未知选项: $1"; exit 2 ;;
-            *) log_error "未知参数: $1"; exit 2 ;;
+            -*) log_error "unknown option: $1"; exit 2 ;;
+            *) log_error "unknown argument: $1"; exit 2 ;;
         esac
     done
 
-    log_info "OpenSpec → DevBooks 2.0 迁移"
-    log_info "项目根目录: ${project_root}"
-    [[ "$dry_run" == true ]] && log_info "模式: DRY-RUN"
-    [[ "$force" == true ]] && log_info "模式: FORCE"
+    log_info "OpenSpec → DevBooks 2.0 migration"
+    log_info "project root: ${project_root}"
+    [[ "$dry_run" == true ]] && log_info "mode: DRY-RUN"
+    [[ "$force" == true ]] && log_info "mode: FORCE"
 
     init_checkpoint
 
-    # 执行迁移步骤
+    # Execute steps
     step_structure
     step_content
     step_config
     step_refs
     step_cleanup
 
-    # 验证
+    # Verify
     if [[ "$dry_run" == false ]]; then
         verify_migration
     fi
 
-    log_pass "迁移完成！"
+    log_pass "migration complete!"
     exit 0
 }
 

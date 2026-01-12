@@ -1,48 +1,48 @@
 #!/bin/bash
 # scripts/config-discovery.sh
-# DevBooks Protocol Discovery Layer - 配置发现脚本
+# DevBooks protocol discovery layer - configuration discovery script
 #
-# 用途：发现并输出当前项目的 DevBooks 配置
-# 返回格式：key=value（每行一个），可被 Shell 或 AI 解析
+# Purpose: discover and output the current project's DevBooks configuration
+# Output: key=value (one per line), parseable by shell or an AI assistant
 #
-# 优先级：
-#   1. .devbooks/config.yaml（优先检查 root: dev-playbooks/）
-#   2. dev-playbooks/（无 config.yaml 时）
-#   3. project.md（通用模板协议）
+# Priority:
+#   1. .devbooks/config.yaml (prefer root: dev-playbooks/)
+#   2. dev-playbooks/ (when config.yaml is missing)
+#   3. project.md (generic template protocol)
 #
-# 用法：
+# Usage:
 #   ./config-discovery.sh [project-root]
-#   source <(./config-discovery.sh)  # 直接导入为 shell 变量
+#   source <(./config-discovery.sh)  # import as shell variables
 #
-# 功能：
-#   - 支持 dev-playbooks/ 路径
-#   - 自动加载 constitution.md
-#   - 纯 Bash YAML 解析（无 yq 依赖）
-#   - 弃用警告：truth_root/change_root 别名（建议迁移到 paths.specs/paths.changes）
+# Features:
+#   - Supports dev-playbooks/ layout
+#   - Loads constitution.md when present
+#   - Pure Bash YAML parsing (no yq dependency)
+#   - Deprecation warning: truth_root/change_root aliases (migrate to paths.specs/paths.changes)
 
 set -euo pipefail
 
 PROJECT_ROOT="${1:-.}"
 
-# 颜色输出（仅在 stderr）
+# Log to stderr only
 log_info() { echo "[INFO] $*" >&2; }
 log_warn() { echo "[WARN] $*" >&2; }
 log_error() { echo "[ERROR] $*" >&2; }
 
 # ============================================
-# 纯 Bash YAML 解析（无 yq 依赖）
+# Pure Bash YAML parsing (no yq)
 # ============================================
 
-# 读取简单键值对
+# Read a simple key/value pair
 get_yaml_value() {
     local file="$1" key="$2"
     grep "^${key}:" "$file" 2>/dev/null | sed 's/^[^:]*: *//' | tr -d '"'"'" | tr -d '/' || true
 }
 
-# 读取嵌套键（一层深度）
+# Read a nested key (1 level deep)
 get_yaml_nested_value() {
     local file="$1" parent="$2" key="$3"
-    # 查找 parent: 下的 key:
+    # Look for key: under parent:
     awk -v parent="$parent" -v key="$key" '
         $0 ~ "^" parent ":" { in_parent = 1; next }
         in_parent && /^[a-z]/ { in_parent = 0 }
@@ -56,13 +56,13 @@ get_yaml_nested_value() {
 }
 
 # ============================================
-# 解析真理根目录
+# Resolve truth root
 # ============================================
 
 resolve_truth_root() {
     local root="$1"
 
-    # 从 config.yaml 读取 root 配置
+    # Read root from config.yaml
     if [[ -f "${root}/.devbooks/config.yaml" ]]; then
         local config_root
         config_root=$(get_yaml_value "${root}/.devbooks/config.yaml" "root")
@@ -72,19 +72,19 @@ resolve_truth_root() {
         fi
     fi
 
-    # 检查 dev-playbooks/ 目录
+    # Check dev-playbooks/ directory
     if [[ -d "${root}/dev-playbooks" ]]; then
         echo "dev-playbooks"
         return 0
     fi
 
-    # 未找到
+    # Not found
     echo ""
     return 1
 }
 
 # ============================================
-# 加载宪法
+# Load constitution
 # ============================================
 
 load_constitution() {
@@ -97,7 +97,7 @@ load_constitution() {
         echo "constitution_path=${config_root}/constitution.md"
         return 0
     else
-        # 检查是否强制要求宪法
+        # Check whether constitution is required
         local require_constitution="false"
         if [[ -f "${PROJECT_ROOT}/.devbooks/config.yaml" ]]; then
             require_constitution=$(get_yaml_nested_value "${PROJECT_ROOT}/.devbooks/config.yaml" "constraints" "require_constitution")
@@ -119,7 +119,7 @@ load_constitution() {
 }
 
 # ============================================
-# 检查文件是否存在
+# Check whether a file exists
 # ============================================
 
 check_file() {
@@ -127,7 +127,7 @@ check_file() {
 }
 
 # ============================================
-# 输出配置
+# Output config
 # ============================================
 
 output_config() {
@@ -137,13 +137,13 @@ output_config() {
     echo "change_root=$4"
     echo "agents_doc=$5"
 
-    # 可选字段
+    # Optional fields
     [[ -n "${6:-}" ]] && echo "project_profile=$6"
     [[ -n "${7:-}" ]] && echo "apply_requires_role=$7"
 }
 
 # ============================================
-# 新格式输出（DevBooks 2.0）
+# New format output (DevBooks 2.0)
 # ============================================
 
 output_config_v2() {
@@ -153,7 +153,7 @@ output_config_v2() {
     echo "devbooks_version=2.0"
     echo "config_root=${config_root}"
 
-    # 从 config.yaml 读取路径配置
+    # Read paths from config.yaml
     if [[ -f "${PROJECT_ROOT}/.devbooks/config.yaml" ]]; then
         local specs_path changes_path staged_path
         specs_path=$(get_yaml_nested_value "${PROJECT_ROOT}/.devbooks/config.yaml" "paths" "specs")
@@ -169,7 +169,7 @@ output_config_v2() {
         echo "staged_dir=${config_root}/specs/_staged/"
     fi
 
-    # 适应度配置
+    # Fitness configuration
     if [[ -f "${PROJECT_ROOT}/.devbooks/config.yaml" ]]; then
         local fitness_mode fitness_rules
         fitness_mode=$(get_yaml_nested_value "${PROJECT_ROOT}/.devbooks/config.yaml" "fitness" "mode")
@@ -179,7 +179,7 @@ output_config_v2() {
         echo "fitness_rules=${config_root}/${fitness_rules:-specs/architecture/fitness-rules.md}"
     fi
 
-    # AC 追溯配置
+    # AC tracing configuration
     if [[ -f "${PROJECT_ROOT}/.devbooks/config.yaml" ]]; then
         local coverage_threshold
         coverage_threshold=$(get_yaml_nested_value "${PROJECT_ROOT}/.devbooks/config.yaml" "tracing" "coverage_threshold")
@@ -188,11 +188,11 @@ output_config_v2() {
 }
 
 # ============================================
-# 主逻辑
+# Main logic
 # ============================================
 
 main() {
-    # 解析真理根目录
+    # Resolve truth root
     local truth_root
     truth_root=$(resolve_truth_root "$PROJECT_ROOT") || {
         log_warn "No DevBooks configuration found"
@@ -213,16 +213,16 @@ main() {
 
     log_info "Found configuration root: $truth_root"
 
-    # 加载宪法（如果存在）
+    # Load constitution (if present)
     load_constitution "$truth_root" || {
         log_error "Constitution loading failed"
         exit 1
     }
 
-    # 根据目录判断协议类型
+    # Determine protocol type
     case "$truth_root" in
         dev-playbooks)
-            # DevBooks 协议
+            # DevBooks protocol
             log_info "Using DevBooks protocol"
 
             output_config \
@@ -239,7 +239,7 @@ main() {
             ;;
 
         *)
-            # Template 协议
+            # Template protocol
             log_info "Using template protocol"
 
             output_config \
@@ -256,5 +256,5 @@ main() {
     exit 0
 }
 
-# 运行主函数
+# Run main
 main

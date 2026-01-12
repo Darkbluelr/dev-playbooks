@@ -7,16 +7,16 @@
 
 ## Domain Terms
 
-| Term | Definition | Chinese | Deprecated Terms |
-|------|------------|---------|------------------|
-| <!-- e.g., User --> | <!-- A person who uses the system --> | <!-- 用户 --> | <!-- Customer, Member --> |
+| Term | Definition | Deprecated Terms |
+|---|---|---|
+| <!-- e.g., User --> | <!-- A person who uses the system --> | <!-- Customer, Member --> |
 
 ---
 
 ## Technical Terms
 
 | Term | Definition | Context |
-|------|------------|---------|
+|---|---|---|
 | Truth Root | The root directory for truth sources, storing final versions of specs and designs | DevBooks |
 | Change Root | The root directory for change packages, storing all artifacts for each change | DevBooks |
 | Spec Delta | Specification increment, describing modifications to specs by a change | DevBooks |
@@ -28,7 +28,7 @@
 ## Abbreviations
 
 | Abbreviation | Full Name | Description |
-|--------------|-----------|-------------|
+|---|---|---|
 | AC | Acceptance Criteria | Criteria for accepting a deliverable |
 | GIP | Global Inviolable Principle | Principles that must never be violated |
 | DoD | Definition of Done | Criteria that define when work is complete |
@@ -45,3 +45,4 @@
 
 **Glossary Version**: v1.0.0
 **Last Updated**: {{DATE}}
+

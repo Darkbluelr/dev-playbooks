@@ -1,17 +1,17 @@
 #!/bin/bash
 # skills/devbooks-delivery-workflow/scripts/spec-rollback.sh
-# 规格回滚脚本
+# Spec rollback script
 #
-# 回滚规格同步操作。
+# Rolls back spec staging operations.
 #
-# 用法：
-#   ./spec-rollback.sh <change-id> [选项]
+# Usage:
+#   ./spec-rollback.sh <change-id> [options]
 #   ./spec-rollback.sh --help
 #
-# 退出码：
-#   0 - 回滚成功
-#   1 - 回滚失败
-#   2 - 用法错误
+# Exit codes:
+#   0 - success
+#   1 - failure
+#   2 - usage error
 
 set -euo pipefail
 
@@ -31,22 +31,22 @@ NC='\033[0m'
 
 show_help() {
     cat << 'EOF'
-规格回滚脚本 (spec-rollback.sh)
+Spec rollback script (spec-rollback.sh)
 
-用法：
-  ./spec-rollback.sh <change-id> [选项]
+usage:
+  ./spec-rollback.sh <change-id> [options]
 
-选项：
-  --project-root DIR  项目根目录
-  --truth-root DIR    真理源目录
-  --change-root DIR   变更包目录
-  --target TARGET     回滚目标：staged | draft
-  --dry-run           模拟运行
-  --help, -h          显示帮助
+options:
+  --project-root DIR  Project root
+  --truth-root DIR    Truth root
+  --change-root DIR   Change root
+  --target TARGET     Target: staged | draft
+  --dry-run           Dry run
+  --help, -h          Show help
 
-回滚目标：
-  staged - 清理暂存层（保留变更包中的 spec delta）
-  draft  - 回滚到变更包状态（清理暂存层，不动 specs）
+targets:
+  staged - clear the staging layer (keep spec deltas in the change package)
+  draft  - roll back to change-package state (clear staging; do not touch specs)
 
 EOF
 }
@@ -68,52 +68,52 @@ main() {
             --change-root) change_root="${2:-changes}"; shift 2 ;;
             --target) target="${2:-staged}"; shift 2 ;;
             --dry-run) dry_run=true; shift ;;
-            -*) log_error "未知选项: $1"; exit 2 ;;
+            -*) log_error "Unknown option: $1"; exit 2 ;;
             *) change_id="$1"; shift ;;
         esac
     done
 
     if [[ -z "$change_id" ]]; then
-        log_error "缺少 change-id"
+        log_error "Missing change-id"
         exit 2
     fi
 
     case "$target" in
         staged|draft) ;;
-        *) log_error "无效的回滚目标: $target"; exit 2 ;;
+        *) log_error "Invalid target: $target"; exit 2 ;;
     esac
 
     local staged_dir="${project_root}/${truth_root}/_staged/${change_id}"
 
-    log_info "回滚变更包: ${change_id}"
-    log_info "回滚目标: ${target}"
+    log_info "rolling back change: ${change_id}"
+    log_info "target: ${target}"
 
     case "$target" in
         staged)
-            # 清理暂存层
+            # Clear staging layer
             if [[ -d "$staged_dir" ]]; then
                 if [[ "$dry_run" == true ]]; then
-                    log_info "[DRY-RUN] 将删除: ${staged_dir}"
+                    log_info "[DRY-RUN] would remove: ${staged_dir}"
                 else
                     rm -rf "$staged_dir"
-                    log_pass "已清理暂存层: ${staged_dir}"
+                    log_pass "cleared staging: ${staged_dir}"
                 fi
             else
-                log_info "暂存层为空，无需清理"
+                log_info "staging is empty; nothing to do"
             fi
             ;;
 
         draft)
-            # 回滚到变更包状态（清理暂存层）
+            # Roll back to change-package state (clear staging)
             if [[ -d "$staged_dir" ]]; then
                 if [[ "$dry_run" == true ]]; then
-                    log_info "[DRY-RUN] 将删除: ${staged_dir}"
+                    log_info "[DRY-RUN] would remove: ${staged_dir}"
                 else
                     rm -rf "$staged_dir"
-                    log_pass "已回滚到 draft 状态"
+                    log_pass "rolled back to draft state"
                 fi
             else
-                log_info "已在 draft 状态"
+                log_info "already in draft state"
             fi
             ;;
     esac

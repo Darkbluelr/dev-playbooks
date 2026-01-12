@@ -1,15 +1,15 @@
 #!/bin/bash
-# DevBooks 系统依赖安装脚本
-# 支持 macOS (Homebrew) 和 Linux (apt/yum)
+# DevBooks dependency installer
+# Supports macOS (Homebrew) and Linux (apt/yum/dnf)
 #
-# 用法: ./setup/install-dependencies.sh [--all | --minimal | --dev]
-#   --minimal  只安装必需依赖 (jq, ripgrep)
-#   --all      安装所有依赖（默认）
-#   --dev      额外安装开发依赖 (shellcheck)
+# Usage: ./scripts/install-dependencies.sh [--all | --minimal | --dev]
+#   --minimal  Install required dependencies only (jq, ripgrep)
+#   --all      Install all recommended dependencies (default)
+#   --dev      Also install developer dependencies (shellcheck)
 
 set -euo pipefail
 
-# 颜色输出
+# Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -19,7 +19,7 @@ log_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# 检测操作系统
+# Detect OS
 detect_os() {
   case "$(uname -s)" in
     Darwin*) echo "macos" ;;
@@ -28,7 +28,7 @@ detect_os() {
   esac
 }
 
-# 检测包管理器
+# Detect package manager
 detect_package_manager() {
   if command -v brew &>/dev/null; then
     echo "brew"
@@ -43,22 +43,22 @@ detect_package_manager() {
   fi
 }
 
-# 检查命令是否存在
+# Check whether a command exists
 check_command() {
   command -v "$1" &>/dev/null
 }
 
-# 安装单个工具
+# Install a single tool
 install_tool() {
   local tool="$1"
   local pkg_manager="$2"
 
   if check_command "$tool"; then
-    log_info "$tool 已安装 ($(which $tool))"
+    log_info "$tool is already installed ($(which $tool))"
     return 0
   fi
 
-  log_info "安装 $tool..."
+  log_info "Installing $tool..."
   case "$pkg_manager" in
     brew)
       case "$tool" in
@@ -67,7 +67,7 @@ install_tool() {
           if check_command go; then
             go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
           else
-            log_warn "跳过 gocyclo（需要 Go 环境）"
+            log_warn "Skipping gocyclo (requires Go)"
             return 0
           fi
           ;;
@@ -79,14 +79,14 @@ install_tool() {
         ripgrep) sudo apt-get install -y ripgrep ;;
         radon) pip3 install radon ;;
         scc)
-          log_warn "scc 需要手动安装: https://github.com/boyter/scc#installation"
+          log_warn "scc requires manual installation: https://github.com/boyter/scc#installation"
           return 0
           ;;
         gocyclo)
           if check_command go; then
             go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
           else
-            log_warn "跳过 gocyclo（需要 Go 环境）"
+            log_warn "Skipping gocyclo (requires Go)"
             return 0
           fi
           ;;
@@ -97,14 +97,14 @@ install_tool() {
       case "$tool" in
         radon) pip3 install radon ;;
         scc)
-          log_warn "scc 需要手动安装: https://github.com/boyter/scc#installation"
+          log_warn "scc requires manual installation: https://github.com/boyter/scc#installation"
           return 0
           ;;
         gocyclo)
           if check_command go; then
             go install github.com/fzipp/gocyclo/cmd/gocyclo@latest
           else
-            log_warn "跳过 gocyclo（需要 Go 环境）"
+            log_warn "Skipping gocyclo (requires Go)"
             return 0
           fi
           ;;
@@ -112,50 +112,50 @@ install_tool() {
       esac
       ;;
     *)
-      log_error "未知包管理器，请手动安装 $tool"
+      log_error "Unknown package manager. Please install $tool manually."
       return 1
       ;;
   esac
 }
 
-# 主函数
+# Main
 main() {
   local mode="${1:---all}"
   local os=$(detect_os)
   local pkg_manager=$(detect_package_manager)
 
-  log_info "检测到操作系统: $os"
-  log_info "检测到包管理器: $pkg_manager"
+  log_info "Detected OS: $os"
+  log_info "Detected package manager: $pkg_manager"
   echo ""
 
-  # 必需依赖
+  # Required dependencies
   local required_tools=(jq ripgrep)
 
-  # 推荐依赖（复杂度计算）
+  # Recommended dependencies (complexity tooling)
   local recommended_tools=(scc radon gocyclo)
 
-  # 开发依赖
+  # Developer dependencies
   local dev_tools=(shellcheck)
 
-  # 根据模式选择安装范围
+  # Select install scope by mode
   local tools_to_install=()
   case "$mode" in
     --minimal)
       tools_to_install=("${required_tools[@]}")
-      log_info "安装模式: 最小依赖"
+      log_info "Install mode: minimal"
       ;;
     --dev)
       tools_to_install=("${required_tools[@]}" "${recommended_tools[@]}" "${dev_tools[@]}")
-      log_info "安装模式: 全部 + 开发依赖"
+      log_info "Install mode: all + dev"
       ;;
     --all|*)
       tools_to_install=("${required_tools[@]}" "${recommended_tools[@]}")
-      log_info "安装模式: 全部推荐依赖"
+      log_info "Install mode: all recommended"
       ;;
   esac
   echo ""
 
-  # 安装工具
+  # Install tools
   local failed=()
   for tool in "${tools_to_install[@]}"; do
     if ! install_tool "$tool" "$pkg_manager"; then
@@ -164,79 +164,79 @@ main() {
   done
   echo ""
 
-  # 验证安装
-  log_info "=== 安装验证 ==="
+  # Verify install
+  log_info "=== Install verification ==="
   echo ""
-  echo "必需工具:"
+  echo "Required tools:"
   for tool in "${required_tools[@]}"; do
     if check_command "$tool"; then
       echo "  ✅ $tool: $(which $tool)"
     else
-      echo "  ❌ $tool: 未安装"
+      echo "  ❌ $tool: not installed"
     fi
   done
   echo ""
-  echo "复杂度工具:"
+  echo "Complexity tools:"
   for tool in "${recommended_tools[@]}"; do
     if check_command "$tool"; then
       echo "  ✅ $tool: $(which $tool)"
     else
-      echo "  ⚠️ $tool: 未安装（可选）"
+      echo "  ⚠️ $tool: not installed (optional)"
     fi
   done
   echo ""
 
   if [[ "$mode" == "--dev" ]]; then
-    echo "开发工具:"
+    echo "Developer tools:"
     for tool in "${dev_tools[@]}"; do
       if check_command "$tool"; then
         echo "  ✅ $tool: $(which $tool)"
       else
-        echo "  ⚠️ $tool: 未安装（可选）"
+        echo "  ⚠️ $tool: not installed (optional)"
       fi
     done
     echo ""
   fi
 
-  # 总结
+  # Summary
   if [ ${#failed[@]} -eq 0 ]; then
-    log_info "✅ 所有依赖安装完成！"
+    log_info "✅ All dependencies installed!"
   else
-    log_warn "以下工具安装失败，请手动安装: ${failed[*]}"
+    log_warn "The following tools failed to install; install manually: ${failed[*]}"
   fi
 }
 
-# 帮助信息
+# Help
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   cat << 'EOF'
-DevBooks 系统依赖安装脚本
+DevBooks dependency installer
 
-用法:
-  ./setup/install-dependencies.sh [选项]
+Usage:
+  ./scripts/install-dependencies.sh [options]
 
-选项:
-  --minimal   只安装必需依赖 (jq, ripgrep)
-  --all       安装所有推荐依赖（默认）
-  --dev       额外安装开发依赖 (shellcheck)
-  --help      显示此帮助信息
+Options:
+  --minimal   Install required deps only (jq, ripgrep)
+  --all       Install all recommended deps (default)
+  --dev       Also install dev deps (shellcheck)
+  --help      Show this help
 
-依赖说明:
-  必需依赖:
-    - jq        JSON 处理（Hook 输出格式化）
-    - ripgrep   代码搜索（符号定义查找）
+Dependencies:
+  Required:
+    - jq        JSON processing (formatting hook outputs)
+    - ripgrep   Code search (symbol definition lookup)
 
-  推荐依赖:
-    - scc       通用复杂度计算（JS/TS/Go/Java 等）
-    - radon     Python 圈复杂度
-    - gocyclo   Go 圈复杂度
+  Recommended:
+    - scc       Language-agnostic complexity metrics (JS/TS/Go/Java, etc.)
+    - radon     Python cyclomatic complexity
+    - gocyclo   Go cyclomatic complexity
 
-  开发依赖:
-    - shellcheck  Shell 脚本静态分析
+  Dev:
+    - shellcheck  Shell script static analysis
 
-示例:
-  ./setup/install-dependencies.sh           # 安装全部推荐依赖
-  ./setup/install-dependencies.sh --minimal # 只安装必需依赖
-  ./setup/install-dependencies.sh --dev     # 安装全部 + 开发依赖
+Examples:
+  ./scripts/install-dependencies.sh           # install all recommended deps
+  ./scripts/install-dependencies.sh --minimal # required deps only
+  ./scripts/install-dependencies.sh --dev     # all + dev deps
 EOF
   exit 0
 fi

@@ -4,16 +4,17 @@ skill: devbooks-brownfield-bootstrap
 
 # /devbooks:bootstrap
 
-触发 Skill：`devbooks-brownfield-bootstrap`
+Triggers Skill: `devbooks-brownfield-bootstrap`
 
-## 用途
+## Purpose
 
-存量项目初始化：在当前真理目录为空时生成项目画像、术语表、基线规格与最小验证锚点，避免"边补 specs 边改行为"。
+Bootstrap an existing project: when the truth root is empty, generate a project profile, glossary, baseline specs, and minimal verification anchors to avoid “editing specs while changing behavior”.
 
-## 典型使用场景
+## Typical use cases
 
-- 老项目接入 DevBooks
-- 建立项目 glossary 和基线
-- 生成初始项目画像
+- Adopt DevBooks in an existing project
+- Establish a project glossary and baseline
+- Generate the initial project profile
 
-请点名使用 `devbooks-brownfield-bootstrap` 执行相应任务。
+Explicitly use `devbooks-brownfield-bootstrap` to execute the workflow.
+

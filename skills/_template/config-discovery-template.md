@@ -1,126 +1,126 @@
-# Skills 配置发现标准模板
+# Skills Configuration Discovery Template
 
-> 此模板定义了所有 `devbooks-*` Skills 在执行前必须遵循的配置发现流程。
+> This template defines the configuration discovery flow that all `devbooks-*` Skills must follow before execution.
 
 ---
 
-## 前置：配置发现（协议无关）
+## Prerequisite: Configuration Discovery (Protocol Agnostic)
 
-执行任何操作前，**必须**按以下顺序查找配置（找到后停止）：
+Before any operation, **must** search for configuration in the following order (stop when found):
 
-### 查找顺序
+### Search Order
 
-1. `.devbooks/config.yaml`（如存在）→ 解析其中的映射
-2. `dev-playbooks/project.md`（如存在）→ 使用 DevBooks 默认映射
-3. `project.md`（如存在）→ 使用 template 默认映射
-4. 若仍无法确定 → **停止并询问用户**
+1. `.devbooks/config.yaml` (if present) -> parse mappings
+2. `dev-playbooks/project.md` (if present) -> use DevBooks default mappings
+3. `project.md` (if present) -> use template default mappings
+4. If still unknown -> **stop and ask the user**
 
-### 默认映射表
+### Default Mapping Table
 
-| 协议 | truth_root | change_root | agents_doc |
-|------|------------|-------------|------------|
+| Protocol | truth_root | change_root | agents_doc |
+|----------|------------|-------------|------------|
 | devbooks | `dev-playbooks/specs/` | `dev-playbooks/changes/` | `dev-playbooks/project.md` |
 | template | `specs/` | `changes/` | `project.md` |
 
-### 从配置中获取
+### Read from Config
 
-- `truth_root`：真理目录根（当前系统规格的最终版本）
-- `change_root`：变更目录根（每次变更的所有产物）
-- `agents_doc`：规则文档位置（AI 必须先阅读）
-- `project_profile`：项目画像位置（可选，用于快速上下文）
+- `truth_root`: truth directory root (final version of system specs)
+- `change_root`: change directory root (all artifacts per change)
+- `agents_doc`: rules document location (must be read by the AI)
+- `project_profile`: project profile location (optional, for fast context)
 
-### 关键约束
+### Key Constraints
 
-1. **如果 `agents_doc` 存在，必须先阅读该文档再执行任何操作**
-2. 禁止猜测目录根
-3. 禁止跳过规则文档阅读
-4. 禁止在未确定配置的情况下执行
+1. **If `agents_doc` exists, you must read it before any operation**
+2. Do not guess directory roots
+3. Do not skip reading the rules document
+4. Do not proceed without confirmed config
 
-### 推荐方式
+### Recommended Approach
 
-运行配置发现脚本：
+Run the config discovery script:
 
 ```bash
 DEVBOOKS_SCRIPTS="${CODEX_HOME:-$HOME/.codex}/skills/devbooks-delivery-workflow/scripts"
-# 或
+# or
 DEVBOOKS_SCRIPTS="${CLAUDE_CODE_HOME:-$HOME/.claude-code}/skills/devbooks-delivery-workflow/scripts"
 
 source <("$DEVBOOKS_SCRIPTS/../config-discovery.sh")
-# 现在可以使用 $truth_root, $change_root, $agents_doc 等变量
+# Now you can use $truth_root, $change_root, $agents_doc, etc.
 ```
 
 ---
 
-## 如何在 SKILL.md 中使用此模板
+## How to Use This Template in SKILL.md
 
-在每个 SKILL.md 文件的开头，添加以下内容：
+Add the following to the beginning of each SKILL.md:
 
 ```markdown
-## 前置：配置发现（协议无关）
+## Prerequisite: Configuration Discovery (Protocol Agnostic)
 
-- `<truth-root>`：当前真理目录根
-- `<change-root>`：变更包目录根
+- `<truth-root>`: current truth directory root
+- `<change-root>`: change package directory root
 
-执行前**必须**按以下顺序查找配置（找到后停止）：
-1. `.devbooks/config.yaml`（如存在）
-2. `dev-playbooks/project.md`（如存在）
-3. `project.md`（如存在）
-4. 若仍无法确定 → **停止并询问用户**
+Before execution, **must** search for configuration in this order (stop when found):
+1. `.devbooks/config.yaml` (if present)
+2. `dev-playbooks/project.md` (if present)
+3. `project.md` (if present)
+4. If still unknown -> **stop and ask the user**
 
-**关键约束**：如果配置中指定了 `agents_doc`（规则文档），必须先阅读该文档再执行任何操作。
+**Key constraint**: If `agents_doc` is specified in config, you must read it before any operation.
 ```
 
 ---
 
-## 示例：更新后的 SKILL.md
+## Example: Updated SKILL.md
 
-### 更新前（硬编码）
+### Before (hardcoded)
 
 ```markdown
-## 前置：目录根（协议无关）
+## Prerequisite: Directory Roots (Protocol Agnostic)
 
-- `<truth-root>`：当前真理目录根（默认建议 `specs/`；DevBooks 项目为 `dev-playbooks/specs/`）
-- `<change-root>`：变更包目录根（默认建议 `changes/`；DevBooks 项目为 `dev-playbooks/changes/`）
+- `<truth-root>`: current truth directory root (default `specs/`; DevBooks uses `dev-playbooks/specs/`)
+- `<change-root>`: change package directory root (default `changes/`; DevBooks uses `dev-playbooks/changes/`)
 
-执行前必须先尝试读取 `dev-playbooks/project.md`（如存在）以确定 `<truth-root>/<change-root>`；禁止猜测目录根。若仍无法确定，再询问用户确认。
+Before execution, attempt to read `dev-playbooks/project.md` (if present) to determine `<truth-root>/<change-root>`; do not guess. If still unknown, ask the user.
 ```
 
-### 更新后（协议发现）
+### After (config discovery)
 
 ```markdown
-## 前置：配置发现（协议无关）
+## Prerequisite: Configuration Discovery (Protocol Agnostic)
 
-- `<truth-root>`：当前真理目录根
-- `<change-root>`：变更包目录根
+- `<truth-root>`: current truth directory root
+- `<change-root>`: change package directory root
 
-执行前**必须**按以下顺序查找配置（找到后停止）：
-1. `.devbooks/config.yaml`（如存在）→ 解析并使用其中的映射
-2. `dev-playbooks/project.md`（如存在）→ DevBooks 协议，使用默认映射
-3. `project.md`（如存在）→ template 协议，使用默认映射
-4. 若仍无法确定 → **停止并询问用户**
+Before execution, **must** search for configuration in this order (stop when found):
+1. `.devbooks/config.yaml` (if present) -> parse mappings
+2. `dev-playbooks/project.md` (if present) -> DevBooks protocol defaults
+3. `project.md` (if present) -> template protocol defaults
+4. If still unknown -> **stop and ask the user**
 
-**关键约束**：
-- 如果配置中指定了 `agents_doc`，必须先阅读该文档再执行任何操作
-- 禁止猜测目录根
-- 禁止跳过规则文档阅读
+**Key constraints**:
+- If `agents_doc` is specified, read it before any operation
+- Do not guess directory roots
+- Do not skip reading the rules document
 ```
 
 ---
 
-## 批量更新脚本（参考）
+## Batch Update Script (Reference)
 
 ```bash
 #!/bin/bash
-# 批量更新所有 Skills 的 SKILL.md
+# Batch update all Skills SKILL.md files
 
-OLD_PATTERN='执行前必须先尝试读取 `dev-playbooks/project.md`'
-NEW_TEXT='执行前**必须**按以下顺序查找配置'
+OLD_PATTERN='Before execution, attempt to read `dev-playbooks/project.md`'
+NEW_TEXT='Before execution, **must** search for configuration'
 
 for skill_dir in skills/devbooks-*/; do
     skill_md="$skill_dir/SKILL.md"
     if [ -f "$skill_md" ] && grep -q "$OLD_PATTERN" "$skill_md"; then
         echo "Updating: $skill_md"
-        # 实际更新需要更复杂的 sed 命令
+        # Actual update needs more complex sed
     fi
 done
 ```

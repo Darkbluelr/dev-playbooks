@@ -1,45 +1,48 @@
-# 不包含在 npm 包中的文件
+# Files excluded from the npm package
 
-# 变更包目录
+# Repo-internal DevBooks playbooks (do not publish)
+dev-playbooks/
+
+# Change packages
 dev-playbooks/changes/
 
-# 备份目录
+# Backup directory
 .devbooks/backup/
 
-# 测试文件
+# Tests
 tests/
 
-# 日志文件
+# Logs
 *.log
 
-# 本地配置
+# Local config
 .claude/
 .git/
 .gitignore
 
-# 开发文件
+# Development files
 *.md
 !README.md
 
-# MCP 相关
+# MCP
 mcp/
 
-# 文档（仅保留 README）
+# Docs (keep README only)
 docs/
 
-# 设置文件（模板在 templates/ 中）
+# Setup files (templates live under templates/)
 setup/
 
-# 工具脚本（非必要）
+# Tool scripts (not required)
 tools/
 
-# 本地脚本
+# Local install scripts
 scripts/install-skills.sh
 
-# 开发提案
+# Dev proposal docs
 DEVBOOKS-EVOLUTION-PROPOSAL.md
 
-# AI CLI 特定文件（DevBooks 应该是 AI 无关的）
+# AI-CLI-specific files (DevBooks should be AI-agnostic)
 CLAUDE.md
 AGENTS.md
 templates/CLAUDE.md

@@ -7,7 +7,7 @@ usage: proposal-debate-check.sh <change-id> [--project-root <dir>] [--change-roo
 
 Checks that a proposal has completed the debate decision:
 - proposal.md contains '## Debate Packet' and '## Decision Log'
-- 'Decision Log' contains '- 决策状态：Approved | Revise | Rejected'
+- 'Decision Log' contains a decision line with Approved | Revise | Rejected
 EOF
 }
 
@@ -85,18 +85,18 @@ if ! rg -n "^## Decision Log" "$file" >/dev/null; then
   exit 1
 fi
 
-decision_line=$(rg -n "^- 决策状态：" "$file" -m 1 || true)
+decision_line=$(rg -n "^- .*[:：] *(Pending|Approved|Revise|Rejected) *$" "$file" -m 1 || true)
 if [[ -z "$decision_line" ]]; then
-  echo "error: missing '- 决策状态：' line in ${file}" >&2
+  echo "error: missing decision line in ${file}" >&2
   exit 1
 fi
 
-value="$(echo "$decision_line" | sed -E 's/^[0-9]+:- 决策状态： *//')"
+value="$(echo "$decision_line" | sed -E 's/^[0-9]+:- .*[:：] *//')"
 
 case "$value" in
   Approved|Revise|Rejected) ;;
   Pending) echo "error: decision is still Pending (debate not concluded): ${file}" >&2; exit 1 ;;
-  *) echo "error: 决策状态必须为 Approved | Revise | Rejected（当前：${value}）" >&2; exit 1 ;;
+  *) echo "error: decision must be Approved | Revise | Rejected (current: ${value})" >&2; exit 1 ;;
 esac
 
 echo "ok: proposal decision present for ${change_id}"

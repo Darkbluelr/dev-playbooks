@@ -14,7 +14,42 @@ DevBooks is an "agentic AI programming workflow" for **Claude Code / Codex CLI**
 
 ## Quick Start
 
-### 1. Install Skills
+### 1. Install DevBooks CLI (npm) (recommended)
+
+Global install:
+
+```bash
+npm install -g devbooks
+```
+
+One-off (no global install):
+
+```bash
+npx devbooks@latest init
+```
+
+### 2. Initialize in Your Project
+
+If you used the one-off npx command above, you can skip this step.
+
+Run in your project root:
+
+```bash
+devbooks init
+```
+
+If you need to update an existing setup later:
+
+```bash
+devbooks update
+```
+
+Installation locations (after `devbooks init` or the install script):
+- Claude Code: `~/.claude/skills/devbooks-*`
+- Codex CLI: `$CODEX_HOME/skills/devbooks-*` (default `~/.codex/skills/devbooks-*`)
+- Codex Prompts: `$CODEX_HOME/prompts/devbooks-*.md` (optional)
+
+### 3. Install from Source (Contributors or Local Testing)
 
 Run in this repository's root directory:
 
@@ -28,12 +63,7 @@ If you primarily use Codex CLI and want to install command entry points (prompts
 ./scripts/install-skills.sh --with-codex-prompts
 ```
 
-Installation locations:
-- Claude Code: `~/.claude/skills/devbooks-*`
-- Codex CLI: `$CODEX_HOME/skills/devbooks-*` (default `~/.codex/skills/devbooks-*`)
-- Codex Prompts: `$CODEX_HOME/prompts/devbooks-*.md` (optional)
-
-### 2. Integrate with Your Project
+### 4. Integrate with Your Project
 
 DevBooks Skills depend on two directory root definitions:
 - `<truth-root>`: Current truth directory root (default `dev-playbooks/specs/`)

@@ -98,7 +98,7 @@ See: `references/code-smell-cheatsheet.md`
 
 ## Execution Method
 
-1) First read and follow: `_shared/references/universal-gate-protocol.md` (verifiability + structural quality gates).
+1) First read and follow: `_shared/references/universal-gating-protocol.md` (verifiability + structural quality gates).
 2) Read resource management guide: `references/resource-management-checklist.md`.
 3) Strictly follow the complete prompt to output review comments: `references/code-review-prompt.md`.
 

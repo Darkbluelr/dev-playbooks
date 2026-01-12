@@ -37,8 +37,8 @@ Before execution, **must** search for configuration in the following order (stop
 
 ## Execution Method
 
-1) First read and follow: `_shared/references/通用守门协议.md` (verifiability + structural quality gating).
-2) Strictly output challenge report per complete prompt: `references/提案质疑提示词.md`.
+1) First read and follow: `_shared/references/universal-gating-protocol.md` (verifiability + structural quality gating).
+2) Strictly output challenge report per complete prompt: `references/proposal-challenge-prompt.md`.
 
 ---
 

@@ -1,13 +1,13 @@
 #!/bin/bash
-# DevBooks 子图缓存管理脚本
-# 用途：缓存常用的 CKB MCP 查询结果，减少重复查询
+# DevBooks graph cache manager
+# Purpose: cache common CKB MCP query results to reduce repeated queries
 
 set -e
 
 CACHE_DIR=".devbooks/cache/graph"
-CACHE_TTL=3600  # 默认缓存 1 小时（秒）
+CACHE_TTL=3600  # default TTL: 1 hour (seconds)
 
-# 颜色输出
+# Color output
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
@@ -15,7 +15,7 @@ NC='\033[0m'
 echo_info() { echo -e "${GREEN}[Cache]${NC} $1"; }
 echo_warn() { echo -e "${YELLOW}[Cache]${NC} $1"; }
 
-# 参数解析
+# Argument parsing
 ACTION=""
 KEY=""
 VALUE=""
@@ -29,37 +29,37 @@ while [[ $# -gt 0 ]]; do
         --ttl) TTL="$2"; shift 2 ;;
         --project-root) cd "$2"; shift 2 ;;
         -h|--help)
-            echo "用法: graph-cache.sh <action> [options]"
+            echo "usage: graph-cache.sh <action> [options]"
             echo ""
             echo "Actions:"
-            echo "  get     获取缓存"
-            echo "  set     设置缓存"
-            echo "  clear   清除缓存"
-            echo "  status  显示缓存状态"
-            echo "  warm    预热缓存"
+            echo "  get     Get cache"
+            echo "  set     Set cache"
+            echo "  clear   Clear cache"
+            echo "  status  Show cache status"
+            echo "  warm    Warm cache"
             echo ""
             echo "Options:"
-            echo "  --key <name>      缓存键名"
-            echo "  --value <data>    缓存值"
-            echo "  --ttl <seconds>   缓存过期时间 (默认: 3600)"
-            echo "  --project-root    项目根目录"
+            echo "  --key <name>      Cache key"
+            echo "  --value <data>    Cache value"
+            echo "  --ttl <seconds>   Cache TTL (default: 3600)"
+            echo "  --project-root    Project root"
             exit 0
             ;;
         *) shift ;;
     esac
 done
 
-# 确保缓存目录存在
+# Ensure cache directory exists
 mkdir -p "$CACHE_DIR"
 
-# 计算缓存文件路径
+# Compute cache file path
 get_cache_file() {
     local key="$1"
     local hash=$(echo "$key" | md5sum | cut -d' ' -f1)
     echo "$CACHE_DIR/${hash}.json"
 }
 
-# 检查缓存是否有效
+# Check whether cache is valid
 is_cache_valid() {
     local cache_file="$1"
     local ttl="${2:-$CACHE_TTL}"
@@ -77,7 +77,7 @@ is_cache_valid() {
     return 0
 }
 
-# 获取缓存
+# Get cache
 cache_get() {
     local cache_file=$(get_cache_file "$KEY")
 
@@ -89,11 +89,11 @@ cache_get() {
     fi
 }
 
-# 设置缓存
+# Set cache
 cache_set() {
     local cache_file=$(get_cache_file "$KEY")
 
-    # 创建缓存元数据
+    # Write cache metadata
     cat > "$cache_file" << EOF
 {
   "key": "$KEY",
@@ -103,28 +103,28 @@ cache_set() {
 }
 EOF
 
-    echo_info "已缓存: $KEY"
+    echo_info "cached: $KEY"
 }
 
-# 清除缓存
+# Clear cache
 cache_clear() {
     if [ -n "$KEY" ]; then
         local cache_file=$(get_cache_file "$KEY")
         rm -f "$cache_file"
-        echo_info "已清除: $KEY"
+        echo_info "cleared: $KEY"
     else
         rm -rf "$CACHE_DIR"/*
-        echo_info "已清除所有缓存"
+        echo_info "cleared all cache entries"
     fi
 }
 
-# 显示缓存状态
+# Show cache status
 cache_status() {
-    echo "=== DevBooks 子图缓存状态 ==="
+    echo "=== DevBooks graph cache status ==="
     echo ""
 
     if [ ! -d "$CACHE_DIR" ] || [ -z "$(ls -A "$CACHE_DIR" 2>/dev/null)" ]; then
-        echo "缓存为空"
+        echo "cache is empty"
         return
     fi
 
@@ -132,7 +132,7 @@ cache_status() {
     local valid=0
     local expired=0
 
-    echo "| 键 | 大小 | 年龄 | 状态 |"
+    echo "| Key | Size | Age | Status |"
     echo "|-----|------|------|------|"
 
     for cache_file in "$CACHE_DIR"/*.json; do
@@ -146,15 +146,15 @@ cache_status() {
             local key=$(jq -r '.key // "unknown"' "$cache_file" 2>/dev/null || echo "unknown")
             local ttl=$(jq -r '.ttl // 3600' "$cache_file" 2>/dev/null || echo 3600)
 
-            local status="✅ 有效"
+            local status="✅ valid"
             if [ $age -gt $ttl ]; then
-                status="❌ 过期"
+                status="❌ expired"
                 expired=$((expired + 1))
             else
                 valid=$((valid + 1))
             fi
 
-            # 截断长键名
+            # Truncate long keys
             if [ ${#key} -gt 30 ]; then
                 key="${key:0:27}..."
             fi
@@ -164,42 +164,42 @@ cache_status() {
     done
 
     echo ""
-    echo "总计: $total 个缓存, $valid 有效, $expired 过期"
+    echo "total: $total entries; $valid valid; $expired expired"
 }
 
-# 预热缓存（常用查询）
+# Warm cache (common queries)
 cache_warm() {
-    echo_info "预热缓存..."
+    echo_info "warming cache..."
 
-    # 检查 SCIP 索引是否存在
+    # Check whether a SCIP index exists
     if [ ! -f "index.scip" ]; then
-        echo_warn "SCIP 索引不存在，无法预热图缓存"
+        echo_warn "SCIP index not found; cannot warm graph cache"
         return 1
     fi
 
-    # 缓存常用查询结果
-    # 注意：实际的 MCP 调用需要在 Claude Code 中执行
-    # 这里只是创建缓存占位符和清理过期缓存
+    # Cache common query results
+    # Note: actual MCP calls must be executed in Claude Code.
+    # Here we only clean expired cache and keep placeholders.
 
-    # 清理过期缓存
+    # Clean expired cache
     for cache_file in "$CACHE_DIR"/*.json; do
         if [ -f "$cache_file" ]; then
             if ! is_cache_valid "$cache_file"; then
                 rm -f "$cache_file"
-                echo_info "清理过期: $(basename "$cache_file")"
+                echo_info "removed expired: $(basename "$cache_file")"
             fi
         fi
     done
 
-    echo_info "缓存预热完成"
+    echo_info "cache warm-up complete"
     echo ""
-    echo "提示：在 Claude Code 中使用以下命令预热常用查询："
+    echo "Tip: in Claude Code, run these commands to warm common queries:"
     echo "  - mcp__ckb__getArchitecture(depth=2)"
     echo "  - mcp__ckb__getHotspots(limit=20)"
     echo "  - mcp__ckb__listKeyConcepts(limit=12)"
 }
 
-# 主逻辑
+# Main
 case "$ACTION" in
     get) cache_get ;;
     set) cache_set ;;
@@ -207,8 +207,8 @@ case "$ACTION" in
     status) cache_status ;;
     warm) cache_warm ;;
     *)
-        echo "请指定操作: get, set, clear, status, warm"
-        echo "使用 -h 查看帮助"
+        echo "error: specify an action: get, set, clear, status, warm"
+        echo "hint: use -h for help"
         exit 1
         ;;
 esac
