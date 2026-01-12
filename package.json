@@ -15,7 +15,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/anthropics/devbooks"
+    "url": "https://github.com/Darkbluelr/dev-playbooks.git"
+  },
+  "homepage": "https://github.com/Darkbluelr/dev-playbooks#readme",
+  "bugs": {
+    "url": "https://github.com/Darkbluelr/dev-playbooks/issues"
   },
   "bin": {
     "devbooks": "./bin/devbooks.js"
