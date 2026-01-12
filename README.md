@@ -70,8 +70,8 @@ DevBooks Skills depend on two directory root definitions:
 - `<change-root>`: Change package directory root (default `dev-playbooks/changes/`)
 
 **Quick Integration**:
-- Entry point: `setup/generic/DevBooks-Integration-Template.md`
-- Let AI auto-wire: `setup/generic/Installation-Prompt.md`
+- Entry point: `docs/devbooks-integration-template.md`
+- Let AI auto-wire: `docs/installation-prompt.md`
 
 ---
 
@@ -176,10 +176,8 @@ Must open 2 separate conversations/instances:
 
 ```
 skills/          # devbooks-* Skills source code
-setup/           # Context protocol adapters and integration templates
-└── generic/     # Protocol-agnostic templates
-scripts/         # Installation and helper scripts
 docs/            # Supporting documentation
+scripts/         # Installation and helper scripts
 tools/           # Helper scripts (complexity calculation, entropy metrics, etc.)
 ```
 

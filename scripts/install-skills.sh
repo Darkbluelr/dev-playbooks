@@ -10,7 +10,7 @@ Installs DevBooks skills (skills/devbooks-*) to:
   - Claude Code: ~/.claude/skills/
   - Codex CLI:   $CODEX_HOME/skills (default: ~/.codex/skills/)
 
-Optionally installs Codex prompt entrypoints (setup/dev-playbooks/prompts/devbooks-*.md) to:
+Optionally installs Codex prompt entrypoints (templates/claude-commands/devbooks/*.md) to:
   - Codex CLI:   $CODEX_HOME/prompts (default: ~/.codex/prompts/)
 EOF
 }
@@ -112,14 +112,14 @@ install_into() {
 install_prompts_into() {
   local dest_root="$1"
 
-  local prompts_src="${repo_root}/setup/dev-playbooks/prompts"
+  local prompts_src="${repo_root}/templates/claude-commands/devbooks"
   if [[ ! -d "$prompts_src" ]]; then
     echo "error: missing prompts dir: $prompts_src" >&2
     exit 1
   fi
 
   local prompt_files=()
-  for f in "$prompts_src"/devbooks-*.md; do
+  for f in "$prompts_src"/*.md; do
     [[ -f "$f" ]] || continue
     prompt_files+=("$f")
   done
@@ -138,7 +138,7 @@ install_prompts_into() {
   for src in "${prompt_files[@]}"; do
     local name
     name="$(basename "$src")"
-    local dest="${dest_root}/${name}"
+    local dest="${dest_root}/devbooks-${name}"
     if [[ "$dry_run" == true ]]; then
       echo "[dry-run] install prompt: $src -> $dest"
       continue
@@ -147,6 +147,7 @@ install_prompts_into() {
     copy_file "$src" "$dest"
   done
 }
+
 
 if [[ "$install_claude" == true ]]; then
   install_into "${HOME}/.claude/skills"
