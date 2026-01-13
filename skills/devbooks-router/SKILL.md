@@ -119,16 +119,16 @@ impact_profile:
 ## Execution Plan (Based on Impact Profile)
 
 ### Must Execute
-1. `/devbooks:proposal` → proposal.md (proposal exists, skip)
-2. `/devbooks:design` → design.md (required)
-3. `/devbooks:plan` → tasks.md (required)
+1. `devbooks-proposal-author skill` → proposal.md (proposal exists, skip)
+2. `devbooks-design-doc skill` → design.md (required)
+3. `devbooks-implementation-plan skill` → tasks.md (required)
 
 ### Recommended (Based on Impact Analysis)
-4. `/devbooks:spec` → specs/** (detected external_api: true)
-5. `/devbooks:c4` → architecture/c4.md (detected architecture_boundary: true)
+4. `devbooks-spec-contract skill` → specs/** (detected external_api: true)
+5. `devbooks-c4-map skill` → architecture/c4.md (detected architecture_boundary: true)
 
 ### Optional
-6. `/devbooks:impact` → Deep impact analysis (affected_modules > 5)
+6. `devbooks-impact-analysis skill` → Deep impact analysis (affected_modules > 5)
 ```
 
 ### Parse Failure Handling (AC-012)
@@ -143,13 +143,13 @@ Missing items:
 - Or impact_profile YAML block is missing
 
 Suggested actions:
-1. Run `/devbooks:impact` to generate impact analysis
-2. Or use direct command `/devbooks:<skill>` directly
+1. Run `devbooks-impact-analysis skill` to generate impact analysis
+2. Or use the appropriate skill directly
 
-Direct command list:
-- /devbooks:design → Design document
-- /devbooks:plan → Implementation plan
-- /devbooks:spec → Specification definition
+Skill list:
+- devbooks-design-doc skill → Design document
+- devbooks-implementation-plan skill → Implementation plan
+- devbooks-spec-contract skill → Specification definition
 ```
 
 **When YAML parsing fails**:
@@ -161,7 +161,7 @@ Error: <specific error message>
 
 Suggested actions:
 1. Check impact_profile YAML format in proposal.md
-2. Or use direct command `/devbooks:<skill>` to bypass Router
+2. Or use the appropriate skill to bypass Router
 ```
 
 ---
@@ -270,9 +270,9 @@ Trigger signals: User says "prototype first/quick validation/spike/--prototype/t
 1. Record key insights learned to `proposal.md` Decision Log
 2. Delete `prototype/` directory
 
-## DevBooks Command Adaptation
+## DevBooks Skill Adaptation
 
-DevBooks uses `/devbooks:proposal`, `/devbooks:apply`, `/devbooks:archive` as entry points.
+DevBooks uses `devbooks-proposal-author skill`, `devbooks-test-owner/coder skill`, `devbooks-spec-gardener skill` as entry points.
 Route according to A/B/C/D above, artifact paths follow `<truth-root>/<change-root>` mappings in project signposts.
 
 ---
@@ -326,7 +326,7 @@ MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template.md`
 
 1. Call `mcp__ckb__getStatus` (2s timeout)
 2. If CKB available → Mark "graph capabilities activated" in routing suggestions
-3. If timeout or failure → Mark "graph capabilities degraded" in routing suggestions, recommend running /devbooks:index
+3. If timeout or failure → Mark "graph capabilities degraded" in routing suggestions, recommend running devbooks-index-bootstrap skill
 
 ### Enhanced Mode vs Basic Mode
 
@@ -342,5 +342,5 @@ When MCP is unavailable, output the following notice:
 
 ```
 Warning: CKB index not activated, graph capabilities (impact analysis, call graph, etc.) will be degraded.
-Recommend running /devbooks:index to generate index for full functionality.
+Recommend running devbooks-index-bootstrap skill to generate index for full functionality.
 ```

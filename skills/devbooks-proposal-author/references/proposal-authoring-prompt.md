@@ -34,7 +34,7 @@ Core values (non-negotiable):
 
 Design decision identification criteria:
 The following are "design decisions" that require user choice:
-- Naming style (e.g., `/devbooks:*` vs `/db:*`)
+- Naming style (e.g., skill naming conventions)
 - Directory structure organization
 - Tech stack choices (e.g., npm package naming strategy)
 - Phase partitioning

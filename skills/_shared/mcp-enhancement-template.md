@@ -48,7 +48,7 @@ When MCP is unavailable, output:
 
 ```
 ⚠️ CKB unavailable (timeout or not configured), running in basic mode.
-To enable enhanced features, run /devbooks:index to build the index.
+To enable enhanced features, run devbooks-index-bootstrap skill to build the index.
 ```
 ```
 

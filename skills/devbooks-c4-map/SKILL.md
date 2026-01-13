@@ -146,6 +146,6 @@ When MCP is unavailable, output the following notice:
 
 ```
 Warning: CKB unavailable, using directory structure to infer architecture.
-Generated C4 diagrams may not be precise. Recommend running /devbooks:index to generate index.
+Generated C4 diagrams may not be precise. Recommend running devbooks-index-bootstrap skill to generate index.
 ```
 

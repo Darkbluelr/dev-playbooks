@@ -214,6 +214,6 @@ When MCP is unavailable, output the following notice:
 
 ```
 WARNING: CKB unavailable, skipping hotspot detection.
-To enable hotspot warnings, run /devbooks:index to generate the index.
+To enable hotspot warnings, run devbooks-index-bootstrap skill to generate the index.
 ```
 

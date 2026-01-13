@@ -187,5 +187,5 @@ When MCP is unavailable, output the following notice:
 
 ```
 Warning: CKB unavailable, using Grep text search for contract reference detection.
-Results may be less precise. Consider running /devbooks:index to generate the index.
+Results may be less precise. Consider running devbooks-index-bootstrap skill to generate the index.
 ```
