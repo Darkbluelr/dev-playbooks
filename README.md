@@ -1,11 +1,13 @@
 # DevBooks
 
-**Agentic AI Development Workflow for Claude Code / Codex CLI**
+**An agentic AI development workflow for Claude Code / Codex CLI**
 
-> Transform large changes into controllable, traceable, and verifiable closed loops: Skills + Quality Gates + Role Isolation.
+> Turn large changes into a controlled, traceable, verifiable loop: Skills + quality gates + role isolation.
 
 [![npm](https://img.shields.io/npm/v/dev-playbooks)](https://www.npmjs.com/package/dev-playbooks)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+![DevBooks Workflow](docs/workflow-diagram.svg)
 
 ---
 
@@ -13,93 +15,69 @@
 
 AI coding assistants are powerful, but often **unpredictable**:
 
-| Pain Point | Consequence |
-|------------|-------------|
-| **AI self-declares "done"** | Tests actually fail, edge cases missed |
-| **Same conversation writes tests and code** | Tests become "pass-through tests", not spec verification |
-| **No verification gates** | False completions silently enter production |
-| **Only supports 0→1 projects** | No way to onboard legacy codebases |
-| **Too few commands** | Complex changes need more than "spec/apply/archive" |
+| Pain point | Outcome |
+|------|------|
+| **AI self-declares "done"** | Tests fail, edge cases are missed |
+| **Writing tests and code in the same chat** | Tests turn into “pass tests” instead of spec verification |
+| **No verification gates** | False completion silently ships |
+| **Only works for greenfield (0→1)** | Brownfield repos have no on-ramp |
+| **Too few commands** | Complex changes are not just "spec/apply/archive" |
 
-**DevBooks Solutions**:
-- **Evidence-based completion**: Completion defined by tests/builds/evidence, not AI self-assessment
-- **Mandatory role isolation**: Test Owner and Coder must work in separate conversations
-- **Multiple quality gates**: Green evidence checks, task completion rate, role boundary checks
-- **21 Skills**: Covering proposals, design, debate, review, entropy metrics, federation analysis, and more
+**DevBooks provides**:
+- **Evidence-based done**: completion is defined by tests/build/evidence, not AI self-evaluation
+- **Enforced role isolation**: Test Owner and Coder must work in separate conversations
+- **Multiple quality gates**: green evidence checks, task completion, role boundary checks
+- **21 Skills**: proposal, design, debate, review, entropy metrics, federation, and more
 
 ---
 
-## DevBooks Comparison
+## DevBooks At a Glance (Comparison)
 
-| Dimension | DevBooks | OpenSpec | spec-kit | No Spec |
-|-----------|----------|----------|----------|---------|
-| **Spec-driven** | Yes | Yes | Yes | No |
-| **Legacy project support** | Auto-generate baseline | Manual | Limited | - |
-| **Completion definition** | Test+build evidence | AI self-assessment | AI self-assessment | AI self-assessment |
-| **Code quality assurance** | Entropy metrics+gates | None | None | None |
-| **Test/implementation separation** | Mandatory isolation | None | None | None |
-| **Change traceability** | Change package archive | Feature folders | Spec files | None |
-| **Workflow complexity** | High (21 Skills) | Low (3 commands) | Medium (~5 commands) | None |
-| **Learning curve** | Steep | Gentle | Medium | None |
-| **Best for** | Large/critical changes | Lightweight changes | 0→1 projects | Simple tasks |
+| Dimension | DevBooks | OpenSpec | spec-kit | No spec |
+|------|----------|----------|----------|--------|
+| Spec-driven workflow | Yes | Yes | Yes | No |
+| Artifact traceability | Change package (proposal/design/spec/tasks/verification/evidence) | Mostly folder/file organization | Docs + tasks orchestration | None |
+| Role & responsibility boundaries | **Enforced** (Test Owner / Coder) | Convention-based (not enforced) | Convention-based (not enforced) | None |
+| Definition of Done (DoD) | **Evidence + gates** (tests/build/audit) | Manual definition/checks | Manual definition/checks | Often subjective |
+| Code quality assurance | Gates + metrics (entropy/hotspots) + review roles | External tools / manual review | External tools / manual review | Unstable |
+| Impact analysis | CKB graph capability (falls back to grep) | Text search / manual reasoning | Text search / manual reasoning | Easy to miss |
+| Brownfield onboarding | Baseline specs/glossary/minimal verification anchors | Manual | Limited | - |
+| Automation coverage | 21 Skills (proposal→implementation→archive loop) | 3 core commands | Toolkit (greenfield-leaning) | - |
 
 ---
 
 ## How It Works
 
-```
-                           DevBooks Workflow
-
-    PROPOSAL Phase              APPLY Phase                    ARCHIVE Phase
-    (No coding)                 (Role isolation enforced)      (Quality gates)
-
-    ┌─────────────────┐         ┌─────────────────┐            ┌─────────────────┐
-    │  /devbooks:     │         │   Session A     │            │  /devbooks:     │
-    │   proposal      │         │  ┌───────────┐  │            │   gardener      │
-    │   impact        │─────────│  │Test Owner │  │────────────│   delivery      │
-    │   design        │         │  │(Run Red   │  │            │                 │
-    │   spec          │         │  │ first)    │  │            │  Quality Gates: │
-    │   plan          │         │  └───────────┘  │            │  ✓ Green evidence│
-    └─────────────────┘         │                 │            │  ✓ Task complete │
-           │                    │   Session B     │            │  ✓ Role boundary │
-           ▼                    │  ┌───────────┐  │            │  ✓ No failures   │
-    ┌─────────────────┐         │  │  Coder    │  │            └─────────────────┘
-    │ Triangle Debate │         │  │(Cannot    │  │
-    │ Author/Challenger│         │  │edit tests)│  │
-    │ /Judge          │         │  └───────────┘  │
-    └─────────────────┘         └─────────────────┘
-```
-
-**Core Constraint**: Test Owner and Coder **must work in separate conversations**. This is a hard constraint, not a suggestion. Coder cannot modify `tests/**`; completion is verified by tests/builds, not AI self-assessment.
+**Hard constraint**: Test Owner and Coder **must work in separate conversations**. This is not a suggestion. Coder cannot modify `tests/**`. "Done" is defined by tests/build verification, not AI self-evaluation.
 
 ---
 
 ## Quick Start
 
-### Supported AI Tools
+### Supported AI tools
 
-| Tool | Support Level | Slash Commands | Config File |
-|------|---------------|----------------|-------------|
-| **Claude Code** | Full Skills | `/devbooks:*` | `CLAUDE.md` |
-| **Codex CLI** | Full Skills | `/devbooks:*` | `AGENTS.md` |
-| **Qoder** | Full Skills | `/devbooks:*` | `AGENTS.md` |
-| **Cursor** | Rules | - | `.cursor/rules/` |
-| **Windsurf** | Rules | - | `.windsurf/rules/` |
-| **Gemini CLI** | Rules | - | `GEMINI.md` |
-| **Continue** | Rules | - | `.continue/rules/` |
-| **GitHub Copilot** | Instructions | - | `.github/copilot-instructions.md` |
+| Tool | Support Level | Config File |
+|------|---------------|-------------|
+| **Claude Code** | Full Skills | `CLAUDE.md` |
+| **Codex CLI** | Full Skills | `AGENTS.md` |
+| **Qoder** | Full Skills | `AGENTS.md` |
+| **Cursor** | Rules | `.cursor/rules/` |
+| **Windsurf** | Rules | `.windsurf/rules/` |
+| **Gemini CLI** | Rules | `GEMINI.md` |
+| **Continue** | Rules | `.continue/rules/` |
+| **GitHub Copilot** | Instructions | `.github/copilot-instructions.md` |
 
-> **Tip**: For tools without Slash command support, use natural language, e.g., "Run DevBooks proposal skill..."
+> **Tip**: Use natural language to invoke skills, e.g., "Run devbooks-proposal-author skill to create a proposal for adding OAuth2 authentication"
 
-### Installation
+### Install & init
 
-**npm install (recommended):**
+**Install via npm (recommended):**
 
 ```bash
-# Global install
+# global install
 npm install -g dev-playbooks
 
-# Initialize in your project
+# init inside your project
 dev-playbooks init
 ```
 
@@ -109,314 +87,330 @@ dev-playbooks init
 npx dev-playbooks@latest init
 ```
 
-**Install from source (contributors):**
+**From source (contributors):**
 
 ```bash
-./scripts/install-skills.sh
+../scripts/install-skills.sh
 ```
 
-### Installation Locations
+### Install targets
 
 After initialization:
 - Claude Code: `~/.claude/skills/devbooks-*`
-- Codex CLI: `$CODEX_HOME/skills/devbooks-*` (default `~/.codex/skills/devbooks-*`)
+- Codex CLI: `~/.codex/skills/devbooks-*`
+- Qoder: `~/.qoder/` (manual setup required)
 
-### Quick Integration
+### Quick integration
 
 DevBooks uses two directory roots:
 
 | Directory | Purpose | Default |
-|-----------|---------|---------|
+|------|------|--------|
 | `<truth-root>` | Current specs (read-only truth) | `dev-playbooks/specs/` |
 | `<change-root>` | Change packages (workspace) | `dev-playbooks/changes/` |
 
-See `docs/devbooks-integration-template.md` or use `docs/installation-prompt.md` to let AI auto-configure.
+See `docs/devbooks-setup-guide.md`, or use the "Quick Start" prompt in that guide to let your assistant configure it automatically.
 
 ---
 
-## Daily Change Workflow
+## Day-to-Day Change Workflow
 
-### Using Router (Recommended)
-
-```
-/devbooks:router <your requirement>
-```
-
-Router analyzes requirements and outputs an execution plan, telling you which command to use next.
-
-### Direct Commands
-
-Once familiar with the flow, call Skills directly:
-
-**1. Proposal Phase (No coding)**
+### Use Router (recommended)
 
 ```
-/devbooks:proposal Add OAuth2 user authentication
+Run devbooks-router skill: <your request>
+```
+
+Router analyzes your request and outputs an execution plan (which skill to run next).
+
+### Direct skill invocation
+
+Once you know the flow, call the Skills directly:
+
+**1) Proposal stage (no coding)**
+
+```
+Run devbooks-proposal-author skill to create a proposal: Add OAuth2 user authentication
 ```
 
 Artifacts: `proposal.md` (required), `design.md`, `tasks.md`
 
-**2. Apply Phase (Mandatory role isolation)**
+**2) Apply stage (role isolation enforced)**
 
-Must open **2 separate conversations**:
-
-```
-# Session A - Test Owner
-/devbooks:test add-oauth2
-
-# Session B - Coder
-/devbooks:code add-oauth2
-```
-
-- Test Owner: Write `verification.md` + tests, run **Red** first
-- Coder: Implement per `tasks.md`, make gates **Green** (cannot modify tests)
-
-**3. Review Phase**
+You must use **two separate conversations**:
 
 ```
-/devbooks:review add-oauth2
+# Chat A - Test Owner
+Run devbooks-test-owner skill for change add-oauth2
+
+# Chat B - Coder
+Run devbooks-coder skill for change add-oauth2
 ```
 
-**4. Archive Phase**
+- Test Owner: writes `verification.md` + tests, runs **Red** first
+- Coder: implements per `tasks.md`, makes gates **Green** (cannot modify tests)
+
+**3) Review stage**
 
 ```
-/devbooks:gardener add-oauth2
+Run devbooks-code-review skill for change add-oauth2
+```
+
+**4) Archive stage**
+
+```
+Run devbooks-spec-gardener skill for change add-oauth2
 ```
 
 ---
 
-## Command Reference
+## Skills Reference
 
-### Proposal Phase
+### Proposal stage
 
-| Command | Skill | Description |
-|---------|-------|-------------|
-| `/devbooks:router` | devbooks-router | Smart routing to appropriate Skill |
-| `/devbooks:proposal` | devbooks-proposal-author | Create change proposal |
-| `/devbooks:impact` | devbooks-impact-analysis | Cross-module impact analysis |
-| `/devbooks:challenger` | devbooks-proposal-challenger | Challenge and critique proposal |
-| `/devbooks:judge` | devbooks-proposal-judge | Judge proposal |
-| `/devbooks:debate` | devbooks-proposal-debate-workflow | Triangle debate (Author/Challenger/Judge) |
-| `/devbooks:design` | devbooks-design-doc | Create design document |
-| `/devbooks:spec` | devbooks-spec-contract | Define specs and contracts |
-| `/devbooks:c4` | devbooks-c4-map | Generate C4 architecture map |
-| `/devbooks:plan` | devbooks-implementation-plan | Create implementation plan |
+| Skill | Description |
+|-------|-------------|
+| devbooks-router | Route to the right Skill |
+| devbooks-proposal-author | Create a change proposal |
+| devbooks-impact-analysis | Cross-module impact analysis |
+| devbooks-proposal-challenger | Challenge a proposal |
+| devbooks-proposal-judge | Adjudicate a proposal |
+| devbooks-proposal-debate-workflow | Triangle debate (Author/Challenger/Judge) |
+| devbooks-design-doc | Create a design doc |
+| devbooks-spec-contract | Define specs & contracts |
+| devbooks-c4-map | Generate a C4 map |
+| devbooks-implementation-plan | Create an implementation plan |
 
-### Apply Phase
+### Apply stage
 
-| Command | Skill | Description |
-|---------|-------|-------------|
-| `/devbooks:test` | devbooks-test-owner | Test Owner role (separate conversation required) |
-| `/devbooks:code` | devbooks-coder | Coder role (separate conversation required) |
-| `/devbooks:backport` | devbooks-design-backport | Backport findings to design document |
+| Skill | Description |
+|-------|-------------|
+| devbooks-test-owner | Test Owner role (separate chat required) |
+| devbooks-coder | Coder role (separate chat required) |
+| devbooks-design-backport | Backport discoveries to design |
 
-### Review Phase
+### Review stage
 
-| Command | Skill | Description |
-|---------|-------|-------------|
-| `/devbooks:review` | devbooks-code-review | Code review (readability/consistency) |
-| `/devbooks:test-review` | devbooks-test-reviewer | Test quality and coverage review |
+| Skill | Description |
+|-------|-------------|
+| devbooks-code-review | Code review (readability/consistency) |
 
-### Archive Phase
+### Archive stage
 
-| Command | Skill | Description |
-|---------|-------|-------------|
-| `/devbooks:gardener` | devbooks-spec-gardener | Spec maintenance and deduplication |
-| `/devbooks:delivery` | devbooks-delivery-workflow | Complete delivery closed loop |
+| Skill | Description |
+|-------|-------------|
+| devbooks-spec-gardener | Maintain/dedupe specs |
+| devbooks-delivery-workflow | End-to-end delivery workflow |
 
 ### Standalone Skills
 
-| Command | Skill | Description |
-|---------|-------|-------------|
-| `/devbooks:entropy` | devbooks-entropy-monitor | System entropy metrics |
-| `/devbooks:federation` | devbooks-federation | Cross-repo federation analysis |
-| `/devbooks:bootstrap` | devbooks-brownfield-bootstrap | Legacy project initialization |
-| `/devbooks:index` | devbooks-index-bootstrap | Generate SCIP index |
+| Skill | Description |
+|-------|-------------|
+| devbooks-entropy-monitor | System entropy metrics |
+| devbooks-federation | Cross-repo federation analysis |
+| devbooks-brownfield-bootstrap | Brownfield project bootstrap |
+| devbooks-index-bootstrap | Generate a SCIP index |
+
+---
+
+## DevBooks Comparisons
+
+### vs. OpenSpec
+
+[OpenSpec](https://github.com/Fission-AI/OpenSpec) is a lightweight spec-driven framework with three core commands (proposal/apply/archive), organizing changes by feature folders.
+
+**What DevBooks adds:**
+- **Role isolation**: hard boundary between Test Owner and Coder (separate chats)
+- **Quality gates**: 5+ verification gates to block false completion
+- **21 Skills**: proposal, debate, review, entropy metrics, federation, etc.
+- **Evidence-based done**: tests/build define “done”, not self-evaluation
+
+**Choose OpenSpec**: you want a lightweight spec workflow.
+
+**Choose DevBooks**: you need role separation and verification gates for larger changes.
+
+### vs. spec-kit
+
+[GitHub spec-kit](https://github.com/github/spec-kit) is a spec-driven toolkit with a constitution file, multi-step refinement, and structured planning.
+
+**What DevBooks adds:**
+- **Brownfield-first**: generates baseline specs for existing repos
+- **Role isolation**: test authoring and implementation are separated
+- **Quality gates**: runtime verification, not just workflow guidance
+- **Prototype mode**: safe experiments without polluting main `src/`
+
+**Choose spec-kit**: greenfield projects with supported AI tools.
+
+**Choose DevBooks**: brownfield repos or when you want enforced gates.
+
+### vs. Kiro.dev
+
+[Kiro](https://kiro.dev/) is an AWS agentic IDE with a three-phase workflow (EARS requirements, design, tasks), but stores specs separately from implementation artifacts.
+
+**DevBooks differences:**
+- **Change package**: proposal/design/spec/plan/verification/evidence in one place for lifecycle traceability
+- **Role isolation**: Test Owner and Coder are separated
+- **Quality gates**: verified through gates, not just task completion
+
+**Choose Kiro**: you want an IDE experience and AWS ecosystem integration.
+
+**Choose DevBooks**: you want change packages to bundle artifacts and enforce role boundaries.
+
+### vs. no spec
+
+Without specs, the assistant generates code from vague prompts, leading to unpredictable output, scope creep, and “hallucinated completion”.
+
+**DevBooks brings:**
+- Specs agreed before implementation
+- Quality gates that verify real completion
+- Role isolation to prevent self-verification
+- Evidence chain per change
+
+---
+
+## Core Principles
+
+| Principle | Meaning |
+|------|------|
+| **Protocol first** | truth/change/archive live in the repo, not only in chat logs |
+| **Anchor first** | done is defined by tests/static checks/build/evidence |
+| **Role isolation** | Test Owner and Coder must work in separate conversations |
+| **Truth root separation** | `<truth-root>` is read-only truth; `<change-root>` is the workspace |
+| **Structural gates** | prioritize complexity/coupling/test quality, not proxy metrics |
 
 ---
 
 ## Advanced Features
 
 <details>
-<summary><strong>Detailed Comparison with Other Tools</strong></summary>
+<summary><strong>Quality gates</strong></summary>
 
-### vs. OpenSpec
+DevBooks uses quality gates to block “false done”:
 
-[OpenSpec](https://github.com/Fission-AI/OpenSpec) is a lightweight spec-driven framework using three core commands (proposal/apply/archive) to align humans and AI, organizing changes by feature folders.
+| Gate | Trigger mode | What it checks |
+|------|----------|----------|
+| Green evidence | archive, strict | `evidence/green-final/` exists and is non-empty |
+| Task completion | strict | all tasks are done or SKIP-APPROVED |
+| Test failure block | archive, strict | no failures in green evidence |
+| P0 skip approval | strict | P0 skips require an approval record |
+| Role boundary | apply --role | Coder cannot modify tests/, Test Owner cannot modify src/ |
 
-**DevBooks adds:**
-- **Role isolation**: Hard boundary between Test Owner and Coder (separate conversations required)
-- **Quality gates**: 5+ verification gates to catch false completions
-- **21 Skills**: Covering proposals, debate, review, entropy metrics, federation analysis
-- **Evidence-based completion**: Tests/builds define "done", not AI self-assessment
-
-**Choose OpenSpec**: Simple spec-driven changes, need lightweight workflow.
-
-**Choose DevBooks**: Large changes, need role separation and quality verification.
-
-### vs. spec-kit
-
-[GitHub spec-kit](https://github.com/github/spec-kit) provides a spec-driven development toolkit with constitution files, multi-step refinement, and structured planning.
-
-**DevBooks adds:**
-- **Legacy-first**: Auto-generate baseline specs for existing codebases
-- **Role isolation**: Mandatory separation of test writing and implementation
-- **Quality gates**: Runtime verification, not just workflow guidance
-- **Prototype mode**: Safe experimentation without polluting main src/
-
-**Choose spec-kit**: 0→1 greenfield projects, using supported AI tools.
-
-**Choose DevBooks**: Legacy projects or need mandatory quality gates.
-
-### vs. Kiro.dev
-
-[Kiro](https://kiro.dev/) is AWS's agentic IDE using a three-phase workflow (EARS format requirements, design, tasks), but stores specs and implementation artifacts separately.
-
-**DevBooks differences:**
-- **Change packages**: Each change contains proposal/design/spec/plan/verification/evidence, entire lifecycle traceable in one location
-- **Role isolation**: Mandatory separation of Test Owner and Coder
-- **Quality gates**: Verification through gates, not just task completion
-
-**Choose Kiro**: Want integrated IDE experience and AWS ecosystem.
-
-**Choose DevBooks**: Want change packages bundling all artifacts with mandatory role boundaries.
-
-### vs. No Spec
-
-Without specs, AI generates code from vague prompts, leading to unpredictable outputs, scope creep, and "hallucinated completions".
-
-**DevBooks provides:**
-- Agreed specs before implementation
-- Quality gates to verify real completion
-- Role isolation to prevent self-validation
-- Evidence chain for every change
-
-</details>
-
-<details>
-<summary><strong>Quality Gates</strong></summary>
-
-DevBooks provides quality gates to catch "false completions":
-
-| Gate | Trigger Mode | Check Content |
-|------|--------------|---------------|
-| Green Evidence Check | archive, strict | `evidence/green-final/` exists and non-empty |
-| Task Completion Check | strict | All tasks in tasks.md complete or SKIP-APPROVED |
-| Test Failure Interception | archive, strict | No failure patterns in Green evidence |
-| P0 Skip Approval | strict | P0 task skips must have approval record |
-| Role Boundary Check | apply --role | Coder cannot modify tests/, Test Owner cannot modify src/ |
-
-**Core Scripts:**
+Core scripts (in `../skills/devbooks-delivery-workflow/scripts/`):
 - `change-check.sh --mode proposal|apply|archive|strict`
-- `handoff-check.sh` - Role handoff verification
-- `audit-scope.sh` - Full audit scan
-- `progress-dashboard.sh` - Progress visualization
+- `handoff-check.sh` - handoff boundary checks
+- `audit-scope.sh` - full audit scan
+- `progress-dashboard.sh` - progress visualization
 
 </details>
 
 <details>
-<summary><strong>Prototype Mode</strong></summary>
+<summary><strong>Prototype mode</strong></summary>
 
-When technical approach is uncertain:
+When the technical approach is uncertain:
 
-1. Create prototype: `change-scaffold.sh <change-id> --prototype`
-2. Test Owner uses `--prototype`: Characterization tests (no Red baseline needed)
-3. Coder uses `--prototype`: Output to `prototype/src/` (isolated from main src)
+1. Create a prototype: `change-scaffold.sh <change-id> --prototype`
+2. Test Owner with `--prototype`: characterization tests (no Red baseline required)
+3. Coder with `--prototype`: output to `prototype/src/` (isolates main src)
 4. Promote or discard: `prototype-promote.sh <change-id>`
 
-Prototype mode prevents experimental code from polluting main source tree.
+Prototype mode prevents experimental code from polluting the main tree.
+
+Scripts live in `../skills/devbooks-delivery-workflow/scripts/`.
 
 </details>
 
 <details>
-<summary><strong>Entropy Metrics Monitoring</strong></summary>
+<summary><strong>Entropy monitoring</strong></summary>
 
-DevBooks tracks four-dimensional system entropy:
+DevBooks tracks four dimensions of system entropy:
 
-| Metric | What It Measures |
-|--------|------------------|
-| Structural Entropy | Module complexity and coupling |
-| Change Entropy | Churn and volatility patterns |
-| Test Entropy | Test coverage and quality decay |
-| Dependency Entropy | External dependency health |
+| Metric | What it measures |
+|------|----------|
+| Structural entropy | module complexity and coupling |
+| Change entropy | change patterns and volatility |
+| Test entropy | coverage/quality decay over time |
+| Dependency entropy | external dependency health |
 
-Use `/devbooks:entropy` to generate reports and identify refactoring opportunities.
+Use `devbooks-entropy-monitor` skill to generate reports and identify refactor opportunities.
 
-Tools: `tools/devbooks-complexity.sh`, `tools/devbooks-entropy-viz.sh`
+Scripts (in `../skills/devbooks-entropy-monitor/scripts/`): `entropy-measure.sh`, `entropy-report.sh`
 
 </details>
 
 <details>
-<summary><strong>Legacy Project Initialization</strong></summary>
+<summary><strong>Brownfield project bootstrap</strong></summary>
 
 When `<truth-root>` is empty:
 
 ```
-/devbooks:bootstrap
+Run devbooks-brownfield-bootstrap skill
 ```
 
 Generates:
-- Project profile and glossary
-- Baseline specs from existing code
-- Minimal verification anchors
-- Module dependency graph
-- Tech debt hotspots
+- project profile and glossary
+- baseline specs from existing code
+- minimal verification anchors
+- module dependency map
+- technical debt hotspots
 
 </details>
 
 <details>
-<summary><strong>Cross-Repository Federation</strong></summary>
+<summary><strong>Cross-repo federation</strong></summary>
 
-Multi-repository analysis:
+For multi-repo analysis:
 
 ```
-/devbooks:federation
+Run devbooks-federation skill
 ```
 
-Analyzes contracts and dependencies across repository boundaries, supporting coordinated changes.
+Analyzes cross-repo contracts and dependencies to support coordinated changes.
 
 </details>
 
 <details>
-<summary><strong>MCP Code Intelligence Enhancement</strong></summary>
+<summary><strong>MCP auto-detection</strong></summary>
 
-DevBooks connects to CKB (Code Knowledge Base) service via MCP (Model Context Protocol), providing AI with **semantic-level code understanding**, not just text search.
+DevBooks Skills support graceful MCP (Model Context Protocol) degradation: you can run the full workflow without MCP/CKB; when CKB (Code Knowledge Base) is detected, DevBooks automatically enables graph-based capabilities for more accurate “scope/reference/call chain” analysis.
 
-**CKB Capabilities:**
+### What is it for?
 
-| Capability | Description | Typical Scenario |
-|------------|-------------|------------------|
-| **Impact Analysis** | Analyze propagation range and risk of symbol changes | Assess downstream impact before modifying interfaces |
-| **Call Graph** | Trace function call chains and dependencies | Understand code execution paths |
-| **Hotspot Discovery** | Identify high-churn, high-coupling code areas | Prioritize refactoring |
-| **Symbol References** | Precisely find all usage locations of symbols | Confirm impact scope before renaming |
+- **More accurate impact analysis**: upgrades from “file-level guesses” to “symbol references + call graphs”
+- **More focused reviews**: automatically pulls hotspots and prioritizes high-risk areas (tech debt/high churn)
+- **Less manual grep**: reduces noise and repeated confirmation in large repos
 
-**Graceful Degradation:**
+### MCP status and behavior
 
-| Environment | Behavior |
-|-------------|----------|
-| CKB Available | Semantic analysis mode: Use graph-based tools for precise analysis |
-| CKB Unavailable | Text search mode: Fall back to Grep + Glob (full functionality, reduced precision) |
+| MCP status | Behavior |
+|----------|------|
+| CKB available | Enhanced mode: symbol-level impact/references/call graph/hotspots (`mcp__ckb__analyzeImpact`, `mcp__ckb__findReferences`, `mcp__ckb__getCallGraph`, `mcp__ckb__getHotspots`) |
+| CKB unavailable | Basic mode: Grep + Glob text search (full functionality, lower precision) |
 
-Auto-detection with 2-second timeout. No manual configuration needed. Recommend configuring CKB for best code understanding.
+### Auto detection
+
+- Skills that depend on MCP call `mcp__ckb__getStatus` first (2s timeout)
+- Timeout/failure → silently falls back to basic mode (non-blocking)
+- No manual “basic/enhanced” switch required
+
+To enable enhanced mode: configure CKB per `docs/Recommended-MCP.md` and run `devbooks-index-bootstrap` skill to generate `index.scip`.
 
 </details>
 
 <details>
-<summary><strong>Proposal Debate Workflow</strong></summary>
+<summary><strong>Proposal debate workflow</strong></summary>
 
-Rigorous proposal review using triangle debate:
+For strict proposal review, run the triangle debate:
 
 ```
-/devbooks:debate
+Run devbooks-proposal-debate-workflow skill
 ```
 
 Three roles:
-1. **Author**: Create and defend proposal
-2. **Challenger**: Question assumptions, find gaps, identify risks
-3. **Judge**: Make final decision, record rationale
+1. **Author**: creates and defends the proposal
+2. **Challenger**: challenges assumptions, finds gaps, identifies risks
+3. **Judge**: makes the final decision and records rationale
 
-Decision outcomes: `Approved`, `Revise`, `Rejected`
+Decision: `Approved`, `Revise`, `Rejected`
 
 </details>
 
@@ -431,12 +425,14 @@ DevBooks provides migration scripts to help you transition from other spec-drive
 If you're currently using [OpenSpec](https://github.com/Fission-AI/OpenSpec) with an `openspec/` directory:
 
 ```bash
-# Download and run the migration script
-curl -sL https://raw.githubusercontent.com/ozbombor/dev-playbooks/master/scripts/migrate-from-openspec.sh | bash
+# Using CLI (recommended)
+dev-playbooks migrate --from openspec
 
-# Or run with options
-./scripts/migrate-from-openspec.sh --project-root . --dry-run  # Preview changes
-./scripts/migrate-from-openspec.sh --project-root . --keep-old # Keep original directory
+# Preview changes first
+dev-playbooks migrate --from openspec --dry-run
+
+# Keep original directory after migration
+dev-playbooks migrate --from openspec --keep-old
 ```
 
 **What gets migrated:**
@@ -444,18 +440,21 @@ curl -sL https://raw.githubusercontent.com/ozbombor/dev-playbooks/master/scripts
 - `openspec/changes/` → `dev-playbooks/changes/`
 - `openspec/project.md` → `dev-playbooks/project.md`
 - All path references are automatically updated
+- AI tool command directories are cleaned up (`.claude/commands/openspec/`, etc.)
 
 ### Migrate from GitHub spec-kit
 
 If you're using [GitHub spec-kit](https://github.com/github/spec-kit) with `specs/` and `memory/` directories:
 
 ```bash
-# Download and run the migration script
-curl -sL https://raw.githubusercontent.com/ozbombor/dev-playbooks/master/scripts/migrate-from-speckit.sh | bash
+# Using CLI (recommended)
+dev-playbooks migrate --from speckit
 
-# Or run with options
-./scripts/migrate-from-speckit.sh --project-root . --dry-run  # Preview changes
-./scripts/migrate-from-speckit.sh --project-root . --keep-old # Keep original directories
+# Preview changes first
+dev-playbooks migrate --from speckit --dry-run
+
+# Keep original directories after migration
+dev-playbooks migrate --from speckit --keep-old
 ```
 
 **Mapping rules:**
@@ -486,42 +485,34 @@ After migration:
 1. Run `dev-playbooks init` to set up DevBooks Skills
 2. Review migrated files in `dev-playbooks/`
 3. Update `verification.md` files with proper AC mappings
-4. Run `/devbooks:bootstrap` if you need baseline specs
+4. Run `devbooks-brownfield-bootstrap` skill if you need baseline specs
 
 ---
 
-## Repository Structure
+## Directory Structure
 
 ```
-skills/          # 21 devbooks-* Skills source code
-templates/       # Project initialization templates
-scripts/         # Installation and helper scripts
-tools/           # Complexity and entropy metrics tools
-docs/            # Supporting documentation
-bin/             # CLI entry point
+dev-playbooks/
+├── README.md              # This document
+├── constitution.md        # Project constitution (GIP principles)
+├── project.md             # Project context (tech stack/conventions)
+├── specs/                 # Current specs (read-only truth)
+│   ├── _meta/             # Metadata (glossary, project profile)
+│   └── architecture/      # Architecture specs (fitness-rules)
+├── changes/               # Change packages (workspace)
+├── scripts/               # Helper scripts
+└── docs/                  # Documentation
+    ├── devbooks-setup-guide.md   # Configuration guide
+    ├── workflow-diagram.svg      # Workflow visualization
+    └── Recommended-MCP.md        # MCP configuration
 ```
 
 ---
 
 ## Documentation
 
-- [Slash Commands Guide](docs/slash-commands-guide.md)
-- [Skills Usage Guide](skills/Skills-Usage-Guide.md)
-- [MCP Configuration](docs/Recommended-MCP.md)
-- [Integration Template](docs/devbooks-integration-template.md)
-- [Installation Prompt](docs/installation-prompt.md)
-
----
-
-## Design Principles
-
-| Principle | Description |
-|-----------|-------------|
-| **Protocol First** | Truth/changes/archives written to project, not just in chat |
-| **Anchor First** | Completion defined by tests, static analysis, builds, and evidence |
-| **Role Isolation** | Test Owner and Coder must work in separate conversations |
-| **Truth Source Separation** | `<truth-root>` is read-only truth; `<change-root>` is temporary workspace |
-| **Structure Gating** | Prioritize complexity/coupling/test quality over proxy metrics |
+- [Setup guide](docs/devbooks-setup-guide.md)
+- [MCP configuration recommendations](docs/Recommended-MCP.md)
 
 ---
 
