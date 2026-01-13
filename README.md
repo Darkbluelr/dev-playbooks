@@ -78,11 +78,19 @@ AI coding assistants are powerful, but often **unpredictable**:
 
 ### Supported AI Tools
 
-| Tool | Slash Commands | Natural Language |
-|------|----------------|------------------|
-| **Claude Code** | `/devbooks:*` | Supported |
-| **Codex CLI** | `/devbooks:*` | Supported |
-| Other AI assistants | - | "Run DevBooks proposal skill..." |
+| Tool | Slash Commands | Natural Language | Config File |
+|------|----------------|------------------|-------------|
+| **Claude Code** | `/devbooks:*` | Supported | `CLAUDE.md` |
+| **Codex CLI** | `/devbooks:*` | Supported | `AGENTS.md` |
+| **Cursor** | - | Supported | `.cursorrules` |
+| **Windsurf** | - | Supported | `.windsurfrules` |
+| **Continue.dev** | - | Supported | `.continuerules` |
+| **GitHub Copilot** | - | Supported | `.github/copilot-instructions.md` |
+| **Gemini Code Assist** | - | Supported | - |
+| **Aider** | - | Supported | `.aider.conf.yml` |
+| **Cline** | - | Supported | `.clinerules` |
+
+> **Tip**: For tools without Slash command support, use natural language, e.g., "Run DevBooks proposal skill..."
 
 ### Installation
 
