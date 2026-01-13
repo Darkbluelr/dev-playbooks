@@ -125,7 +125,7 @@ install_prompts_into() {
   done
 
   if [[ ${#prompt_files[@]} -eq 0 ]]; then
-    echo "error: no devbooks-*.md prompts found in $prompts_src" >&2
+    echo "error: no prompts found in $prompts_src" >&2
     exit 1
   fi
 

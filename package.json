@@ -1,5 +1,5 @@
 {
-  "name": "devbooks",
+  "name": "dev-playbooks",
   "version": "1.0.0",
   "description": "AI-powered spec-driven development workflow",
   "keywords": [
@@ -22,7 +22,7 @@
     "url": "https://github.com/Darkbluelr/dev-playbooks/issues"
   },
   "bin": {
-    "devbooks": "./bin/devbooks.js"
+    "dev-playbooks": "./bin/devbooks.js"
   },
   "files": [
     "bin/",

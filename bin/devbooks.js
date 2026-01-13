@@ -6,8 +6,8 @@
  * AI-agnostic spec-driven development workflow
  *
  * Usage:
- *   devbooks init [path] [options]
- *   devbooks update [path]
+ *   dev-playbooks init [path] [options]
+ *   dev-playbooks update [path]
  *
  * Options:
  *   --tools <tools>    Non-interactively select AI tools: all, none, or a comma-separated list
@@ -24,6 +24,8 @@ import ora from 'ora';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+const CLI_COMMAND = 'dev-playbooks';
 
 // ============================================================================
 // Skills support levels
@@ -146,7 +148,7 @@ const AI_TOOLS = [
     description: 'OpenAI Codex CLI',
     skillsSupport: SKILLS_SUPPORT.BASIC,
     slashDir: null,
-    globalSlashDir: path.join(os.homedir(), '.codex', 'prompts', 'devbooks'),
+    globalSlashDir: path.join(os.homedir(), '.codex', 'prompts'),
     instructionFile: 'AGENTS.md',
     available: true
   }
@@ -188,6 +190,26 @@ function copyDirSync(src, dest) {
       count++;
     }
   }
+  return count;
+}
+
+function copyCodexPromptsSync(srcDir, destDir) {
+  if (!fs.existsSync(srcDir)) return 0;
+  fs.mkdirSync(destDir, { recursive: true });
+
+  let count = 0;
+  const entries = fs.readdirSync(srcDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (!entry.isFile()) continue;
+    if (!entry.name.endsWith('.md')) continue;
+
+    const srcPath = path.join(srcDir, entry.name);
+    const destName = entry.name.startsWith('devbooks-') ? entry.name : `devbooks-${entry.name}`;
+    const destPath = path.join(destDir, destName);
+    fs.copyFileSync(srcPath, destPath);
+    count++;
+  }
+
   return count;
 }
 
@@ -289,7 +311,7 @@ async function promptToolSelection() {
 // ============================================================================
 
 function installSlashCommands(toolIds, projectDir) {
-  const slashSrcDir = path.join(__dirname, '..', 'slash-commands', 'devbooks');
+  const slashSrcDir = path.join(__dirname, '..', 'templates', 'claude-commands', 'devbooks');
 
   if (!fs.existsSync(slashSrcDir)) {
     return { results: [], total: 0 };
@@ -310,7 +332,9 @@ function installSlashCommands(toolIds, projectDir) {
       continue;
     }
 
-    const count = copyDirSync(slashSrcDir, destDir);
+    const count = toolId === 'codex'
+      ? copyCodexPromptsSync(slashSrcDir, destDir)
+      : copyDirSync(slashSrcDir, destDir);
     results.push({ tool: tool.name, count, path: destDir });
   }
 
@@ -695,7 +719,7 @@ async function initCommand(projectDir, options) {
   if (selectedTools.length === 0) {
     console.log();
     console.log(chalk.green('✓') + ' DevBooks project structure created!');
-    console.log(chalk.gray('  Run `devbooks init` and select AI tools to configure integrations.'));
+    console.log(chalk.gray(`  Run \`${CLI_COMMAND} init\` and select AI tools to configure integrations.`));
     return;
   }
 
@@ -791,7 +815,7 @@ async function updateCommand(projectDir) {
   // Check whether initialized
   const configPath = path.join(projectDir, '.devbooks', 'config.yaml');
   if (!fs.existsSync(configPath)) {
-    console.log(chalk.red('✗') + ' DevBooks config not found. Run `devbooks init` first.');
+    console.log(chalk.red('✗') + ` DevBooks config not found. Run \`${CLI_COMMAND} init\` first.`);
     process.exit(1);
   }
 
@@ -800,7 +824,7 @@ async function updateCommand(projectDir) {
   const configuredTools = config.aiTools;
 
   if (configuredTools.length === 0) {
-    console.log(chalk.yellow('⚠') + ' No AI tools configured. Run `devbooks init` to configure.');
+    console.log(chalk.yellow('⚠') + ` No AI tools configured. Run \`${CLI_COMMAND} init\` to configure.`);
     return;
   }
 
@@ -850,8 +874,8 @@ function showHelp() {
   console.log(chalk.bold('DevBooks') + ' - AI-agnostic spec-driven development workflow');
   console.log();
   console.log(chalk.cyan('Usage:'));
-  console.log('  devbooks init [path] [options]    Initialize DevBooks');
-  console.log('  devbooks update [path]            Update configured tools');
+  console.log(`  ${CLI_COMMAND} init [path] [options]    Initialize DevBooks`);
+  console.log(`  ${CLI_COMMAND} update [path]            Update configured tools`);
   console.log();
   console.log(chalk.cyan('Options:'));
   console.log('  --tools <tools>    Non-interactively select AI tools');
@@ -898,10 +922,10 @@ function showHelp() {
 
   console.log();
   console.log(chalk.cyan('Examples:'));
-  console.log('  devbooks init                        # interactive init');
-  console.log('  devbooks init my-project             # init in my-project');
-  console.log('  devbooks init --tools claude,cursor  # non-interactive');
-  console.log('  devbooks update                      # update configured tools');
+  console.log(`  ${CLI_COMMAND} init                        # interactive init`);
+  console.log(`  ${CLI_COMMAND} init my-project             # init in my-project`);
+  console.log(`  ${CLI_COMMAND} init --tools claude,cursor  # non-interactive`);
+  console.log(`  ${CLI_COMMAND} update                      # update configured tools`);
 }
 
 // ============================================================================

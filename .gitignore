@@ -17,6 +17,7 @@ dev-playbooks/
 # Project self-test artifacts (not part of the npm package)
 AGENTS.md
 openspec/
+tests/
 
 # Python
 __pycache__/
