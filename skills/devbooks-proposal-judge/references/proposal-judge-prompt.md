@@ -32,6 +32,29 @@ Output format (strict):
 2) **Reason summary** (3–5 bullets)
 3) **Required changes (if Revise)**: list each item
 4) **Verification requirements**: evidence/tests/checks to add
-5) **Write-back instructions**: changes that must be applied to `proposal.md`
 
-Start the "verdict report" now; do not output extra explanations.
+Execution requirements (must follow):
+- **Must write back**: The verdict must be written to the `## Decision Log` section of `proposal.md` using the Edit tool, not just output to the chat window
+- Write-back format:
+  ```markdown
+  ## Decision Log
+
+  ### [Date] Verdict: [Approved|Revise|Rejected]
+
+  **Reason summary**:
+  - [Reason 1]
+  - [Reason 2]
+  - ...
+
+  **Required changes** (if Revise):
+  - [ ] [Change 1]
+  - [ ] [Change 2]
+
+  **Verification requirements**:
+  - [ ] [Verification 1]
+  - [ ] [Verification 2]
+  ```
+- If `## Decision Log` section does not exist, create it at the end of proposal.md
+- After write-back is complete, briefly inform the user of the verdict and write-back location in the chat window
+
+Begin executing the verdict and writing back to proposal.md now.
