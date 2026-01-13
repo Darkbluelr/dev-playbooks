@@ -27,6 +27,62 @@ Before execution, **must** search for configuration in the following order (stop
 - Do not guess directory roots
 - Do not skip reading the rules document
 
+---
+
+## Core Responsibilities
+
+### 1. Spec Merge and Maintenance
+
+During archive phase, merge change package spec artifacts into `<truth-root>`:
+
+| Source Path | Target Path | Merge Strategy |
+|-------------|-------------|----------------|
+| `<change-root>/<change-id>/specs/**` | `<truth-root>/specs/**` | Incremental merge |
+| `<change-root>/<change-id>/contracts/**` | `<truth-root>/contracts/**` | Versioned merge |
+
+### 2. C4 Architecture Map Merge (New)
+
+> **Design Decision**: C4 architecture changes are now recorded in design.md's Architecture Impact section and merged into truth by spec-gardener during archiving.
+
+During archive phase, detect and merge architecture changes:
+
+| Detection Source | Target Path | Merge Logic |
+|------------------|-------------|-------------|
+| "Architecture Impact" section in `<change-root>/<change-id>/design.md` | `<truth-root>/architecture/c4.md` | Incremental update |
+
+**C4 Merge Flow**:
+
+1. **Detect Architecture Changes**: Parse "Architecture Impact" section in `design.md`
+2. **Determine If Merge Needed**:
+   - If "No Architecture Changes" is checked → Skip merge
+   - If "Has Architecture Changes" → Execute merge
+3. **Execute Merge**:
+   - Read `<truth-root>/architecture/c4.md` (create if doesn't exist)
+   - Update corresponding sections based on Architecture Impact descriptions
+   - Update Container/Component tables
+   - Update dependency relationships
+   - Update layering constraints (if changed)
+4. **Record Merge Log**: Append change record at end of c4.md
+
+**Merge Output Format** (appended to c4.md):
+
+```markdown
+## Change History
+
+| Date | Change ID | Impact Summary |
+|------|-----------|----------------|
+| <date> | <change-id> | <brief description of architecture changes> |
+```
+
+### 3. Deduplication and Cleanup
+
+Execute in maintenance mode:
+
+- Detect duplicate spec definitions
+- Clean up obsolete/deprecated specs
+- Organize directory structure
+- Fix consistency issues
+
 ## Execution Method
 
 1) First read and follow: `_shared/references/universal-gating-protocol.md` (verifiability + structural quality gates).

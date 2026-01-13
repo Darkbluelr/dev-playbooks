@@ -108,7 +108,7 @@ impact_profile:
 | Impact Field | Value | Auto-Append Skill |
 |--------------|-------|-------------------|
 | `external_api: true` | - | `devbooks-spec-contract` |
-| `architecture_boundary: true` | - | `devbooks-c4-map` |
+| `architecture_boundary: true` | - | `devbooks-design-doc` (ensure Architecture Impact section is complete) |
 | `cross_repo: true` | - | `devbooks-federation` |
 | `risk_level: high` | - | `devbooks-proposal-debate-workflow` |
 | `affected_modules` count > 5 | - | `devbooks-impact-analysis` (deep analysis) |
@@ -125,7 +125,7 @@ impact_profile:
 
 ### Recommended (Based on Impact Analysis)
 4. `devbooks-spec-contract skill` → specs/** (detected external_api: true)
-5. `devbooks-c4-map skill` → architecture/c4.md (detected architecture_boundary: true)
+5. `devbooks-design-doc skill` → design.md Architecture Impact section (detected architecture_boundary: true)
 
 ### Optional
 6. `devbooks-impact-analysis skill` → Deep impact analysis (affected_modules > 5)
@@ -182,7 +182,7 @@ Append as needed (add only when conditions are met):
 - **Obvious risks/controversies/trade-offs**: `devbooks-proposal-debate-workflow` (Author/Challenger/Judge, write back to Decision Log after debate)
 - **External behavior/contract/data invariant changes**: `devbooks-spec-contract` → `(<change-root>/<change-id>/specs/**)` + `design.md` Contract section
   - If you need "deterministic spec delta file creation/avoid path errors": `change-spec-delta-scaffold.sh <change-id> <capability> ...`
-- **Module boundary/dependency direction/architecture shape changes**: `devbooks-c4-map` → `(<truth-root>/architecture/c4.md)`
+- **Module boundary/dependency direction/architecture shape changes**: Ensure `devbooks-design-doc` outputs complete Architecture Impact section → merged to `(<truth-root>/architecture/c4.md)` by `devbooks-spec-gardener` during archiving
 
 Hard constraint reminders:
 - Proposal phase prohibits writing implementation code; implementation happens in apply phase with tests/gates as completion criteria.

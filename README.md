@@ -178,7 +178,6 @@ Run devbooks-spec-gardener skill for change add-oauth2
 | devbooks-proposal-debate-workflow | Triangle debate (Author/Challenger/Judge) |
 | devbooks-design-doc | Create a design doc |
 | devbooks-spec-contract | Define specs & contracts |
-| devbooks-c4-map | Generate a C4 map |
 | devbooks-implementation-plan | Create an implementation plan |
 
 ### Apply stage

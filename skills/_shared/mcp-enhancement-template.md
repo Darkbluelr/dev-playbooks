@@ -91,7 +91,6 @@ The following Skills depend on MCP and require the full MCP Enhancement section:
 | devbooks-index-bootstrap | mcp__ckb__getStatus | Index status detection |
 | devbooks-federation | mcp__ckb__*, mcp__github__* | Cross-repo analysis |
 | devbooks-router | mcp__ckb__getStatus | Index availability detection |
-| devbooks-c4-map | mcp__ckb__getArchitecture | Module dependency graph |
 | devbooks-spec-contract | mcp__ckb__findReferences | Reference detection |
 | devbooks-entropy-monitor | mcp__ckb__getHotspots | Hotspot trend analysis |
 | devbooks-delivery-workflow | mcp__ckb__getStatus | Index detection |

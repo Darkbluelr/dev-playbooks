@@ -35,7 +35,7 @@ Before execution, **must** search for configuration in the following order (stop
 - Code formatting
 
 ### 2. Dependency Health Review
-- Layer constraint compliance (see devbooks-c4-map)
+- Layer constraint compliance (see `<truth-root>/architecture/c4.md`)
 - Circular dependency detection
 - Internal module encapsulation (prohibit deep imports of *Internal files)
 - Dependency direction correctness

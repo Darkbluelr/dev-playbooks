@@ -74,6 +74,81 @@ The following change types **require** updating corresponding documentation:
 | New commands/CLI parameters | User guide |
 | External API changes | API documentation |
 
+## Architecture Impact Statement (Required)
+
+Design documents **must** include an "Architecture Impact" section declaring the impact of this change on system architecture. This is a key mechanism to ensure architecture changes go through verification closed-loops.
+
+> **Design Decision**: C4 architecture changes are no longer written directly to the truth directory by a standalone `devbooks-c4-map` skill. Instead, they are part of design.md and merged into truth by `devbooks-spec-gardener` after change acceptance.
+
+### Template
+
+```markdown
+## Architecture Impact
+
+<!-- Required: Choose one of the following -->
+
+### No Architecture Changes
+
+- [x] This change does not affect module boundaries, dependency directions, or component structure
+- Reason: <Brief explanation of why there's no architecture impact>
+
+### Has Architecture Changes
+
+#### C4 Level Impact
+
+| Level | Change Type | Impact Description |
+|-------|-------------|-------------------|
+| Context | None / Add / Modify / Delete | <description> |
+| Container | None / Add / Modify / Delete | <description> |
+| Component | None / Add / Modify / Delete | <description> |
+
+#### Container Changes
+
+- [Add/Modify/Delete] `<container-name>`: <change description>
+
+#### Component Changes
+
+- [Add/Modify/Delete] `<component-name>` in `<container>`: <change description>
+
+#### Dependency Changes
+
+| Source | Target | Change Type | Notes |
+|--------|--------|-------------|-------|
+| `<source>` | `<target>` | Add/Delete/Direction Change | <notes> |
+
+#### Layering Constraint Impact
+
+- [ ] This change follows existing layering constraints
+- [ ] This change requires modifying layering constraints (explain below)
+
+Layering constraint modification notes: <if any>
+```
+
+### Detection Rules
+
+When executing design-doc skill, **must check** the following conditions to determine architecture changes:
+
+| Check Item | Detection Method | Has Architecture Change |
+|------------|------------------|------------------------|
+| New/deleted directories | Check changed file paths | May affect module boundaries |
+| Cross-module imports | Check import statement changes | May affect dependency direction |
+| New external dependencies | Check package.json/go.mod etc. | Affects Container level |
+| New services/processes | Check Dockerfile/docker-compose | Affects Container level |
+| New API endpoint groups | Check route definitions | May affect Component level |
+
+### Trigger Rules
+
+The following change types **require** filling in architecture change details:
+
+| Change Type | Requirement |
+|-------------|-------------|
+| New module/directory | Must describe Component changes |
+| New service/container | Must describe Container changes |
+| Modified inter-module dependencies | Must describe dependency changes |
+| Introduced new external system | Must describe Context changes |
+
+---
+
 ## Execution Method
 
 1) First read and follow: `_shared/references/universal-gating-protocol.md` (verifiability + structural quality gates).

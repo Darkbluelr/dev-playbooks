@@ -171,28 +171,6 @@ If you are not using DevBooks, replace `dev-playbooks/specs` / `dev-playbooks/ch
 
 ---
 
-## `devbooks-c4-map` (C4 Map Maintainer)
-
-- Purpose: maintain/update the authoritative C4 architecture map (truth) and produce a C4 Delta per change.
-- When to use:
-  - Proposal stage: describe boundary/dependency direction changes in `design.md` (C4 Delta only; do not modify current truth)
-  - Review/archive stage: change is implemented; update the authoritative map at `(<truth-root>/architecture/c4.md)`
-- Copy-paste prompts:
-  - Proposal stage (C4 Delta only; do not edit current truth):
-    ```text
-    You are C4 Map Maintainer. Explicitly use `devbooks-c4-map`, but during proposal stage do NOT modify `dev-playbooks/specs/architecture/c4.md` (current truth).
-    First read: `dev-playbooks/specs/architecture/c4.md` (if present) + `dev-playbooks/changes/<change-id>/proposal.md` + `dev-playbooks/changes/<change-id>/design.md`.
-    Output: a **C4 Delta** section that I can paste into `dev-playbooks/changes/<change-id>/design.md` (C1/C2/C3 add/modify/remove + dependency direction changes + suggested architecture guardrails/fitness tests).
-    ```
-  - Review/archive stage (update current truth map):
-    ```text
-    You are C4 Map Maintainer. Explicitly use `devbooks-c4-map`.
-    First read: `dev-playbooks/specs/architecture/c4.md` (if present) + `dev-playbooks/changes/<change-id>/design.md` + relevant code changes (to confirm the change is real).
-    Update (or create a minimal skeleton with TODOs): `dev-playbooks/specs/architecture/c4.md`.
-    ```
-
----
-
 ## `devbooks-implementation-plan` (Planner / tasks.md)
 
 - Purpose: derive an implementation plan `tasks.md` from `design.md` (critical path / side quests / checkpoints), tied to verification anchors (must not reference `tests/`).
