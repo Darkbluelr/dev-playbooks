@@ -7,6 +7,8 @@
 [![npm](https://img.shields.io/npm/v/dev-playbooks)](https://www.npmjs.com/package/dev-playbooks)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../LICENSE)
 
+![DevBooks Workflow](docs/workflow-diagram.svg)
+
 ---
 
 ## Why DevBooks?
@@ -45,8 +47,6 @@ AI coding assistants are powerful, but often **unpredictable**:
 ---
 
 ## How It Works
-
-![DevBooks Workflow](docs/workflow-diagram.svg)
 
 **Hard constraint**: Test Owner and Coder **must work in separate conversations**. This is not a suggestion. Coder cannot modify `tests/**`. "Done" is defined by tests/build verification, not AI self-evaluation.
 
