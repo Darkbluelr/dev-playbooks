@@ -4,7 +4,7 @@
 
 > Turn large changes into a controlled, traceable, verifiable loop: Skills + quality gates + role isolation.
 
-[![npm](https://img.shields.io/npm/v/dev-playbooks-cn)](https://www.npmjs.com/package/dev-playbooks-cn)
+[![npm](https://img.shields.io/npm/v/dev-playbooks)](https://www.npmjs.com/package/dev-playbooks)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](../LICENSE)
 
 ---
@@ -46,30 +46,9 @@ AI coding assistants are powerful, but often **unpredictable**:
 
 ## How It Works
 
-```
-                           DevBooks Workflow
+![DevBooks Workflow](docs/workflow-diagram.svg)
 
-    PROPOSAL stage                 APPLY stage                      ARCHIVE stage
-    (no coding)                    (role isolation enforced)         (quality gates)
-
-    ┌─────────────────┐            ┌─────────────────┐              ┌─────────────────┐
-    │  /devbooks:     │            │   Chat A        │              │  /devbooks:     │
-    │   proposal      │            │  ┌───────────┐  │              │   gardener      │
-    │   impact        │────────────│  │Test Owner │  │──────────────│   delivery      │
-    │   design        │            │  │(Red first)│  │              │                 │
-    │   spec          │            │  └───────────┘  │              │  Gates:         │
-    │   plan          │            │                 │              │  ✓ Green evidence│
-    └─────────────────┘            │   Chat B        │              │  ✓ Tasks done   │
-           │                       │  ┌───────────┐  │              │  ✓ Role boundary│
-           ▼                       │  │  Coder    │  │              │  ✓ No failures  │
-    ┌─────────────────┐            │  │(no tests!)│  │              └─────────────────┘
-    │ Triangle debate │            │  └───────────┘  │
-    │ Author/Challenger│            └─────────────────┘
-    │ /Judge          │
-    └─────────────────┘
-```
-
-**Hard constraint**: Test Owner and Coder **must work in separate conversations**. This is not a suggestion. Coder cannot modify `tests/**`. “Done” is defined by tests/build verification, not AI self-evaluation.
+**Hard constraint**: Test Owner and Coder **must work in separate conversations**. This is not a suggestion. Coder cannot modify `tests/**`. "Done" is defined by tests/build verification, not AI self-evaluation.
 
 ---
 
@@ -77,18 +56,18 @@ AI coding assistants are powerful, but often **unpredictable**:
 
 ### Supported AI tools
 
-| Tool | Support Level | Slash Commands | Config File |
-|------|---------------|----------------|-------------|
-| **Claude Code** | Full Skills | `/devbooks:*` | `CLAUDE.md` |
-| **Codex CLI** | Full Skills | `/devbooks:*` | `AGENTS.md` |
-| **Qoder** | Full Skills | `/devbooks:*` | `AGENTS.md` |
-| **Cursor** | Rules | - | `.cursor/rules/` |
-| **Windsurf** | Rules | - | `.windsurf/rules/` |
-| **Gemini CLI** | Rules | - | `GEMINI.md` |
-| **Continue** | Rules | - | `.continue/rules/` |
-| **GitHub Copilot** | Instructions | - | `.github/copilot-instructions.md` |
+| Tool | Support Level | Config File |
+|------|---------------|-------------|
+| **Claude Code** | Full Skills | `CLAUDE.md` |
+| **Codex CLI** | Full Skills | `AGENTS.md` |
+| **Qoder** | Full Skills | `AGENTS.md` |
+| **Cursor** | Rules | `.cursor/rules/` |
+| **Windsurf** | Rules | `.windsurf/rules/` |
+| **Gemini CLI** | Rules | `GEMINI.md` |
+| **Continue** | Rules | `.continue/rules/` |
+| **GitHub Copilot** | Instructions | `.github/copilot-instructions.md` |
 
-> **Tip**: For tools without Slash command support, use natural language, e.g., "Run DevBooks proposal skill..."
+> **Tip**: Use natural language to invoke skills, e.g., "Run devbooks-proposal-author skill to create a proposal for adding OAuth2 authentication"
 
 ### Install & init
 
@@ -96,16 +75,16 @@ AI coding assistants are powerful, but often **unpredictable**:
 
 ```bash
 # global install
-npm install -g dev-playbooks-cn
+npm install -g dev-playbooks
 
 # init inside your project
-dev-playbooks-cn init
+dev-playbooks init
 ```
 
 **One-off usage:**
 
 ```bash
-npx dev-playbooks-cn@latest init
+npx dev-playbooks@latest init
 ```
 
 **From source (contributors):**
@@ -130,7 +109,7 @@ DevBooks uses two directory roots:
 | `<truth-root>` | Current specs (read-only truth) | `dev-playbooks/specs/` |
 | `<change-root>` | Change packages (workspace) | `dev-playbooks/changes/` |
 
-See `docs/devbooks-integration-template.md`, or use `docs/installation-prompt.md` to let your assistant configure it automatically.
+See `docs/devbooks-setup-guide.md`, or use the "Quick Start" prompt in that guide to let your assistant configure it automatically.
 
 ---
 
@@ -139,19 +118,19 @@ See `docs/devbooks-integration-template.md`, or use `docs/installation-prompt.md
 ### Use Router (recommended)
 
 ```
-/devbooks:router <your request>
+Run devbooks-router skill: <your request>
 ```
 
-Router analyzes your request and outputs an execution plan (which command to run next).
+Router analyzes your request and outputs an execution plan (which skill to run next).
 
-### Direct commands
+### Direct skill invocation
 
 Once you know the flow, call the Skills directly:
 
 **1) Proposal stage (no coding)**
 
 ```
-/devbooks:proposal Add OAuth2 user authentication
+Run devbooks-proposal-author skill to create a proposal: Add OAuth2 user authentication
 ```
 
 Artifacts: `proposal.md` (required), `design.md`, `tasks.md`
@@ -162,10 +141,10 @@ You must use **two separate conversations**:
 
 ```
 # Chat A - Test Owner
-/devbooks:test add-oauth2
+Run devbooks-test-owner skill for change add-oauth2
 
 # Chat B - Coder
-/devbooks:code add-oauth2
+Run devbooks-coder skill for change add-oauth2
 ```
 
 - Test Owner: writes `verification.md` + tests, runs **Red** first
@@ -174,64 +153,63 @@ You must use **two separate conversations**:
 **3) Review stage**
 
 ```
-/devbooks:review add-oauth2
+Run devbooks-code-review skill for change add-oauth2
 ```
 
 **4) Archive stage**
 
 ```
-/devbooks:gardener add-oauth2
+Run devbooks-spec-gardener skill for change add-oauth2
 ```
 
 ---
 
-## Command Reference
+## Skills Reference
 
 ### Proposal stage
 
-| Command | Skill | Description |
-|------|-------|------|
-| `/devbooks:router` | devbooks-router | Route to the right Skill |
-| `/devbooks:proposal` | devbooks-proposal-author | Create a change proposal |
-| `/devbooks:impact` | devbooks-impact-analysis | Cross-module impact analysis |
-| `/devbooks:challenger` | devbooks-proposal-challenger | Challenge a proposal |
-| `/devbooks:judge` | devbooks-proposal-judge | Adjudicate a proposal |
-| `/devbooks:debate` | devbooks-proposal-debate-workflow | Triangle debate (Author/Challenger/Judge) |
-| `/devbooks:design` | devbooks-design-doc | Create a design doc |
-| `/devbooks:spec` | devbooks-spec-contract | Define specs & contracts |
-| `/devbooks:c4` | devbooks-c4-map | Generate a C4 map |
-| `/devbooks:plan` | devbooks-implementation-plan | Create an implementation plan |
+| Skill | Description |
+|-------|-------------|
+| devbooks-router | Route to the right Skill |
+| devbooks-proposal-author | Create a change proposal |
+| devbooks-impact-analysis | Cross-module impact analysis |
+| devbooks-proposal-challenger | Challenge a proposal |
+| devbooks-proposal-judge | Adjudicate a proposal |
+| devbooks-proposal-debate-workflow | Triangle debate (Author/Challenger/Judge) |
+| devbooks-design-doc | Create a design doc |
+| devbooks-spec-contract | Define specs & contracts |
+| devbooks-c4-map | Generate a C4 map |
+| devbooks-implementation-plan | Create an implementation plan |
 
 ### Apply stage
 
-| Command | Skill | Description |
-|------|-------|------|
-| `/devbooks:test` | devbooks-test-owner | Test Owner role (separate chat required) |
-| `/devbooks:code` | devbooks-coder | Coder role (separate chat required) |
-| `/devbooks:backport` | devbooks-design-backport | Backport discoveries to design |
+| Skill | Description |
+|-------|-------------|
+| devbooks-test-owner | Test Owner role (separate chat required) |
+| devbooks-coder | Coder role (separate chat required) |
+| devbooks-design-backport | Backport discoveries to design |
 
 ### Review stage
 
-| Command | Skill | Description |
-|------|-------|------|
-| `/devbooks:review` | devbooks-code-review | Code review (readability/consistency) |
-| `/devbooks:test-review` | devbooks-test-reviewer | Test quality & coverage review |
+| Skill | Description |
+|-------|-------------|
+| devbooks-code-review | Code review (readability/consistency) |
 
 ### Archive stage
 
-| Command | Skill | Description |
-|------|-------|------|
-| `/devbooks:gardener` | devbooks-spec-gardener | Maintain/dedupe specs |
-| `/devbooks:delivery` | devbooks-delivery-workflow | End-to-end delivery workflow |
+| Skill | Description |
+|-------|-------------|
+| devbooks-spec-gardener | Maintain/dedupe specs |
+| devbooks-delivery-workflow | End-to-end delivery workflow |
 
 ### Standalone Skills
 
-| Command | Skill | Description |
-|------|-------|------|
-| `/devbooks:entropy` | devbooks-entropy-monitor | System entropy metrics |
-| `/devbooks:federation` | devbooks-federation | Cross-repo federation analysis |
-| `/devbooks:bootstrap` | devbooks-brownfield-bootstrap | Brownfield project bootstrap |
-| `/devbooks:index` | devbooks-index-bootstrap | Generate a SCIP index |
+| Skill | Description |
+|-------|-------------|
+| devbooks-entropy-monitor | System entropy metrics |
+| devbooks-federation | Cross-repo federation analysis |
+| devbooks-brownfield-bootstrap | Brownfield project bootstrap |
+| devbooks-index-bootstrap | Generate a SCIP index |
 
 ---
 
@@ -353,7 +331,7 @@ DevBooks tracks four dimensions of system entropy:
 | Test entropy | coverage/quality decay over time |
 | Dependency entropy | external dependency health |
 
-Use `/devbooks:entropy` to generate reports and identify refactor opportunities.
+Use `devbooks-entropy-monitor` skill to generate reports and identify refactor opportunities.
 
 Scripts (in `../skills/devbooks-entropy-monitor/scripts/`): `entropy-measure.sh`, `entropy-report.sh`
 
@@ -365,7 +343,7 @@ Scripts (in `../skills/devbooks-entropy-monitor/scripts/`): `entropy-measure.sh`
 When `<truth-root>` is empty:
 
 ```
-/devbooks:bootstrap
+Run devbooks-brownfield-bootstrap skill
 ```
 
 Generates:
@@ -383,7 +361,7 @@ Generates:
 For multi-repo analysis:
 
 ```
-/devbooks:federation
+Run devbooks-federation skill
 ```
 
 Analyzes cross-repo contracts and dependencies to support coordinated changes.
@@ -414,7 +392,7 @@ DevBooks Skills support graceful MCP (Model Context Protocol) degradation: you c
 - Timeout/failure → silently falls back to basic mode (non-blocking)
 - No manual “basic/enhanced” switch required
 
-To enable enhanced mode: configure CKB per `docs/Recommended-MCP.md` and run `/devbooks:index` to generate `index.scip`.
+To enable enhanced mode: configure CKB per `docs/Recommended-MCP.md` and run `devbooks-index-bootstrap` skill to generate `index.scip`.
 
 </details>
 
@@ -424,7 +402,7 @@ To enable enhanced mode: configure CKB per `docs/Recommended-MCP.md` and run `/d
 For strict proposal review, run the triangle debate:
 
 ```
-/devbooks:debate
+Run devbooks-proposal-debate-workflow skill
 ```
 
 Three roles:
@@ -448,13 +426,13 @@ If you're currently using [OpenSpec](https://github.com/Fission-AI/OpenSpec) wit
 
 ```bash
 # Using CLI (recommended)
-dev-playbooks-cn migrate --from openspec
+dev-playbooks migrate --from openspec
 
 # Preview changes first
-dev-playbooks-cn migrate --from openspec --dry-run
+dev-playbooks migrate --from openspec --dry-run
 
 # Keep original directory after migration
-dev-playbooks-cn migrate --from openspec --keep-old
+dev-playbooks migrate --from openspec --keep-old
 ```
 
 **What gets migrated:**
@@ -470,13 +448,13 @@ If you're using [GitHub spec-kit](https://github.com/github/spec-kit) with `spec
 
 ```bash
 # Using CLI (recommended)
-dev-playbooks-cn migrate --from speckit
+dev-playbooks migrate --from speckit
 
 # Preview changes first
-dev-playbooks-cn migrate --from speckit --dry-run
+dev-playbooks migrate --from speckit --dry-run
 
 # Keep original directories after migration
-dev-playbooks-cn migrate --from speckit --keep-old
+dev-playbooks migrate --from speckit --keep-old
 ```
 
 **Mapping rules:**
@@ -504,10 +482,10 @@ Both migration scripts support:
 
 After migration:
 
-1. Run `dev-playbooks-cn init` to set up DevBooks Skills
+1. Run `dev-playbooks init` to set up DevBooks Skills
 2. Review migrated files in `dev-playbooks/`
 3. Update `verification.md` files with proper AC mappings
-4. Run `/devbooks:bootstrap` if you need baseline specs
+4. Run `devbooks-brownfield-bootstrap` skill if you need baseline specs
 
 ---
 
@@ -524,20 +502,17 @@ dev-playbooks/
 ├── changes/               # Change packages (workspace)
 ├── scripts/               # Helper scripts
 └── docs/                  # Documentation
-    ├── slash-commands-guide.md
-    ├── Recommended-MCP.md
-    ├── devbooks-integration-template.md
-    └── installation-prompt.md
+    ├── devbooks-setup-guide.md   # Configuration guide
+    ├── workflow-diagram.svg      # Workflow visualization
+    └── Recommended-MCP.md        # MCP configuration
 ```
 
 ---
 
 ## Documentation
 
-- [Slash command guide](docs/slash-commands-guide.md)
+- [Setup guide](docs/devbooks-setup-guide.md)
 - [MCP configuration recommendations](docs/Recommended-MCP.md)
-- [Integration template](docs/devbooks-integration-template.md)
-- [Installation prompt](docs/installation-prompt.md)
 
 ---
 
