@@ -131,23 +131,27 @@ const AI_TOOLS = [
     instructionFile: '.github/copilot-instructions.md',
     available: true
   },
+
+  // === Continue (Rules/Prompts system) ===
   {
     id: 'continue',
     name: 'Continue',
     description: 'Continue (VS Code / JetBrains)',
-    skillsSupport: SKILLS_SUPPORT.AGENTS,
+    skillsSupport: SKILLS_SUPPORT.RULES,
     slashDir: '.continue/prompts/devbooks',
+    rulesDir: '.continue/rules',
     instructionFile: null,
     available: true
   },
 
-  // === Basic support ===
+  // === Codex CLI (Full Skills support) ===
   {
     id: 'codex',
     name: 'Codex CLI',
     description: 'OpenAI Codex CLI',
-    skillsSupport: SKILLS_SUPPORT.BASIC,
+    skillsSupport: SKILLS_SUPPORT.FULL,
     slashDir: null,
+    skillsDir: path.join(os.homedir(), '.codex', 'skills'),
     globalSlashDir: path.join(os.homedir(), '.codex', 'prompts'),
     instructionFile: 'AGENTS.md',
     available: true
@@ -253,20 +257,16 @@ function printSkillsSupportInfo() {
   console.log(chalk.gray('─'.repeat(50)));
   console.log();
 
-  console.log(chalk.green('★ Full Skills') + chalk.gray(' - Claude Code, Qoder'));
+  console.log(chalk.green('★ Full Skills') + chalk.gray(' - Claude Code, Codex CLI, Qoder'));
   console.log(chalk.gray('   └ Callable Skills/Agents with isolated context'));
   console.log();
 
-  console.log(chalk.blue('◆ Rules System') + chalk.gray(' - Cursor, Windsurf, Gemini, Antigravity, OpenCode'));
+  console.log(chalk.blue('◆ Rules System') + chalk.gray(' - Cursor, Windsurf, Gemini, Antigravity, OpenCode, Continue'));
   console.log(chalk.gray('   └ Rules automatically apply to matching files/contexts (Skills-like)'));
   console.log();
 
-  console.log(chalk.yellow('● Project Instructions') + chalk.gray(' - GitHub Copilot, Continue'));
+  console.log(chalk.yellow('● Project Instructions') + chalk.gray(' - GitHub Copilot'));
   console.log(chalk.gray('   └ Project-level instruction files (referenced, not callable)'));
-  console.log();
-
-  console.log(chalk.gray('○ Basic Support') + chalk.gray(' - Codex'));
-  console.log(chalk.gray('   └ Global instructions only (simulated via AGENTS.md)'));
   console.log();
   console.log(chalk.gray('─'.repeat(50)));
   console.log();
@@ -276,14 +276,30 @@ function printSkillsSupportInfo() {
 // Interactive selection (inquirer)
 // ============================================================================
 
-async function promptToolSelection() {
+async function promptToolSelection(projectDir) {
   printSkillsSupportInfo();
 
-  const choices = AI_TOOLS.filter(t => t.available).map(tool => ({
-    name: `${tool.name} ${chalk.gray(`(${tool.description})`)} ${getSkillsSupportLabel(tool.skillsSupport)}`,
-    value: tool.id,
-    checked: tool.id === 'claude' // Default: Claude Code
-  }));
+  // Load saved config
+  const config = loadConfig(projectDir);
+  const savedTools = config.aiTools || [];
+  const hasSavedConfig = savedTools.length > 0;
+
+  const choices = AI_TOOLS.filter(t => t.available).map(tool => {
+    const isSelected = hasSavedConfig
+      ? savedTools.includes(tool.id)
+      : tool.id === 'claude'; // First run: default to Claude Code
+
+    return {
+      name: `${tool.name} ${chalk.gray(`(${tool.description})`)} ${getSkillsSupportLabel(tool.skillsSupport)}`,
+      value: tool.id,
+      checked: isSelected
+    };
+  });
+
+  if (hasSavedConfig) {
+    console.log(chalk.blue('ℹ') + ` Detected saved config: ${savedTools.join(', ')}`);
+    console.log();
+  }
 
   const selectedTools = await checkbox({
     message: 'Select AI tools to configure (space to toggle, enter to confirm)',
@@ -342,7 +358,7 @@ function installSlashCommands(toolIds, projectDir) {
 }
 
 // ============================================================================
-// Install Skills (Claude Code + Qoder only)
+// Install Skills (Claude Code, Codex CLI, Qoder)
 // ============================================================================
 
 function installSkills(toolIds, update = false) {
@@ -352,7 +368,8 @@ function installSkills(toolIds, update = false) {
     const tool = AI_TOOLS.find(t => t.id === toolId);
     if (!tool || tool.skillsSupport !== SKILLS_SUPPORT.FULL) continue;
 
-    if (toolId === 'claude' && tool.skillsDir) {
+    // Claude Code and Codex CLI support the same Skills format
+    if ((toolId === 'claude' || toolId === 'codex') && tool.skillsDir) {
       const skillsSrcDir = path.join(__dirname, '..', 'skills');
       const skillsDestDir = tool.skillsDir;
 
@@ -380,7 +397,7 @@ function installSkills(toolIds, update = false) {
         installedCount++;
       }
 
-      results.push({ tool: 'Claude Code', type: 'skills', count: installedCount, total: skillDirs.length });
+      results.push({ tool: tool.name, type: 'skills', count: installedCount, total: skillDirs.length });
     }
 
     // Qoder: create agents directory structure (but do not copy Skills; formats differ)
@@ -393,7 +410,7 @@ function installSkills(toolIds, update = false) {
 }
 
 // ============================================================================
-// Install Rules (Cursor, Windsurf, Gemini, Antigravity, OpenCode)
+// Install Rules (Cursor, Windsurf, Gemini, Antigravity, OpenCode, Continue)
 // ============================================================================
 
 function installRules(toolIds, projectDir) {
@@ -436,7 +453,11 @@ description: DevBooks workflow rules - auto-applied during feature and architect
     antigravity: `---
 description: DevBooks workflow rules
 ---`,
-    opencode: ''
+    opencode: '',
+    continue: `---
+name: DevBooks workflow rules
+description: DevBooks spec-driven development workflow
+---`
   };
 
   return `${frontmatter[toolId] || ''}
@@ -705,7 +726,7 @@ async function initCommand(projectDir, options) {
     }
     console.log(chalk.blue('ℹ') + ` Non-interactive mode: ${selectedTools.length > 0 ? selectedTools.join(', ') : 'none'}`);
   } else {
-    selectedTools = await promptToolSelection();
+    selectedTools = await promptToolSelection(projectDir);
   }
 
   // Create project structure
@@ -911,12 +932,6 @@ function showHelp() {
   console.log();
   console.log(chalk.yellow('  ● Project instructions support:'));
   for (const tool of groupedTools[SKILLS_SUPPORT.AGENTS]) {
-    console.log(`    ${tool.id.padEnd(15)} ${tool.name}`);
-  }
-
-  console.log();
-  console.log(chalk.gray('  ○ Basic support:'));
-  for (const tool of groupedTools[SKILLS_SUPPORT.BASIC]) {
     console.log(`    ${tool.id.padEnd(15)} ${tool.name}`);
   }
 

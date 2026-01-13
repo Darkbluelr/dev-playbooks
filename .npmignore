@@ -1,5 +1,8 @@
 # Files excluded from the npm package
 
+# macOS
+.DS_Store
+
 # Repo-internal DevBooks playbooks (do not publish)
 dev-playbooks/
 
@@ -20,14 +23,10 @@ tests/
 .git/
 .gitignore
 
-# Development files
-*.md
-!README.md
-
 # MCP
 mcp/
 
-# Docs (keep README only)
+# Docs
 docs/
 
 # Setup files (templates live under templates/)
@@ -42,9 +41,8 @@ scripts/install-skills.sh
 # Dev proposal docs
 DEVBOOKS-EVOLUTION-PROPOSAL.md
 
-# AI-CLI-specific files (DevBooks should be AI-agnostic)
+# Repo-only instruction files
 CLAUDE.md
 AGENTS.md
 templates/CLAUDE.md
 templates/AGENTS.md
-templates/claude-commands/

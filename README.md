@@ -78,17 +78,16 @@ AI coding assistants are powerful, but often **unpredictable**:
 
 ### Supported AI Tools
 
-| Tool | Slash Commands | Natural Language | Config File |
-|------|----------------|------------------|-------------|
-| **Claude Code** | `/devbooks:*` | Supported | `CLAUDE.md` |
-| **Codex CLI** | `/devbooks:*` | Supported | `AGENTS.md` |
-| **Cursor** | - | Supported | `.cursorrules` |
-| **Windsurf** | - | Supported | `.windsurfrules` |
-| **Continue.dev** | - | Supported | `.continuerules` |
-| **GitHub Copilot** | - | Supported | `.github/copilot-instructions.md` |
-| **Gemini Code Assist** | - | Supported | - |
-| **Aider** | - | Supported | `.aider.conf.yml` |
-| **Cline** | - | Supported | `.clinerules` |
+| Tool | Support Level | Slash Commands | Config File |
+|------|---------------|----------------|-------------|
+| **Claude Code** | Full Skills | `/devbooks:*` | `CLAUDE.md` |
+| **Codex CLI** | Full Skills | `/devbooks:*` | `AGENTS.md` |
+| **Qoder** | Full Skills | `/devbooks:*` | `AGENTS.md` |
+| **Cursor** | Rules | - | `.cursor/rules/` |
+| **Windsurf** | Rules | - | `.windsurf/rules/` |
+| **Gemini CLI** | Rules | - | `GEMINI.md` |
+| **Continue** | Rules | - | `.continue/rules/` |
+| **GitHub Copilot** | Instructions | - | `.github/copilot-instructions.md` |
 
 > **Tip**: For tools without Slash command support, use natural language, e.g., "Run DevBooks proposal skill..."
 
