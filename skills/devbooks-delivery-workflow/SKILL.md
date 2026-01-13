@@ -20,8 +20,8 @@ tools:
 Before execution, **must** search for configuration in the following order (stop when found):
 1. `.devbooks/config.yaml` (if exists) -> Parse and use its mappings
 2. `dev-playbooks/project.md` (if exists) -> DevBooks 2.0 protocol, use default mappings
-4. `project.md` (if exists) -> template protocol, use default mappings
-5. If still undetermined -> **Stop and ask the user**
+3. `project.md` (if exists) -> template protocol, use default mappings
+4. If still undetermined -> **Stop and ask the user**
 
 **Key Constraints**:
 - If `agents_doc` (rules document) is specified in configuration, **must read that document first** before executing any operations

@@ -6,7 +6,8 @@ Goal: One-time completion of "project profile and conventions + baseline specs" 
 
 Core principles:
 - **Do not try to document the whole system at once**: start with external-facing surfaces (API/CLI/events/config/Schema), then fill internal core later.
-- **Evidence first**: every spec item must point to code/tests/logs/runtime behavior; if unsure, write `TBD` + a verification plan.
+- **Evidence first**: every spec item must point to code/tests/logs/runtime behavior.
+- **TBD policy**: `spec.md` forbids TBD/TODO (gates will reject); unknown items must go into `verification.md` Open Questions or MANUAL verification tasks with a specific verification plan.
 - **Stabilize current behavior before refactoring**: the baseline phase should avoid behavioral change; do not "patch specs while changing behavior" and drift the truth source.
 
 ---
@@ -60,7 +61,7 @@ In `<change-root>/<baseline-id>/specs/<capability>/spec.md`, write **current-sta
 - Requirements/Scenarios must be observable (inputs/outputs/error semantics/invariants)
 
 Notes:
-- If uncertain, write `TBD` and add a verification action to the plan section of `verification.md` (do not guess).
+- If uncertain: **do not write TBD in spec.md**; add a verification action to `verification.md` Open Questions or MANUAL verification tasks (with a verification plan).
 - If you find obvious bugs, do not fix them during baseline; create a separate change for fixes (avoid mixing behavior changes into baseline).
 
 ---

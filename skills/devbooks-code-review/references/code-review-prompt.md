@@ -98,3 +98,8 @@ Output format:
 2) Maintainability risks (recommended)
 3) Style & consistency suggestions (optional)
 4) If new quality gates are needed (lint/complexity/dependency rules), propose them concretely
+5) **Provide an explicit verdict**:
+   - ✅ **APPROVED**: Code quality meets standards, ready to merge
+   - ⚠️ **APPROVED WITH COMMENTS**: Can merge but recommend follow-up improvements (list specific items)
+   - 🔄 **REQUEST CHANGES**: Requires fixes before re-review (list must-fix items)
+   - ❌ **REJECTED**: Serious issues or design flaws, needs to return to design phase

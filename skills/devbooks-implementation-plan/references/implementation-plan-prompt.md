@@ -24,11 +24,13 @@ Tasks:
 
 Hard constraints (must follow):
 - Output an **implementation plan**, not code.
-- Do not output: full runnable implementation code, full function bodies, or code blocks longer than 25 lines.
+- Do not output: full runnable implementation code, full function bodies, or code blocks longer than 25 lines (Algorithm Spec pseudocode is an exception; see Algorithm section).
 - Allowed output: interface signatures (no implementation), data field lists, event schemas, migration/table sketches, and "complex algorithm pseudocode or structured natural-language flows" (see Algorithm section).
 - Task granularity must support tracking and parallel development: each subtask should be 1 PR or 0.5–2 days of work (adjust to project reality); avoid "giant tasks" or micro-step checklists.
-- **Small change constraint**: each subtask should change no more than **200 lines** of code (excluding generated code); if more, split into independently verifiable subtasks.
-- Plans must be verifiable: each subtask must have explicit Acceptance Criteria and map to tests when possible (unit/integration/architecture/restore tests).
+- **Small change constraint**: each subtask should default to **≤200 lines** of code change (excluding generated code). Exceeding 200 lines triggers a split evaluation. If splitting would harm structural integrity (cohesion/boundaries/dependency direction), exceptions are allowed but you must:
+  1) Document "why it cannot be split + risk mitigation" in Guardrail Conflicts (e.g., LSC slices/codemod/stronger acceptance anchors);
+  2) Ensure acceptance anchors provide full coverage and rollback capability.
+- Plans must be verifiable: each subtask must have explicit Acceptance Criteria and map to test types/run commands/anchor categories (unit/integration/architecture/restore tests). **Note**: specific Test IDs and test case details are Test Owner's responsibility; Planner only declares "what kind of acceptance anchors are needed" to maintain role separation.
 - If info is insufficient: do not stop at questions; list **Assumptions** and continue. Open questions max 3, placed at the end.
 
 Scope and change control (must follow):

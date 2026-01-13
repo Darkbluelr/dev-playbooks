@@ -83,6 +83,8 @@ Inspired by VS Code’s `.github/pull_request_template.md`, this document define
 | L | 500–1000 | 2+ hours | Consider splitting |
 | XL | > 1000 | half day+ | **Must split** |
 
+**Note**: Line count is a **review cost signal**, not a hard structural splitting rule. When splitting would harm module cohesion, distort boundaries, or create duplication, exceeding is allowed but should be explained.
+
 Principle: one PR does one thing; keep it atomic.
 
 ---

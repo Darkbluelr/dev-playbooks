@@ -23,7 +23,7 @@ Hard constraints (must follow):
 
 Quality gates (must execute):
 - Run tests/static checks related to the change; retain failure outputs as fix evidence.
-- Fix in small steps: each change focuses on one plan item, **single commit < 200 lines**.
+- Fix in small steps: each change focuses on one plan item, **default target: single commit ≤200 lines**; if structural integrity requires exceeding, explain in commit message or PR, and ensure acceptance anchors cover the change and commit sequence is rollbackable.
 - Avoid smells: long functions (P95 < 50 lines), deep nesting, duplicate logic, implicit dependencies, cycles, excessive coupling, cross-layer calls.
 - If lint/complexity/dependency rules exist, comply; if not, state "recommended quality gates to add."
 

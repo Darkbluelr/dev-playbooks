@@ -96,6 +96,10 @@ Execution steps:
 2) Implement test code in the repo (Part B)
 3) Run tests to confirm a **Red** baseline and store failing evidence in `<change-root>/<change-id>/evidence/`
 4) Output a short summary: covered ACs, how to run, which tests are optional/skipped and why
+5) **Provide an explicit verdict**:
+   - ✅ **PASS**: All tests are ready, Red baseline established, ready to hand off to Coder
+   - ⚠️ **PASS WITH CONDITIONS**: Tests are ready but there are pending items (list specific conditions)
+   - ❌ **FAIL**: Cannot complete tests (list blocking reasons and suggested next steps)
 
 ========================
 Z) Prototype mode: characterization tests
