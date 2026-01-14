@@ -1,7 +1,7 @@
 ---
 name: devbooks-test-reviewer
 description: "devbooks-test-reviewer: Reviews tests/ quality (coverage, edge cases, readability, maintainability) as the Test Reviewer role. Outputs review comments only and never changes code. Use when the user requests test review/test quality/coverage/edge cases, or when acting as the test reviewer during the DevBooks apply phase."
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read

@@ -1,7 +1,7 @@
 ---
 name: devbooks-delivery-workflow
 description: devbooks-delivery-workflow: Run a change through a traceable closed-loop workflow (Design->Plan->Trace->Verify->Implement->Archive), with clear DoD, traceability matrix, and role isolation (Test Owner and Coder separation). Use when the user says "run closed-loop/delivery acceptance/traceability matrix/DoD/close and archive/acceptance workflow" etc.
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read

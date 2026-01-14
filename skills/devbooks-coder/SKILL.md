@@ -1,7 +1,7 @@
 ---
 name: devbooks-coder
 description: "devbooks-coder: Implements features strictly following tasks.md as the Coder role and runs quality gates. Modifying tests/ is prohibited; tests and static checks serve as the sole completion criteria. Use when the user says 'implement as planned/fix failing tests/make all gates green/implement task items/don't modify tests', or when executing as coder during the DevBooks apply phase."
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read

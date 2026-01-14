@@ -1,7 +1,7 @@
 ---
 name: devbooks-test-owner
 description: devbooks-test-owner: As the Test Owner role, converts design/specs into executable acceptance tests and traceability documentation (verification.md), emphasizing independent dialogue from implementation (Coder) and establishing Red baseline first. Use when users say "write tests/acceptance tests/traceability matrix/verification.md/Red-Green/contract tests/fitness tests", or when executing as test owner during DevBooks apply phase.
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read

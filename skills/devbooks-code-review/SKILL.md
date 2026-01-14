@@ -1,7 +1,7 @@
 ---
 name: devbooks-code-review
 description: devbooks-code-review: Perform readability/consistency/dependency health/code smell reviews as a Reviewer role, outputting only review comments and actionable suggestions without discussing business correctness. Use when user says "help me do code review/review maintainability/code smells/dependency risks/consistency suggestions", or when executing as reviewer during DevBooks apply phase.
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read

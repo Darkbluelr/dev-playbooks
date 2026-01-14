@@ -1,7 +1,7 @@
 ---
 name: devbooks-design-backport
 description: devbooks-design-backport: Backport newly discovered constraints, conflicts, or gaps from implementation back to design.md (keeping design as the golden truth), with annotated decisions and impacts. Use when the user says "backport design/update design doc/Design Backport/design-implementation mismatch/need to clarify constraints" etc.
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read

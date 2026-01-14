@@ -1,7 +1,7 @@
 ---
 name: devbooks-router
 description: devbooks-router: DevBooks workflow entry guidance. Helps users determine which skill to start with, detects project current status, and provides shortest closed-loop path. Use when user says "what's next/where to start/run DevBooks closed-loop/project status" etc. Note: Routing after skill completion is handled by each skill itself, no need to call router.
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read

@@ -1,7 +1,7 @@
 ---
 name: devbooks-brownfield-bootstrap
 description: "devbooks-brownfield-bootstrap: Brownfield project initialization. When the truth directory is empty, generate project profile, glossary, baseline specs, and minimum verification anchors to avoid 'patching specs while changing behavior'. Use when user says 'brownfield init/baseline specs/project profile/establish glossary/onboard legacy project to context protocol' etc."
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read

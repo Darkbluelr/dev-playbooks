@@ -613,7 +613,53 @@ function installSkills(toolIds, update = false) {
 }
 
 // ============================================================================
-// 安装 Rules（Cursor, Windsurf, Gemini, Antigravity, OpenCode, Continue）
+// Install Claude Code Custom Subagents (solves built-in subagents cannot access Skills)
+// ============================================================================
+
+function installClaudeAgents(toolIds, projectDir, update = false) {
+  const results = [];
+
+  // Only Claude Code needs custom subagents
+  if (!toolIds.includes('claude')) return results;
+
+  const agentsSrcDir = path.join(__dirname, '..', 'templates', 'claude-agents');
+  const agentsDestDir = path.join(projectDir, '.claude', 'agents');
+
+  if (!fs.existsSync(agentsSrcDir)) return results;
+
+  const agentFiles = fs.readdirSync(agentsSrcDir)
+    .filter(name => name.endsWith('.md'));
+
+  if (agentFiles.length === 0) return results;
+
+  fs.mkdirSync(agentsDestDir, { recursive: true });
+
+  let installedCount = 0;
+  for (const agentFile of agentFiles) {
+    const srcPath = path.join(agentsSrcDir, agentFile);
+    const destPath = path.join(agentsDestDir, agentFile);
+
+    if (fs.existsSync(destPath) && !update) continue;
+
+    fs.copyFileSync(srcPath, destPath);
+    installedCount++;
+  }
+
+  if (installedCount > 0) {
+    results.push({
+      tool: 'Claude Code',
+      type: 'agents',
+      count: installedCount,
+      total: agentFiles.length,
+      path: agentsDestDir
+    });
+  }
+
+  return results;
+}
+
+// ============================================================================
+// Install Rules (Cursor, Windsurf, Gemini, Antigravity, OpenCode, Continue)
 // ============================================================================
 
 function installRules(toolIds, projectDir, update = false) {
@@ -992,15 +1038,23 @@ async function initCommand(projectDir, options) {
   });
 
   if (fullSupportTools.length > 0) {
-    const skillsSpinner = ora('安装 Skills...').start();
+    const skillsSpinner = ora('Installing Skills...').start();
     const skillsResults = installSkills(fullSupportTools);
-    skillsSpinner.succeed('Skills 安装完成');
+    skillsSpinner.succeed('Skills installed');
 
     for (const result of skillsResults) {
       if (result.count > 0) {
-        console.log(chalk.gray(`  └ ${result.tool}: ${result.count}/${result.total} 个 ${result.type}`));
+        console.log(chalk.gray(`  └ ${result.tool}: ${result.count}/${result.total} ${result.type}`));
       } else if (result.note) {
         console.log(chalk.gray(`  └ ${result.tool}: ${result.note}`));
+      }
+    }
+
+    // Install Claude Code custom subagents (solves built-in subagents cannot access Skills)
+    const agentsResults = installClaudeAgents(fullSupportTools, projectDir);
+    for (const result of agentsResults) {
+      if (result.count > 0) {
+        console.log(chalk.gray(`  └ ${result.tool}: ${result.count} custom subagents → ${result.path}`));
       }
     }
   }
@@ -1105,6 +1159,14 @@ async function updateCommand(projectDir) {
     }
     if (result.removed && result.removed > 0) {
       console.log(chalk.green('✓') + ` ${result.tool} ${result.type}: removed ${result.removed} obsolete skills`);
+    }
+  }
+
+  // Update Claude Code custom subagents (project directory)
+  const agentsResults = installClaudeAgents(configuredTools, projectDir, true);
+  for (const result of agentsResults) {
+    if (result.count > 0) {
+      console.log(chalk.green('✓') + ` ${result.tool}: updated ${result.count} custom subagents`);
     }
   }
 

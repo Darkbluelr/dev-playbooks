@@ -1,7 +1,7 @@
 ---
 name: devbooks-implementation-plan
 description: devbooks-implementation-plan: Derive coding plan (tasks.md) from design documents, output trackable mainline plan/temporary plan/breakpoint zones, and bind acceptance anchors. Use when the user says "write coding plan/Implementation Plan/tasks.md/task breakdown/parallel splitting/milestones/acceptance anchors" etc.
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read

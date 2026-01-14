@@ -1,7 +1,7 @@
 ---
 name: devbooks-impact-analysis
 description: devbooks-impact-analysis: Performs impact analysis before cross-module/cross-file/external contract changes, producing the Impact section (Scope/Impacts/Risks/Minimal Diff/Open Questions) that can be directly written to proposal.md. Use when the user mentions "impact analysis/change scope control/reference lookup/affected modules/compatibility risks" etc.
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read

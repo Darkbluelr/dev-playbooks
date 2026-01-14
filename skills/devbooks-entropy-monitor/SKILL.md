@@ -1,7 +1,7 @@
 ---
 name: devbooks-entropy-monitor
 description: devbooks-entropy-monitor: Periodically collect system entropy metrics (structural entropy/change entropy/test entropy/dependency entropy), generate quantitative reports, and recommend refactoring when thresholds are exceeded. Use when user mentions "entropy measurement/complexity trends/refactoring warnings/code health/technical debt measurement".
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read

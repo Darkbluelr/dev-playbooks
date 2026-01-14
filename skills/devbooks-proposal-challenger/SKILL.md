@@ -1,7 +1,7 @@
 ---
 name: devbooks-proposal-challenger
 description: devbooks-proposal-challenger: Challenge proposal.md as Challenger + gap analysis, identifying risks/omissions/inconsistencies and providing conclusions, discovering missing acceptance criteria and uncovered scenarios. Use when user says "challenge proposal/critique/risk assessment/proposal debate challenger/gap analysis" etc.
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read

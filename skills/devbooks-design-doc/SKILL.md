@@ -1,7 +1,7 @@
 ---
 name: devbooks-design-doc
 description: devbooks-design-doc: Produce design documents (design.md) for change packages, focusing only on What/Constraints and AC-xxx, without implementation steps. Use when user says "write design doc/Design Doc/architecture design/constraints/acceptance criteria/AC/C4 Delta" etc.
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read

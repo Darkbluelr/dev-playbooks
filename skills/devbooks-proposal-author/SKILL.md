@@ -1,7 +1,7 @@
 ---
 name: devbooks-proposal-author
 description: "devbooks-proposal-author: Author change proposals (proposal.md) with Why/What/Impact + Debate Packet, serving as the entry point for subsequent Design/Spec/Plan phases. For design decisions, presents options to users for their choice. Use when the user mentions 'write proposal/proposal/why change/impact scope/bad smell refactoring proposal' etc."
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read

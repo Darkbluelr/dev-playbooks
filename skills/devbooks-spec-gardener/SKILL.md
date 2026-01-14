@@ -1,7 +1,7 @@
 ---
 name: devbooks-spec-gardener
 description: devbooks-spec-gardener: Prune and maintain <truth-root> before archiving (deduplicate/merge, remove obsolete, organize directories, fix inconsistencies) to prevent specs from accumulating out of control. Use when user says "spec gardener/deduplicate specs/pre-archive cleanup/clean obsolete specs", or during DevBooks archive/pre-archive finalization.
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read

@@ -1,7 +1,7 @@
 ---
 name: devbooks-proposal-judge
 description: "devbooks-proposal-judge: Make rulings (Judge) on proposals during the proposal phase, output Approved/Revise/Rejected and write back to the Decision Log in proposal.md. Use when user says 'judge proposal/proposal review/Approved Revise Rejected/decision log' etc."
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read

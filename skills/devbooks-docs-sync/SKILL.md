@@ -1,7 +1,7 @@
 ---
 name: devbooks-docs-sync
 description: "devbooks-docs-sync: Maintains consistency between project documentation (README, API docs, and other user-facing docs) and code. Supports incremental mode (for changes) and global mode (consistency check). Use when user says update docs/sync docs/align docs/README update/API docs update."
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read

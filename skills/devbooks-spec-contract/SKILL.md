@@ -1,7 +1,7 @@
 ---
 name: devbooks-spec-contract
 description: devbooks-spec-contract: Define external behavior specifications and contracts (Requirements/Scenarios/API/Schema/compatibility strategies/migrations), and suggest or generate contract tests. Combines the functionality of the original spec-delta and contract-data. Use when the user says "write spec/specification/contract/OpenAPI/Schema/compatibility strategy/contract tests" etc.
-tools:
+allowed-tools:
   - Glob
   - Grep
   - Read
