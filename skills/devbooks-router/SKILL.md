@@ -215,19 +215,36 @@ Trigger signals: User says "review/code smells/maintainability/dependency risks/
 
 Default routing:
 - `devbooks-code-review` (output actionable suggestions; do not change business conclusions or tests)
+- `devbooks-test-reviewer` (review test quality, coverage, edge cases)
 
-### D) Archive (Archive Phase)
+### D) Docs Sync (Documentation Sync)
+
+Trigger signals: User says "update docs/sync docs/README update/API docs" etc.
+
+Default routing:
+- `devbooks-docs-sync` (maintain user documentation consistency with code)
+  - Incremental mode: In change package context, only update docs related to this change
+  - Global mode: With --global parameter, scan all docs and generate difference report
+
+**Trigger conditions** (not required for every change):
+- Add/modify/remove public API
+- Change user-visible behavior
+- Modify configuration options
+- Change CLI commands
+
+### E) Archive (Archive Phase)
 
 Trigger signals: User says "archive/merge specs/close out/wrap up" etc.
 
 Default routing:
 - If spec deltas were produced this time: `devbooks-spec-gardener` (prune `<truth-root>/**` before archive merge)
 - If design decisions need to be written back: `devbooks-design-backport` (as needed)
+- If user documentation affected: `devbooks-docs-sync` (ensure docs consistent with code)
 
 Pre-archive deterministic checks (recommended):
 - `change-check.sh <change-id> --mode strict ...` (requires: proposal Approved, tasks all checked, trace matrix has no TODOs, structural gate decisions filled in)
 
-### E) Prototype (Prototype Mode)
+### F) Prototype (Prototype Mode)
 
 > Source: "The Mythical Man-Month" Chapter 11 "Plan to Throw One Away" — "The first system built is never suitable for use...plan to throw one away"
 

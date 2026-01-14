@@ -305,6 +305,160 @@ function getCliVersion() {
   }
 }
 
+// ============================================================================
+// Auto-update .gitignore and .npmignore
+// ============================================================================
+
+const IGNORE_MARKERS = {
+  start: '# DevBooks managed - DO NOT EDIT',
+  end: '# End DevBooks managed'
+};
+
+/**
+ * Get entries to add to .gitignore
+ * @param {string[]} toolIds - Selected AI tool IDs
+ * @returns {string[]} - Entries to ignore
+ */
+function getGitIgnoreEntries(toolIds) {
+  const entries = [
+    '# DevBooks local config (contains user preferences, should not be committed)',
+    '.devbooks/'
+  ];
+
+  // Add corresponding AI tool directories based on selected tools
+  for (const toolId of toolIds) {
+    const tool = AI_TOOLS.find(t => t.id === toolId);
+    if (!tool) continue;
+
+    // Add slash command directory
+    if (tool.slashDir) {
+      const topDir = tool.slashDir.split('/')[0];
+      if (!entries.includes(topDir + '/')) {
+        entries.push(`${topDir}/`);
+      }
+    }
+
+    // Add rules directory
+    if (tool.rulesDir) {
+      const topDir = tool.rulesDir.split('/')[0];
+      if (!entries.includes(topDir + '/')) {
+        entries.push(`${topDir}/`);
+      }
+    }
+
+    // Add agents directory (e.g., .github/instructions)
+    if (tool.instructionsDir) {
+      const topDir = tool.instructionsDir.split('/')[0];
+      if (topDir !== '.github') { // .github directory usually needs to be kept
+        if (!entries.includes(topDir + '/')) {
+          entries.push(`${topDir}/`);
+        }
+      }
+    }
+  }
+
+  return entries;
+}
+
+/**
+ * Get entries to add to .npmignore
+ * @returns {string[]} - Entries to ignore
+ */
+function getNpmIgnoreEntries() {
+  return [
+    '# DevBooks development docs (not needed at runtime)',
+    'dev-playbooks/',
+    '.devbooks/',
+    '',
+    '# AI tool config directories',
+    '.claude/',
+    '.cursor/',
+    '.windsurf/',
+    '.gemini/',
+    '.agent/',
+    '.opencode/',
+    '.continue/',
+    '.qoder/',
+    '.github/instructions/',
+    '.github/copilot-instructions.md',
+    '',
+    '# DevBooks instruction files',
+    'CLAUDE.md',
+    'AGENTS.md',
+    'GEMINI.md'
+  ];
+}
+
+/**
+ * Update ignore file, preserving user-defined content
+ * @param {string} filePath - ignore file path
+ * @param {string[]} entries - Entries to add
+ * @returns {object} - { updated: boolean, action: 'created' | 'updated' | 'unchanged' }
+ */
+function updateIgnoreFile(filePath, entries) {
+  const managedBlock = [
+    IGNORE_MARKERS.start,
+    ...entries,
+    IGNORE_MARKERS.end
+  ].join('\n');
+
+  if (!fs.existsSync(filePath)) {
+    // File doesn't exist, create new file
+    fs.writeFileSync(filePath, managedBlock + '\n');
+    return { updated: true, action: 'created' };
+  }
+
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const startIdx = content.indexOf(IGNORE_MARKERS.start);
+  const endIdx = content.indexOf(IGNORE_MARKERS.end);
+
+  if (startIdx !== -1 && endIdx !== -1 && startIdx < endIdx) {
+    // Managed block exists, update it
+    const before = content.slice(0, startIdx);
+    const after = content.slice(endIdx + IGNORE_MARKERS.end.length);
+    const newContent = before + managedBlock + after;
+
+    if (newContent !== content) {
+      fs.writeFileSync(filePath, newContent);
+      return { updated: true, action: 'updated' };
+    }
+    return { updated: false, action: 'unchanged' };
+  }
+
+  // No managed block, append to end of file
+  const newContent = content.trimEnd() + '\n\n' + managedBlock + '\n';
+  fs.writeFileSync(filePath, newContent);
+  return { updated: true, action: 'updated' };
+}
+
+/**
+ * Setup project's ignore files
+ * @param {string[]} toolIds - Selected AI tool IDs
+ * @param {string} projectDir - Project directory
+ * @returns {object[]} - Results array
+ */
+function setupIgnoreFiles(toolIds, projectDir) {
+  const results = [];
+
+  // Update .gitignore
+  const gitIgnorePath = path.join(projectDir, '.gitignore');
+  const gitIgnoreEntries = getGitIgnoreEntries(toolIds);
+  const gitResult = updateIgnoreFile(gitIgnorePath, gitIgnoreEntries);
+  if (gitResult.updated) {
+    results.push({ file: '.gitignore', action: gitResult.action });
+  }
+
+  // Update .npmignore
+  const npmIgnorePath = path.join(projectDir, '.npmignore');
+  const npmIgnoreEntries = getNpmIgnoreEntries();
+  const npmResult = updateIgnoreFile(npmIgnorePath, npmIgnoreEntries);
+  if (npmResult.updated) {
+    results.push({ file: '.npmignore', action: npmResult.action });
+  }
+
+  return results;
+}
+
 function showVersion() {
   console.log(`${CLI_COMMAND} v${getCliVersion()}`);
 }
@@ -867,16 +1021,28 @@ async function initCommand(projectDir, options) {
     }
   }
 
-  // 安装指令文件
-  const instructionSpinner = ora('创建指令文件...').start();
+  // Install instruction files
+  const instructionSpinner = ora('Creating instruction files...').start();
   const instructionResults = installInstructionFiles(selectedTools, projectDir);
-  instructionSpinner.succeed(`创建了 ${instructionResults.length} 个指令文件`);
+  instructionSpinner.succeed(`Created ${instructionResults.length} instruction files`);
 
   for (const result of instructionResults) {
     console.log(chalk.gray(`  └ ${result.tool}: ${path.relative(projectDir, result.path)}`));
   }
 
-  // 完成
+  // Setup ignore files
+  const ignoreSpinner = ora('Configuring ignore files...').start();
+  const ignoreResults = setupIgnoreFiles(selectedTools, projectDir);
+  if (ignoreResults.length > 0) {
+    ignoreSpinner.succeed('Ignore files configured');
+    for (const result of ignoreResults) {
+      console.log(chalk.gray(`  └ ${result.file}: ${result.action}`));
+    }
+  } else {
+    ignoreSpinner.succeed('Ignore files already up to date');
+  }
+
+  // Done
   console.log();
   console.log(chalk.green('══════════════════════════════════════'));
   console.log(chalk.green('✓') + chalk.bold(' DevBooks 初始化完成！'));
