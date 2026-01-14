@@ -293,42 +293,101 @@ Detection results:
 
 ---
 
-## Next Step Recommendations
+## Deviation Detection and Persistence Protocol
 
-**Reference**: `skills/_shared/workflow-next-steps.md`
+**Reference**: `skills/_shared/references/deviation-detection-routing-protocol.md`
 
-After completing test-owner (Red baseline produced), the next step is:
+### Real-time Persistence Requirements
 
-| Condition | Next Skill | Reason |
-|-----------|------------|--------|
-| Red baseline produced | `devbooks-coder` | Coder implements to make gates Green |
+During test writing, you **must immediately** write to `deviation-log.md` in these situations:
 
-**CRITICAL**:
-- Coder **must work in a separate conversation/instance**
-- Test Owner and Coder cannot share the same chat context
-- The workflow order is:
-```
-test-owner (Chat A) → coder (Chat B) → code-review
-```
+| Situation | Type | Example |
+|-----------|------|---------|
+| Found boundary case not covered by design.md | DESIGN_GAP | Concurrent write scenario |
+| Found additional constraints needed | CONSTRAINT_CHANGE | Need to add parameter validation |
+| Found interface adjustment needed | API_CHANGE | Need to add return field |
+| Found configuration change needed | CONSTRAINT_CHANGE | Need new config parameter |
 
-### Output Template
-
-After completing test-owner (Red baseline), output:
+### deviation-log.md Format
 
 ```markdown
-## Recommended Next Step
+# Deviation Log
 
-**Next: `devbooks-coder`** (MUST be in a separate conversation)
+## Pending Backport Records
 
-Reason: Red baseline has been produced. The next step is to have Coder implement per tasks.md to make all gates Green. Coder must work in a separate conversation to ensure role isolation.
-
-### How to invoke (in a SEPARATE conversation)
-```
-Run devbooks-coder skill for change <change-id>
+| Time | Type | Description | Affected Files | Backported |
+|------|------|-------------|----------------|:----------:|
+| 2024-01-15 09:30 | DESIGN_GAP | Found concurrent scenario not covered | tests/concurrent.test.ts | ❌ |
 ```
 
-**Important**: Coder cannot modify `tests/**`. If test changes are needed, hand back to Test Owner.
+### Compact Protection
+
+**Important**: deviation-log.md is a persistent file unaffected by compact. Even if conversation is compressed, deviation information is preserved.
+
+---
+
+## Completion Status and Routing
+
+### Completion Status Classification (MECE)
+
+| Code | Status | Determination Criteria | Next Step |
+|:----:|--------|------------------------|-----------|
+| ✅ | COMPLETED | Red baseline produced, no deviations | `devbooks-coder` (separate session) |
+| ⚠️ | COMPLETED_WITH_DEVIATION | Red baseline produced, deviation-log has pending records | `devbooks-design-backport` |
+| ❌ | BLOCKED | Needs external input/decision | Record breakpoint, wait for user |
+| 💥 | FAILED | Test framework issues etc. | Fix and retry |
+
+### Status Determination Flow
+
 ```
+1. Check if deviation-log.md has "| ❌" records
+   → Yes: COMPLETED_WITH_DEVIATION
+
+2. Check if Red baseline is produced
+   - verification.md exists with traceability matrix
+   - evidence/red-baseline/ exists
+   → No: BLOCKED or FAILED
+
+3. All checks passed
+   → COMPLETED
+```
+
+### Routing Output Template (Required)
+
+After completing test-owner, **must** output in this format:
+
+```markdown
+## Completion Status
+
+**Status**: ✅ COMPLETED / ⚠️ COMPLETED_WITH_DEVIATION / ❌ BLOCKED / 💥 FAILED
+
+**Red Baseline**: Produced / Not completed
+
+**Deviation Records**: Has N pending / None
+
+## Next Step
+
+**Recommended**: `devbooks-xxx skill` (separate session)
+
+**Reason**: [specific reason]
+
+### How to invoke
+Run devbooks-xxx skill for change <change-id>
+```
+
+### Specific Routing Rules
+
+| My Status | Next Step | Reason |
+|-----------|-----------|--------|
+| COMPLETED | `devbooks-coder` (separate session) | Red baseline produced, Coder implements to make Green |
+| COMPLETED_WITH_DEVIATION | `devbooks-design-backport` | Backport design first, then hand to Coder |
+| BLOCKED | Wait for user | Record breakpoint area |
+| FAILED | Fix and retry | Analyze failure reason |
+
+**Critical Constraints**:
+- **Role Isolation**: Coder must work in a **separate conversation/instance**
+- Test Owner and Coder cannot share the same session context
+- If deviations exist, must design-backport first before handing to Coder
 
 ---
 

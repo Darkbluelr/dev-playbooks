@@ -245,45 +245,104 @@ Detection Results:
 
 ---
 
-## Next Step Recommendations
+## Deviation Detection and Persistence Protocol
 
-**Reference**: `skills/_shared/workflow-next-steps.md`
+**Reference**: `skills/_shared/references/deviation-detection-routing-protocol.md`
 
-After completing coder (all tasks done, gates Green), the next step is:
+### Real-time Persistence Requirements
 
-| Condition | Next Skill | Reason |
-|-----------|------------|--------|
-| All tasks completed | `devbooks-code-review` | Review for readability/consistency |
-| Test changes needed | Hand back to `devbooks-test-owner` | Coder cannot modify tests |
+During implementation, you **must immediately** write to `deviation-log.md` in these situations:
 
-**CRITICAL**:
-- Coder **cannot modify** `tests/**`
-- If test issues are found, hand back to Test Owner (separate chat)
-- The workflow order is:
-```
-coder → code-review → spec-gardener (if spec deltas) → archive
-```
+| Situation | Type | Example |
+|-----------|------|---------|
+| Added functionality not in tasks.md | NEW_FEATURE | Added warmup() method |
+| Modified constraint from design.md | CONSTRAINT_CHANGE | Timeout changed to 60s |
+| Found edge case not covered by design | DESIGN_GAP | Concurrency scenario |
+| Public interface differs from design | API_CHANGE | Added parameter |
 
-### Output Template
-
-After completing coder (all gates Green), output:
+### deviation-log.md Format
 
 ```markdown
-## Recommended Next Step
+# Deviation Log
 
-**Next: `devbooks-code-review`**
+## Pending Backport Records
 
-Reason: All tasks are complete and gates are Green. The next step is code review for readability, consistency, and maintainability.
+| Time | Type | Description | Affected Files | Backported |
+|------|------|-------------|----------------|:----------:|
+| 2024-01-15 10:30 | NEW_FEATURE | Added cache warmup feature | src/cache.ts | ❌ |
+```
+
+### Compact Protection
+
+**Important**: deviation-log.md is a persistent file unaffected by compact. Even if the conversation is compressed, deviation information is preserved.
+
+---
+
+## Completion Status and Routing
+
+### Completion Status Classification (MECE)
+
+| Code | Status | Determination Criteria | Next Step |
+|:----:|--------|------------------------|-----------|
+| ✅ | COMPLETED | All tasks done, no deviations | `devbooks-code-review` |
+| ⚠️ | COMPLETED_WITH_DEVIATION | Tasks done, deviation-log has pending records | `devbooks-design-backport` |
+| 🔄 | HANDOFF | Found test issues needing modification | `devbooks-test-owner` |
+| ❌ | BLOCKED | Needs external input/decision | Record breakpoint, wait for user |
+| 💥 | FAILED | Gates not passed | Fix and retry |
+
+### Status Determination Flow
+
+```
+1. Check if deviation-log.md has "| ❌" records
+   → Yes: COMPLETED_WITH_DEVIATION
+
+2. Check if tests/ modification needed
+   → Yes: HANDOFF to test-owner
+
+3. Check if tasks.md is fully completed
+   → No: BLOCKED or FAILED
+
+4. All checks passed
+   → COMPLETED
+```
+
+### Routing Output Template (Required)
+
+After completing coder, you **must** output in this format:
+
+```markdown
+## Completion Status
+
+**Status**: ✅ COMPLETED / ⚠️ COMPLETED_WITH_DEVIATION / 🔄 HANDOFF / ❌ BLOCKED / 💥 FAILED
+
+**Task Progress**: X/Y completed
+
+**Deviation Records**: Has N pending / None
+
+## Next Step
+
+**Recommended**: `devbooks-xxx skill`
+
+**Reason**: [specific reason]
 
 ### How to invoke
-```
-Run devbooks-code-review skill for change <change-id>
+Run devbooks-xxx skill for change <change-id>
 ```
 
-### After Review
-- If spec deltas exist: `devbooks-spec-gardener` to merge into truth
-- If no spec deltas: Archive complete
-```
+### Specific Routing Rules
+
+| My Status | Next Step | Reason |
+|-----------|-----------|--------|
+| COMPLETED | `devbooks-code-review` | Review readability/consistency |
+| COMPLETED_WITH_DEVIATION | `devbooks-design-backport` | Backport design first, then review |
+| HANDOFF (test issue) | `devbooks-test-owner` | Coder cannot modify tests |
+| BLOCKED | Wait for user | Record breakpoint area |
+| FAILED | Fix and retry | Analyze failure reason |
+
+**Critical Constraints**:
+- Coder **can never modify** `tests/**`
+- If test issues found, must HANDOFF to Test Owner (separate session)
+- If deviations exist, must design-backport first before continuing
 
 ---
 

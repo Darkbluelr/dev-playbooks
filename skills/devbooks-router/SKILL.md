@@ -1,6 +1,6 @@
 ---
 name: devbooks-router
-description: "devbooks-router: DevBooks workflow routing and next-step recommendations. Routes user requests (proposal/design/spec/plan/test/implement/review/archive, or DevBooks proposal/apply/archive) to appropriate devbooks-* Skills, providing artifact destinations and shortest closed-loop paths. Use when user asks 'what's next/route to appropriate skill/run DevBooks closed-loop' etc."
+description: devbooks-router: DevBooks workflow entry guidance. Helps users determine which skill to start with, detects project current status, and provides shortest closed-loop path. Use when user says "what's next/where to start/run DevBooks closed-loop/project status" etc. Note: Routing after skill completion is handled by each skill itself, no need to call router.
 tools:
   - Glob
   - Grep
@@ -9,7 +9,22 @@ tools:
   - mcp__ckb__getStatus
 ---
 
-# DevBooks: Workflow Router
+# DevBooks: Workflow Entry Guide (Router)
+
+## Positioning Statement
+
+> **Important**: Router's responsibility is **entry guidance**, not step-by-step routing.
+
+| Scenario | Use Router? |
+|----------|:-----------:|
+| "Where should I start?" | ✅ Use |
+| "What's the project status?" | ✅ Use |
+| "What's next after coder?" | ❌ Don't use (coder outputs it) |
+| "What's next after this skill?" | ❌ Don't use (each skill outputs its own) |
+
+**Principle**: Each skill outputs its own next-step recommendation upon completion, following `_shared/references/deviation-detection-routing-protocol.md`.
+
+---
 
 ## Prerequisites: Configuration Discovery (Protocol-Agnostic)
 
