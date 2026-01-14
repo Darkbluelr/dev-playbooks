@@ -27,22 +27,7 @@ AI coding assistants are powerful, but often **unpredictable**:
 - **Evidence-based done**: completion is defined by tests/build/evidence, not AI self-evaluation
 - **Enforced role isolation**: Test Owner and Coder must work in separate conversations
 - **Multiple quality gates**: green evidence checks, task completion, role boundary checks
-- **21 Skills**: proposal, design, debate, review, entropy metrics, federation, and more
-
----
-
-## DevBooks At a Glance (Comparison)
-
-| Dimension | DevBooks | OpenSpec | spec-kit | No spec |
-|------|----------|----------|----------|--------|
-| Spec-driven workflow | Yes | Yes | Yes | No |
-| Artifact traceability | Change package (proposal/design/spec/tasks/verification/evidence) | Mostly folder/file organization | Docs + tasks orchestration | None |
-| Role & responsibility boundaries | **Enforced** (Test Owner / Coder) | Convention-based (not enforced) | Convention-based (not enforced) | None |
-| Definition of Done (DoD) | **Evidence + gates** (tests/build/audit) | Manual definition/checks | Manual definition/checks | Often subjective |
-| Code quality assurance | Gates + metrics (entropy/hotspots) + review roles | External tools / manual review | External tools / manual review | Unstable |
-| Impact analysis | CKB graph capability (falls back to grep) | Text search / manual reasoning | Text search / manual reasoning | Easy to miss |
-| Brownfield onboarding | Baseline specs/glossary/minimal verification anchors | Manual | Limited | - |
-| Automation coverage | 21 Skills (proposal→implementation→archive loop) | 3 core commands | Toolkit (greenfield-leaning) | - |
+- **18 Skills**: proposal, design, review, entropy metrics, and full workflow coverage
 
 ---
 
@@ -175,7 +160,6 @@ Run devbooks-spec-gardener skill for change add-oauth2
 | devbooks-impact-analysis | Cross-module impact analysis |
 | devbooks-proposal-challenger | Challenge a proposal |
 | devbooks-proposal-judge | Adjudicate a proposal |
-| devbooks-proposal-debate-workflow | Triangle debate (Author/Challenger/Judge) |
 | devbooks-design-doc | Create a design doc |
 | devbooks-spec-contract | Define specs & contracts |
 | devbooks-implementation-plan | Create an implementation plan |
@@ -193,6 +177,7 @@ Run devbooks-spec-gardener skill for change add-oauth2
 | Skill | Description |
 |-------|-------------|
 | devbooks-code-review | Code review (readability/consistency) |
+| devbooks-test-reviewer | Test quality and coverage review |
 
 ### Archive stage
 
@@ -206,9 +191,7 @@ Run devbooks-spec-gardener skill for change add-oauth2
 | Skill | Description |
 |-------|-------------|
 | devbooks-entropy-monitor | System entropy metrics |
-| devbooks-federation | Cross-repo federation analysis |
 | devbooks-brownfield-bootstrap | Brownfield project bootstrap |
-| devbooks-index-bootstrap | Generate a SCIP index |
 
 ---
 
@@ -218,52 +201,53 @@ Run devbooks-spec-gardener skill for change add-oauth2
 
 [OpenSpec](https://github.com/Fission-AI/OpenSpec) is a lightweight spec-driven framework with three core commands (proposal/apply/archive), organizing changes by feature folders.
 
-**What DevBooks adds:**
-- **Role isolation**: hard boundary between Test Owner and Coder (separate chats)
-- **Quality gates**: 5+ verification gates to block false completion
-- **21 Skills**: proposal, debate, review, entropy metrics, federation, etc.
-- **Evidence-based done**: tests/build define “done”, not self-evaluation
+**OpenSpec's limitations:**
+- No role isolation, AI may self-verify "done"
+- No quality gates, false completion is hard to catch
+- Only 3 commands, insufficient coverage for complex changes
 
-**Choose OpenSpec**: you want a lightweight spec workflow.
-
-**Choose DevBooks**: you need role separation and verification gates for larger changes.
+**DevBooks solutions:**
+- **Enforced role isolation**: Test Owner and Coder must work in separate conversations, preventing self-verification
+- **5+ quality gates**: Green evidence checks, task completion rate, role boundary checks
+- **18 Skills**: Full coverage from proposal to implementation to archive
 
 ### vs. spec-kit
 
 [GitHub spec-kit](https://github.com/github/spec-kit) is a spec-driven toolkit with a constitution file, multi-step refinement, and structured planning.
 
-**What DevBooks adds:**
-- **Brownfield-first**: generates baseline specs for existing repos
-- **Role isolation**: test authoring and implementation are separated
-- **Quality gates**: runtime verification, not just workflow guidance
-- **Prototype mode**: safe experiments without polluting main `src/`
+**spec-kit's limitations:**
+- Focused on greenfield (0→1) projects, limited brownfield support
+- No enforced role isolation, tests and implementation may get confused
+- Relies on manual checks, no runtime verification
 
-**Choose spec-kit**: greenfield projects with supported AI tools.
-
-**Choose DevBooks**: brownfield repos or when you want enforced gates.
+**DevBooks solutions:**
+- **Brownfield-first**: `devbooks-brownfield-bootstrap` auto-generates baseline specs
+- **Enforced role isolation**: Test authoring and implementation are physically separated
+- **Runtime gates**: Automated verification, not dependent on manual checks
 
 ### vs. Kiro.dev
 
-[Kiro](https://kiro.dev/) is an AWS agentic IDE with a three-phase workflow (EARS requirements, design, tasks), but stores specs separately from implementation artifacts.
+[Kiro](https://kiro.dev/) is an AWS agentic IDE with a three-phase workflow (EARS requirements, design, tasks).
 
-**DevBooks differences:**
-- **Change package**: proposal/design/spec/plan/verification/evidence in one place for lifecycle traceability
-- **Role isolation**: Test Owner and Coder are separated
-- **Quality gates**: verified through gates, not just task completion
+**Kiro's limitations:**
+- Specs and implementation artifacts stored separately, hard to trace
+- No enforced role isolation
+- Requires a specific IDE environment
 
-**Choose Kiro**: you want an IDE experience and AWS ecosystem integration.
-
-**Choose DevBooks**: you want change packages to bundle artifacts and enforce role boundaries.
+**DevBooks solutions:**
+- **Change packages**: proposal/design/spec/plan/verification/evidence centralized, full traceability
+- **Enforced role isolation**: Hard boundary between Test Owner and Coder
+- **Tool-agnostic**: Supports Claude Code, Codex CLI, Cursor, and more
 
 ### vs. no spec
 
-Without specs, the assistant generates code from vague prompts, leading to unpredictable output, scope creep, and “hallucinated completion”.
+Without specs, the assistant generates code from vague prompts, leading to unpredictable output, scope creep, and "hallucinated completion".
 
 **DevBooks brings:**
-- Specs agreed before implementation
-- Quality gates that verify real completion
-- Role isolation to prevent self-verification
-- Evidence chain per change
+- Specs agreed before implementation, clear and controlled scope
+- Quality gates verify real completion
+- Role isolation prevents self-verification
+- Complete evidence chain per change
 
 ---
 
@@ -354,18 +338,6 @@ Generates:
 
 </details>
 
-<details>
-<summary><strong>Cross-repo federation</strong></summary>
-
-For multi-repo analysis:
-
-```
-Run devbooks-federation skill
-```
-
-Analyzes cross-repo contracts and dependencies to support coordinated changes.
-
-</details>
 
 <details>
 <summary><strong>MCP auto-detection</strong></summary>
@@ -391,23 +363,21 @@ DevBooks Skills support graceful MCP (Model Context Protocol) degradation: you c
 - Timeout/failure → silently falls back to basic mode (non-blocking)
 - No manual “basic/enhanced” switch required
 
-To enable enhanced mode: configure CKB per `docs/Recommended-MCP.md` and run `devbooks-index-bootstrap` skill to generate `index.scip`.
+To enable enhanced mode: configure CKB per `docs/Recommended-MCP.md` and manually generate `index.scip`.
 
 </details>
 
 <details>
-<summary><strong>Proposal debate workflow</strong></summary>
+<summary><strong>Proposal review workflow</strong></summary>
 
-For strict proposal review, run the triangle debate:
+For strict proposal review, use separate conversations for Challenger and Judge:
 
-```
-Run devbooks-proposal-debate-workflow skill
-```
+Three roles (must work in separate conversations):
+1. **Author**: creates and defends the proposal (use `devbooks-proposal-author`)
+2. **Challenger**: challenges assumptions, finds gaps, identifies risks (use `devbooks-proposal-challenger`)
+3. **Judge**: makes the final decision and records rationale (use `devbooks-proposal-judge`)
 
-Three roles:
-1. **Author**: creates and defends the proposal
-2. **Challenger**: challenges assumptions, finds gaps, identifies risks
-3. **Judge**: makes the final decision and records rationale
+**Important**: The three roles must work in **separate conversations** to avoid role confusion and self-verification.
 
 Decision: `Approved`, `Revise`, `Rejected`
 

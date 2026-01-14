@@ -115,26 +115,6 @@ If you are not using DevBooks, replace `dev-playbooks/specs` / `dev-playbooks/ch
 
 ---
 
-## `devbooks-proposal-debate-workflow` (Proposal Debate Workflow)
-
-- Purpose: run “proposal → challenge → judgment” as a 3-role triangular debate (Author/Challenger/Judge isolation), and ensure the Decision Log is explicit.
-- When to use:
-  - You want enforced 3-role contention to raise proposal quality
-  - Your team often “starts coding before risks are stated”
-- Copy-paste prompt:
-  ```text
-  You are Proposal Debate Orchestrator. Explicitly use `devbooks-proposal-debate-workflow`.
-  First read: `dev-playbooks/project.md`
-  Constraint: Author/Challenger/Judge must be separate conversations/instances; if I cannot provide that, stop and explain why.
-  Goal: `dev-playbooks/changes/<change-id>/proposal.md` Decision Log must end in Approved/Revise/Rejected (no Pending).
-  Tell me, step by step, what instruction I should copy-paste into each separate conversation, and what outputs I should paste back here.
-
-  My request:
-  <one-sentence request + background + constraints>
-  ```
-
----
-
 ## `devbooks-design-doc` (Design Owner / Design Doc)
 
 - Purpose: write `design.md` with What/Constraints + AC-xxx only (no implementation steps). This is the golden truth for tests and planning.
@@ -364,62 +344,23 @@ If you are not using DevBooks, replace `dev-playbooks/specs` / `dev-playbooks/ch
 
 ---
 
-## `devbooks-index-bootstrap` (Index Bootstrapper) [New]
+## Generating SCIP Index (Manual)
 
-- Purpose: detect project language stack and generate a SCIP index to unlock graph-based code understanding (call graph, impact analysis, symbol references, etc.).
-- Triggers:
-  - User asks for “index initialization / code graph / graph analysis”
-  - `mcp__ckb__getStatus` reports `healthy: false` for SCIP backend
-  - New project and `index.scip` does not exist
-- When to use:
-  - You want graph-mode in `devbooks-impact-analysis`
-  - You want hotspot awareness in `devbooks-coder` / `devbooks-code-review`
-  - CKB MCP tools report “SCIP backend unavailable”
-- Copy-paste prompt:
-  ```text
-  Explicitly use `devbooks-index-bootstrap`.
-  Goal: detect project stack, generate SCIP index, enable graph-based understanding.
-  Project root: $(pwd)
-  ```
-- Manual indexing (no Skill required):
-  ```bash
-  # TypeScript/JavaScript
-  npm install -g @anthropic-ai/scip-typescript
-  scip-typescript index --output index.scip
+If you need graph-based code understanding (call graph, impact analysis, symbol references), you can generate a SCIP index manually:
 
-  # Python
-  pip install scip-python
-  scip-python index . --output index.scip
+```bash
+# TypeScript/JavaScript
+npm install -g @anthropic-ai/scip-typescript
+scip-typescript index --output index.scip
 
-  # Go
-  go install github.com/sourcegraph/scip-go@latest
-  scip-go --output index.scip
-  ```
+# Python
+pip install scip-python
+scip-python index . --output index.scip
 
----
+# Go
+go install github.com/sourcegraph/scip-go@latest
+scip-go --output index.scip
+```
 
-## `devbooks-federation` (Federation Analyst) [New]
-
-- Purpose: cross-repo federation analysis and contract synchronization: detect contract changes, analyze cross-repo impact, notify downstream consumers.
-- Triggers:
-  - User asks for “cross-repo impact / federation analysis / contract sync / upstream-downstream dependencies”
-  - The change touches contract files defined in `federation.yaml`
-- When to use:
-  - Multi-repo projects where you need downstream impact analysis
-  - External API/contract changes requiring consumer notification
-  - You want cross-repo traceability
-- Prerequisite:
-  - `.devbooks/federation.yaml` exists at project root (copy from `skills/devbooks-federation/templates/federation.yaml`)
-- Copy-paste prompt:
-  ```text
-  Explicitly use `devbooks-federation`.
-  Goal: analyze cross-repo impact for this change, detect contract changes, generate an impact report.
-  Project root: $(pwd)
-  Changed files: <list of changed files>
-  ```
-- Script usage:
-  ```bash
-  # Check federation contract changes
-  bash ~/.claude/skills/devbooks-federation/scripts/federation-check.sh --project-root "$(pwd)"
-  ```
+See `docs/Recommended-MCP.md` for more details on configuring CKB.
 

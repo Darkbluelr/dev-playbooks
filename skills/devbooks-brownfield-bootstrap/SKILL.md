@@ -272,5 +272,5 @@ When MCP is unavailable, output the following notice:
 
 ```
 Warning: CKB unavailable, using traditional analysis methods to generate project profile.
-For more precise architecture analysis, run devbooks-index-bootstrap skill to generate index.
+For more precise architecture analysis, manually generate SCIP index.
 ```

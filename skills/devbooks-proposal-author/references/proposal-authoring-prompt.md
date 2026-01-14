@@ -26,6 +26,16 @@ Hard constraints (must follow):
    - You may run them but treat them as **read-only checks**.
    - You must not create/modify `design/tasks/specs/tests` to "fix validation errors."
    - You may only summarize the errors into `proposal.md` Debate Packet or Open Questions and state which role/Skill should handle next.
+6) **Forbidden to modify decision status**:
+   - Author is **forbidden** from setting `Status` or `Decision status` to `Approved`, `Revise`, or `Rejected`
+   - Author may only set `Status: Pending`
+   - Only the Judge role has authority to modify decision status
+   - Even after Judge decides `Revise` and Author revises the proposal, Author is **forbidden** from changing status to Approved
+7) **Change-ID naming convention**:
+   - Change-ID **must start with a verb**, using `verb-noun` or `verb-noun-modifier` format
+   - Correct examples: `add-oauth2-auth`, `fix-login-bug`, `refactor-user-service`, `update-api-schema`
+   - Incorrect examples: `oauth2-feature`, `user-auth`, `new-login` (missing verb)
+   - Common verbs: `add`, `fix`, `update`, `refactor`, `remove`, `migrate`, `implement`, `optimize`
 
 Core values (non-negotiable):
 - Minimize value and scope (small and clear)

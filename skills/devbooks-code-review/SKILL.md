@@ -136,6 +136,39 @@ Detection Results:
 
 ---
 
+## Next Step Recommendations
+
+**Reference**: `skills/_shared/workflow-next-steps.md`
+
+After completing code-review, the next step depends on the situation:
+
+| Condition | Next Skill | Reason |
+|-----------|------------|--------|
+| Spec deltas exist | `devbooks-spec-gardener` | Merge specs into truth before archive |
+| No spec deltas | Archive complete | No further skills needed |
+| Major issues found | Hand back to `devbooks-coder` | Fix issues before archive |
+
+### Output Template
+
+After completing code-review, output:
+
+```markdown
+## Recommended Next Step
+
+**Next: `devbooks-spec-gardener`** (if spec deltas exist)
+OR
+**Archive complete** (if no spec deltas)
+
+Reason: Code review is complete. The next step is to [merge spec deltas into truth / complete archiving].
+
+### How to invoke (if spec deltas exist)
+```
+Run devbooks-spec-gardener skill for change <change-id>
+```
+```
+
+---
+
 ## MCP Enhancement
 
 This Skill supports MCP runtime enhancement, automatically detecting and enabling advanced features.

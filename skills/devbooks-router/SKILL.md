@@ -34,9 +34,8 @@ Before execution, you **must** search for configuration in the following order (
 1. Call `mcp__ckb__getStatus` to check SCIP backend
 2. If `backends.scip.healthy = false`:
    - Prompt user: "Code graph index not activated detected, impact analysis/call graph and other graph-based capabilities unavailable"
-   - Ask if they want to generate index now (approximately 1-5 minutes)
-   - If user agrees, execute `devbooks-index-bootstrap` workflow
-   - If user declines, continue routing but mark "graph capabilities degraded"
+   - Provide the command to manually generate the index (see script above)
+   - Continue routing but mark "graph capabilities degraded"
 
 3. If `backends.scip.healthy = true`:
    - Pass silently, continue routing
@@ -109,8 +108,8 @@ impact_profile:
 |--------------|-------|-------------------|
 | `external_api: true` | - | `devbooks-spec-contract` |
 | `architecture_boundary: true` | - | `devbooks-design-doc` (ensure Architecture Impact section is complete) |
-| `cross_repo: true` | - | `devbooks-federation` |
-| `risk_level: high` | - | `devbooks-proposal-debate-workflow` |
+| `cross_repo: true` | - | Manual cross-repo impact analysis |
+| `risk_level: high` | - | `devbooks-proposal-challenger` + `devbooks-proposal-judge` |
 | `affected_modules` count > 5 | - | `devbooks-impact-analysis` (deep analysis) |
 
 ### Execution Plan Output Format
@@ -179,7 +178,7 @@ Default routing:
 
 Append as needed (add only when conditions are met):
 - **Cross-module/unclear impact**: `devbooks-impact-analysis` (recommend writing back to proposal Impact)
-- **Obvious risks/controversies/trade-offs**: `devbooks-proposal-debate-workflow` (Author/Challenger/Judge, write back to Decision Log after debate)
+- **Obvious risks/controversies/trade-offs**: `devbooks-proposal-challenger` + `devbooks-proposal-judge` (Author/Challenger/Judge in separate conversations, write back to Decision Log after debate)
 - **External behavior/contract/data invariant changes**: `devbooks-spec-contract` → `(<change-root>/<change-id>/specs/**)` + `design.md` Contract section
   - If you need "deterministic spec delta file creation/avoid path errors": `change-spec-delta-scaffold.sh <change-id> <capability> ...`
 - **Module boundary/dependency direction/architecture shape changes**: Ensure `devbooks-design-doc` outputs complete Architecture Impact section → merged to `(<truth-root>/architecture/c4.md)` by `devbooks-spec-gardener` during archiving
@@ -326,7 +325,7 @@ MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template.md`
 
 1. Call `mcp__ckb__getStatus` (2s timeout)
 2. If CKB available → Mark "graph capabilities activated" in routing suggestions
-3. If timeout or failure → Mark "graph capabilities degraded" in routing suggestions, recommend running devbooks-index-bootstrap skill
+3. If timeout or failure → Mark "graph capabilities degraded" in routing suggestions, recommend manually generating SCIP index
 
 ### Enhanced Mode vs Basic Mode
 
@@ -342,5 +341,5 @@ When MCP is unavailable, output the following notice:
 
 ```
 Warning: CKB index not activated, graph capabilities (impact analysis, call graph, etc.) will be degraded.
-Recommend running devbooks-index-bootstrap skill to generate index for full functionality.
+Recommend manually generating SCIP index for full functionality.
 ```

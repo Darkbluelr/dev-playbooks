@@ -213,5 +213,5 @@ When MCP is unavailable, output the following notice:
 
 ```
 Warning: CKB index unavailable, architecture check will use basic mode.
-Suggest running devbooks-index-bootstrap skill to generate index for precise checks.
+Consider manually generating SCIP index for precise checks.
 ```

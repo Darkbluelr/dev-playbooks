@@ -48,7 +48,7 @@ When MCP is unavailable, output:
 
 ```
 ⚠️ CKB unavailable (timeout or not configured), running in basic mode.
-To enable enhanced features, run devbooks-index-bootstrap skill to build the index.
+To enable enhanced features, manually generate SCIP index.
 ```
 ```
 
@@ -65,7 +65,6 @@ The following Skills do not depend on MCP and do not need an MCP Enhancement sec
 - devbooks-proposal-author (document-only)
 - devbooks-proposal-challenger (review-only)
 - devbooks-proposal-judge (verdict-only)
-- devbooks-proposal-debate-workflow (workflow orchestration)
 - devbooks-design-backport (document backport)
 - devbooks-spec-gardener (file pruning)
 - devbooks-test-reviewer (test review)
@@ -88,8 +87,6 @@ The following Skills depend on MCP and require the full MCP Enhancement section:
 | devbooks-code-review | mcp__ckb__getHotspots | Hotspot highlighting |
 | devbooks-impact-analysis | mcp__ckb__analyzeImpact, findReferences | Precise impact analysis |
 | devbooks-brownfield-bootstrap | mcp__ckb__* | COD model generation |
-| devbooks-index-bootstrap | mcp__ckb__getStatus | Index status detection |
-| devbooks-federation | mcp__ckb__*, mcp__github__* | Cross-repo analysis |
 | devbooks-router | mcp__ckb__getStatus | Index availability detection |
 | devbooks-spec-contract | mcp__ckb__findReferences | Reference detection |
 | devbooks-entropy-monitor | mcp__ckb__getHotspots | Hotspot trend analysis |

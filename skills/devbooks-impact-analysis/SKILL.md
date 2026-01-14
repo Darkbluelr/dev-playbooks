@@ -130,6 +130,6 @@ When MCP is unavailable, output the following notice:
 
 ```
 Warning: CKB unavailable, using Grep text search for impact analysis.
-Analysis results may not be precise. Recommend running devbooks-index-bootstrap skill to generate index and re-analyze.
+Analysis results may not be precise. Recommend manually generating SCIP index and re-analyzing.
 ```
 

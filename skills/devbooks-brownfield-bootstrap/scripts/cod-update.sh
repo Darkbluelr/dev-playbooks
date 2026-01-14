@@ -182,7 +182,7 @@ EOF
     echo "" >> "$temp_file"
     echo "---" >> "$temp_file"
     echo "" >> "$temp_file"
-    echo "> 提示：运行 \`devbooks-index-bootstrap\` 生成 SCIP 索引以获得更精确的依赖分析" >> "$temp_file"
+    echo "> Tip: Manually generate SCIP index for more precise dependency analysis (see docs/Recommended-MCP.md)" >> "$temp_file"
 
     # 只在内容变化时更新
     if [ -f "$output" ]; then

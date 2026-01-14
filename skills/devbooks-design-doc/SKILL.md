@@ -188,6 +188,43 @@ Detection Results:
 
 ---
 
+## Next Step Recommendations
+
+**Reference**: `skills/_shared/workflow-next-steps.md`
+
+After completing design-doc, the next step depends on the change scope:
+
+| Condition | Next Skill | Reason |
+|-----------|------------|--------|
+| External behavior/contract changes | `devbooks-spec-contract` | Must define contracts before planning |
+| No external contract changes | `devbooks-implementation-plan` | Go directly to task planning |
+
+**CRITICAL**: Do NOT recommend `devbooks-test-owner` or `devbooks-coder` directly after design-doc. The workflow order is:
+```
+design-doc → [spec-contract] → implementation-plan → test-owner → coder
+```
+
+### Output Template
+
+After completing design-doc, output:
+
+```markdown
+## Recommended Next Step
+
+**Next: `devbooks-spec-contract`** (if external behavior/contract changes)
+OR
+**Next: `devbooks-implementation-plan`** (if no external contract changes)
+
+Reason: Design is complete. The next step is to [define external contracts / create implementation plan].
+
+### How to invoke
+```
+Run devbooks-<skill-name> skill for change <change-id>
+```
+```
+
+---
+
 ## MCP Enhancement
 
 This Skill does not depend on MCP services, no runtime detection required.

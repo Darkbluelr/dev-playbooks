@@ -139,17 +139,14 @@ Each change must declare which gates are covered; missing items require reasons:
 
 | Workflow | Skill | Description |
 |----------|-------|-------------|
-| Proposal Debate | `devbooks-proposal-debate-workflow` | Triangle debate |
 | Delivery | `devbooks-delivery-workflow` | Change loop |
 | Brownfield Bootstrap | `devbooks-brownfield-bootstrap` | Legacy project init |
 
-### Metrics & Indexing
+### Metrics
 
 | Feature | Skill | Description |
 |---------|-------|-------------|
 | Entropy Monitor | `devbooks-entropy-monitor` | System entropy metrics |
-| Index Bootstrap | `devbooks-index-bootstrap` | Generate SCIP index |
-| Federation | `devbooks-federation` | Cross-repo analysis |
 
 ---
 
@@ -178,16 +175,6 @@ Copy templates from `templates/ci/` to `.github/workflows/`:
 
 - `devbooks-guardrail.yml`: PR checks for complexity/hotspots/layering violations
 - `devbooks-cod-update.yml`: COD model update after push
-
-### Cross-Repo Federation
-
-For multi-repo projects, configure `.devbooks/federation.yaml`:
-
-```bash
-cp skills/devbooks-federation/templates/federation.yaml .devbooks/federation.yaml
-```
-
-See `skills/devbooks-federation/SKILL.md`
 
 ---
 

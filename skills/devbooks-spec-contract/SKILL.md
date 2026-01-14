@@ -154,6 +154,40 @@ Implicit changes = changes that are not explicitly declared but alter system beh
 
 ---
 
+## Next Step Recommendations
+
+**Reference**: `skills/_shared/workflow-next-steps.md`
+
+After completing spec-contract, the **required** next step is:
+
+| Condition | Next Skill | Reason |
+|-----------|------------|--------|
+| Always | `devbooks-implementation-plan` | Must create tasks.md before apply stage |
+
+**CRITICAL**: Do NOT recommend `devbooks-test-owner` or `devbooks-coder` directly after spec-contract. The workflow order is:
+```
+spec-contract → implementation-plan → test-owner → coder
+```
+
+### Output Template
+
+After completing spec-contract, output:
+
+```markdown
+## Recommended Next Step
+
+**Next: `devbooks-implementation-plan`**
+
+Reason: Spec and contract are now defined. The next step is to create an implementation plan (tasks.md) that breaks down the work into trackable tasks with verification anchors.
+
+### How to invoke
+```
+Run devbooks-implementation-plan skill for change <change-id>
+```
+```
+
+---
+
 ## MCP Enhancement
 
 This Skill supports MCP runtime enhancement, automatically detecting and enabling advanced features.
@@ -187,5 +221,5 @@ When MCP is unavailable, output the following notice:
 
 ```
 Warning: CKB unavailable, using Grep text search for contract reference detection.
-Results may be less precise. Consider running devbooks-index-bootstrap skill to generate the index.
+Results may be less precise. Consider manually generating SCIP index for more precise results.
 ```

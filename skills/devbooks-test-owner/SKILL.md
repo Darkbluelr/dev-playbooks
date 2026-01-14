@@ -36,6 +36,111 @@ Before execution, **must** search for configuration in the following order (stop
 
 ---
 
+## verification.md Enhanced Template (Required Structure)
+
+Test Owner must produce a structured `verification.md` that serves as both test plan and traceability document.
+
+```markdown
+# Verification Plan: <change-id>
+
+## Test Strategy
+
+### Test Type Distribution
+| Test Type | Count | Purpose | Expected Time |
+|-----------|-------|---------|---------------|
+| Unit Tests | X | Core logic, edge cases | < 5s |
+| Integration Tests | Y | API contracts, data flow | < 30s |
+| E2E Tests | Z | Critical user paths | < 60s |
+| Contract Tests | W | External API compatibility | < 10s |
+
+### Test Environment
+| Test Type | Environment | Dependencies |
+|-----------|-------------|--------------|
+| Unit | Node.js | None (all mocked) |
+| Integration | Node.js + Test DB | Docker |
+| E2E | Browser (Playwright) | Full application |
+
+---
+
+## AC Coverage Matrix
+
+| AC-ID | Description | Test Type | Test ID | Priority | Status |
+|-------|-------------|-----------|---------|----------|--------|
+| AC-001 | User login returns JWT | unit | T-001 | P0 | [ ] |
+| AC-002 | Wrong password returns 401 | unit | T-002 | P0 | [ ] |
+| AC-003 | Token expires after 24h | integration | T-003 | P1 | [ ] |
+
+**Coverage Summary**:
+- Total ACs: X
+- Covered by tests: Y
+- Coverage rate: Y/X = Z%
+
+---
+
+## Boundary Conditions Checklist
+
+### Input Validation
+- [ ] Empty input / null values
+- [ ] Maximum length exceeded
+- [ ] Invalid format (email, phone, etc.)
+- [ ] SQL injection / XSS attempts
+
+### State Boundaries
+- [ ] First item (index 0)
+- [ ] Last item (index n-1)
+- [ ] Empty collection
+- [ ] Single item collection
+- [ ] Maximum capacity
+
+### Concurrency & Timing
+- [ ] Concurrent access to same resource
+- [ ] Request timeout handling
+- [ ] Race condition scenarios
+- [ ] Retry after failure
+
+### Error Handling
+- [ ] Network failure
+- [ ] Database connection lost
+- [ ] External API unavailable
+- [ ] Invalid response format
+
+---
+
+## Test Priority
+
+| Priority | Definition | Red Baseline Requirement |
+|----------|------------|--------------------------|
+| P0 | Blocks release, core functionality | MUST fail in Red baseline |
+| P1 | Important, should be covered | Should fail in Red baseline |
+| P2 | Nice to have, can be added later | Optional in Red baseline |
+
+### P0 Tests (Must be in Red Baseline)
+1. T-001: <test description>
+2. T-002: <test description>
+
+### P1 Tests (Should be in Red Baseline)
+1. T-003: <test description>
+
+---
+
+## Manual Verification Checklist
+
+### MANUAL-001: <Manual check description>
+- [ ] Step 1
+- [ ] Step 2
+- [ ] Expected result
+
+---
+
+## Traceability Matrix
+
+| Requirement | Design (AC) | Test | Evidence |
+|-------------|-------------|------|----------|
+| REQ-001 | AC-001, AC-002 | T-001, T-002 | evidence/red-baseline/*.log |
+```
+
+---
+
 ## Evidence Path Convention (Mandatory)
 
 **Red baseline evidence must be saved to the change package directory**:
@@ -184,6 +289,45 @@ Detection results:
 - Role isolation: ✓ (Coder not executed in current session)
 - AC count: 14
 - Execution mode: Initial writing
+```
+
+---
+
+## Next Step Recommendations
+
+**Reference**: `skills/_shared/workflow-next-steps.md`
+
+After completing test-owner (Red baseline produced), the next step is:
+
+| Condition | Next Skill | Reason |
+|-----------|------------|--------|
+| Red baseline produced | `devbooks-coder` | Coder implements to make gates Green |
+
+**CRITICAL**:
+- Coder **must work in a separate conversation/instance**
+- Test Owner and Coder cannot share the same chat context
+- The workflow order is:
+```
+test-owner (Chat A) → coder (Chat B) → code-review
+```
+
+### Output Template
+
+After completing test-owner (Red baseline), output:
+
+```markdown
+## Recommended Next Step
+
+**Next: `devbooks-coder`** (MUST be in a separate conversation)
+
+Reason: Red baseline has been produced. The next step is to have Coder implement per tasks.md to make all gates Green. Coder must work in a separate conversation to ensure role isolation.
+
+### How to invoke (in a SEPARATE conversation)
+```
+Run devbooks-coder skill for change <change-id>
+```
+
+**Important**: Coder cannot modify `tests/**`. If test changes are needed, hand back to Test Owner.
 ```
 
 ---

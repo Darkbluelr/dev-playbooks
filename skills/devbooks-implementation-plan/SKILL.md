@@ -75,6 +75,48 @@ Detection Result:
 
 ---
 
+## Next Step Recommendations
+
+**Reference**: `skills/_shared/workflow-next-steps.md`
+
+After completing implementation-plan, the **required** next step is:
+
+| Condition | Next Skill | Reason |
+|-----------|------------|--------|
+| Always | `devbooks-test-owner` | Test Owner must produce Red baseline first |
+
+**CRITICAL**:
+- Test Owner **must work in a separate conversation/instance**
+- Do NOT recommend `devbooks-coder` directly after implementation-plan
+- The workflow order is:
+```
+implementation-plan → test-owner (Chat A) → coder (Chat B)
+```
+
+### Output Template
+
+After completing implementation-plan, output:
+
+```markdown
+## Recommended Next Step
+
+**Next: `devbooks-test-owner`** (MUST be in a separate conversation)
+
+Reason: Implementation plan is complete. The next step is to have Test Owner create verification tests and produce a Red baseline. Test Owner and Coder must work in separate conversations to ensure role isolation.
+
+### How to invoke (in a NEW conversation)
+```
+Run devbooks-test-owner skill for change <change-id>
+```
+
+**Important**: After Test Owner produces Red baseline, start another separate conversation for Coder:
+```
+Run devbooks-coder skill for change <change-id>
+```
+```
+
+---
+
 ## MCP Enhancement
 
 This Skill does not depend on MCP services, no runtime detection required.

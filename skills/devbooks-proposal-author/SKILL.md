@@ -75,6 +75,46 @@ Detection Results:
 
 ---
 
+## Next Step Recommendations
+
+**Reference**: `skills/_shared/workflow-next-steps.md`
+
+After completing proposal-author, the next step depends on the situation:
+
+| Condition | Next Skill | Reason |
+|-----------|------------|--------|
+| Cross-module impact unclear | `devbooks-impact-analysis` | Clarify impact scope first |
+| High risk / controversial | `devbooks-proposal-challenger` | Challenge before proceeding |
+| Impact clear, ready for design | `devbooks-design-doc` | Create design document |
+
+**CRITICAL**: Do NOT recommend `devbooks-test-owner` or `devbooks-coder` directly after proposal-author. The workflow order is:
+```
+proposal-author → [impact-analysis] → design-doc → [spec-contract] → implementation-plan → test-owner → coder
+```
+
+### Output Template
+
+After completing proposal-author, output:
+
+```markdown
+## Recommended Next Step
+
+**Next: `devbooks-design-doc`** (most common)
+OR
+**Next: `devbooks-impact-analysis`** (if cross-module impact unclear)
+OR
+**Next: `devbooks-proposal-challenger`** (if high risk, optional)
+
+Reason: Proposal is complete. The next step is to [clarify impact / create design document].
+
+### How to invoke
+```
+Run devbooks-<skill-name> skill for change <change-id>
+```
+```
+
+---
+
 ## MCP Enhancement
 
 This Skill does not depend on MCP services and requires no runtime detection.

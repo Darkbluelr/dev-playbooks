@@ -245,6 +245,48 @@ Detection Results:
 
 ---
 
+## Next Step Recommendations
+
+**Reference**: `skills/_shared/workflow-next-steps.md`
+
+After completing coder (all tasks done, gates Green), the next step is:
+
+| Condition | Next Skill | Reason |
+|-----------|------------|--------|
+| All tasks completed | `devbooks-code-review` | Review for readability/consistency |
+| Test changes needed | Hand back to `devbooks-test-owner` | Coder cannot modify tests |
+
+**CRITICAL**:
+- Coder **cannot modify** `tests/**`
+- If test issues are found, hand back to Test Owner (separate chat)
+- The workflow order is:
+```
+coder → code-review → spec-gardener (if spec deltas) → archive
+```
+
+### Output Template
+
+After completing coder (all gates Green), output:
+
+```markdown
+## Recommended Next Step
+
+**Next: `devbooks-code-review`**
+
+Reason: All tasks are complete and gates are Green. The next step is code review for readability, consistency, and maintainability.
+
+### How to invoke
+```
+Run devbooks-code-review skill for change <change-id>
+```
+
+### After Review
+- If spec deltas exist: `devbooks-spec-gardener` to merge into truth
+- If no spec deltas: Archive complete
+```
+
+---
+
 ## MCP Enhancement
 
 This Skill supports MCP runtime enhancement, automatically detecting and enabling advanced features.
@@ -278,6 +320,6 @@ When MCP is unavailable, output the following notice:
 
 ```
 WARNING: CKB unavailable, skipping hotspot detection.
-To enable hotspot warnings, run devbooks-index-bootstrap skill to generate the index.
+To enable hotspot warnings, manually generate SCIP the index.
 ```
 
