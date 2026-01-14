@@ -94,12 +94,69 @@ Delivery outputs (required):
 Execution steps:
 1) Produce the test plan instruction table (Part A)
 2) Implement test code in the repo (Part B)
-3) Run tests to confirm a **Red** baseline and store failing evidence in `<change-root>/<change-id>/evidence/`
+3) Run tests to confirm a **Red** baseline and store failing evidence in `<change-root>/<change-id>/evidence/red-baseline/`
 4) Output a short summary: covered ACs, how to run, which tests are optional/skipped and why
 5) **Provide an explicit verdict**:
    - ✅ **PASS**: All tests are ready, Red baseline established, ready to hand off to Coder
    - ⚠️ **PASS WITH CONDITIONS**: Tests are ready but there are pending items (list specific conditions)
    - ❌ **FAIL**: Cannot complete tests (list blocking reasons and suggested next steps)
+
+---
+
+## Evidence Path Convention (Mandatory)
+
+> **Core principle**: All evidence files must be output to the change package directory, never to project root.
+
+**Evidence path pattern** (must follow):
+```
+<change-root>/<change-id>/evidence/
+├── red-baseline/           # Red baseline evidence (Test Owner output)
+│   └── test-YYYYMMDD-HHMMSS.log
+└── green-final/            # Green final evidence (Coder output)
+    └── test-YYYYMMDD-HHMMSS.log
+```
+
+**Key constraints**:
+- ❌ Forbidden: `./evidence/` (project root)
+- ❌ Forbidden: `evidence/` (relative to cwd)
+- ✅ Correct: `<change-root>/<change-id>/evidence/red-baseline/`
+- ✅ Correct: `dev-playbooks/changes/<change-id>/evidence/red-baseline/`
+
+**Collect evidence using scripts**:
+```bash
+# Recommended: use change-evidence.sh
+devbooks change-evidence <change-id> --label red-baseline -- npm test
+
+# Manual: ensure correct path
+mkdir -p <change-root>/<change-id>/evidence/red-baseline/
+npm test 2>&1 | tee <change-root>/<change-id>/evidence/red-baseline/test-$(date +%Y%m%d-%H%M%S).log
+```
+
+---
+
+## Test Owner Completion Check Protocol
+
+> **Core principle**: Test Owner completion means tests are ready AND Red baseline is established.
+
+**Before declaring PASS, you MUST verify:**
+
+### Completion Checklist
+
+| Item | Status | Notes |
+|------|--------|-------|
+| verification.md created | ✅/❌ | `<change-root>/<change-id>/verification.md` |
+| Traceability matrix complete | ✅/❌ | All AC-xxx have mapped tests |
+| Test code implemented | ✅/❌ | `tests/` directory has new files |
+| Red baseline run | ✅/❌ | Tests fail (expected) |
+| Red evidence saved | ✅/❌ | `evidence/red-baseline/*.log` exists |
+
+**Forbidden behaviors**:
+- Do not declare PASS without verification.md
+- Do not declare PASS with TODO in traceability matrix
+- Do not declare PASS without Red baseline evidence
+- Do not output evidence outside the change package directory
+
+---
 
 ========================
 Z) Prototype mode: characterization tests

@@ -103,3 +103,76 @@ Output format:
    - ⚠️ **APPROVED WITH COMMENTS**: Can merge but recommend follow-up improvements (list specific items)
    - 🔄 **REQUEST CHANGES**: Requires fixes before re-review (list must-fix items)
    - ❌ **REJECTED**: Serious issues or design flaws, needs to return to design phase
+
+---
+
+## Deliverable Completeness Check Protocol
+
+> **Core principle**: Reviewer verifies not just code quality but also Coder task completeness.
+
+**Before giving APPROVED, you MUST verify:**
+
+### 1. Task Plan Completion Verification
+```bash
+# Check tasks.md completion
+rg "^- \[ \]" <change-root>/<change-id>/tasks.md
+```
+
+**Verification criteria**:
+- [ ] All task items in tasks.md are complete (`- [x]`) or have SKIP-APPROVED
+- [ ] No missing main plan items
+
+### 2. Test Pass Status Verification
+```bash
+# Verify all tests pass (not skip)
+npm test 2>&1 | rg -i "pass|fail|skip"
+```
+
+**Verification criteria**:
+- [ ] All tests PASS (not SKIP)
+- [ ] No `.only()` or `.skip()` residue
+- [ ] Skip count is 0 or has explicit justification
+
+### 3. Green Evidence Verification
+```bash
+# Verify Green evidence directory exists and has content
+ls -la <change-root>/<change-id>/evidence/green-final/
+```
+
+**Verification criteria**:
+- [ ] `evidence/green-final/` directory exists
+- [ ] Directory contains test log files
+- [ ] Logs contain no FAIL/FAILED/ERROR patterns
+
+### 4. Deliverable Check Table
+
+Your review output must include this verification table:
+
+```markdown
+## Deliverable Completeness Check
+
+| Item | Status | Notes |
+|------|--------|-------|
+| tasks.md completion | ✅/❌ | X/Y completed |
+| All tests green (no skip) | ✅/❌ | X pass / Y skip / Z fail |
+| Green evidence exists | ✅/❌ | evidence/green-final/ has N files |
+| No failure patterns in evidence | ✅/❌ | Logs have no FAIL/ERROR |
+```
+
+### 5. Enhanced Verdict Rules
+
+**Prerequisites for APPROVED** (ALL must be satisfied):
+1. Code quality review passes (existing logic)
+2. tasks.md 100% complete or has SKIP-APPROVED
+3. All tests PASS (skip count is 0)
+4. Green evidence directory exists with no failure patterns
+
+**If any condition is NOT met**:
+- Must give 🔄 **REQUEST CHANGES** or ❌ **REJECTED**
+- Clearly state what's missing and how to fix
+
+**Forbidden behaviors**:
+- Do not give APPROVED with incomplete tasks
+- Do not give APPROVED with skipped tests
+- Do not give APPROVED without Green evidence
+- Do not review only code quality while ignoring deliverable completeness

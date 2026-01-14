@@ -52,6 +52,48 @@ You **must** perform the following steps at the start of each session:
 
 ---
 
+## Real-time Progress Update Protocol
+
+> **Core principle**: Complete one task, check it off immediately. Never batch-check at the end.
+
+**Must follow**:
+
+### Check Off Immediately After Each Task
+
+After completing each task item in tasks.md, **immediately** change it from `- [ ]` to `- [x]`:
+
+```markdown
+# Before task completion
+- [ ] MP1.1 Implement cache manager base structure
+
+# After task completion, update immediately
+- [x] MP1.1 Implement cache manager base structure
+```
+
+### Why Real-time Checking is Required
+
+1. **Checkpoint Recovery**: Know exactly where to continue after interruption
+2. **Visible Progress**: Both user and AI can clearly see current progress
+3. **Avoid Forgetting**: Batch checking often leads to missing items
+4. **Complete Evidence Chain**: Each checkmark represents a completed milestone
+
+### When to Check Off
+
+| Timing | Action |
+|--------|--------|
+| Code writing complete | Do not check yet |
+| Compilation passes | Do not check yet |
+| Related tests pass | **Check immediately** |
+| Multiple tasks completed together | Check one by one, not in batch |
+
+### Forbidden Behaviors
+
+- ❌ Do not wait until all tasks are done to batch-check
+- ❌ Do not consider "code written = complete" without checking off
+- ❌ Do not uncheck a checked item (unless rolling back code)
+
+---
+
 ## Output Management Constraints (Observation Masking)
 
 Prevent large outputs from polluting the context:
@@ -60,14 +102,36 @@ Prevent large outputs from polluting the context:
 |----------|-----------------|
 | Command output > 50 lines | Keep only first and last 10 lines + middle summary |
 | Test output | Extract key failure information, do not paste full output into conversation |
-| Log output | Write to `evidence/`, only reference the path in conversation |
+| Log output | Write to `<change-root>/<change-id>/evidence/`, only reference the path in conversation |
 | Large file content | Reference path, do not inline |
 
 **Example**:
 ```
 BAD: Pasting 2000 lines of test logs
-GOOD: 3 tests failed, see evidence/test-output.log
+GOOD: 3 tests failed, see <change-root>/<change-id>/evidence/green-final/test-output.log
       Key error: FAIL src/order.test.ts:45 - Expected 400, got 500
+```
+
+---
+
+## Evidence Path Convention (Mandatory)
+
+**Green evidence must be saved to the change package directory**:
+```
+<change-root>/<change-id>/evidence/green-final/
+```
+
+**Forbidden paths**:
+- ❌ `./evidence/` (project root)
+- ❌ `evidence/` (relative to current working directory)
+
+**Correct path examples**:
+```bash
+# DevBooks 2.0 default path
+dev-playbooks/changes/<change-id>/evidence/green-final/test-$(date +%Y%m%d-%H%M%S).log
+
+# Using the script
+devbooks change-evidence <change-id> --label green-final -- npm test
 ```
 
 ---

@@ -32,6 +32,29 @@ Before execution, **must** search for configuration in the following order (stop
 
 - Test plan and traceability: `<change-root>/<change-id>/verification.md`
 - Test code: Per repository conventions (e.g., `tests/**`)
+- Red baseline evidence: `<change-root>/<change-id>/evidence/red-baseline/`
+
+---
+
+## Evidence Path Convention (Mandatory)
+
+**Red baseline evidence must be saved to the change package directory**:
+```
+<change-root>/<change-id>/evidence/red-baseline/
+```
+
+**Forbidden paths**:
+- ❌ `./evidence/` (project root)
+- ❌ `evidence/` (relative to current working directory)
+
+**Correct path examples**:
+```bash
+# DevBooks 2.0 default path
+dev-playbooks/changes/<change-id>/evidence/red-baseline/test-$(date +%Y%m%d-%H%M%S).log
+
+# Using the script
+devbooks change-evidence <change-id> --label red-baseline -- npm test
+```
 
 ---
 

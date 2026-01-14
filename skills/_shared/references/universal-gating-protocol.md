@@ -24,6 +24,81 @@ From now on, each time you write files, restate the `<truth-root>` and `<change-
 
 ---
 
+## 0.5 Output Path Convention (Mandatory)
+
+> **Core principle**: All artifacts must be output to correct directories, never to project root or other wrong locations.
+
+### Path Mapping Table (must follow)
+
+| Artifact Type | Correct Path | Forbidden Path |
+|---------------|--------------|----------------|
+| Change documents | `<change-root>/<change-id>/` | Project root |
+| Evidence files | `<change-root>/<change-id>/evidence/` | `./evidence/` |
+| Red baseline | `<change-root>/<change-id>/evidence/red-baseline/` | `./evidence/red-baseline/` |
+| Green evidence | `<change-root>/<change-id>/evidence/green-final/` | `./evidence/green-final/` |
+| Spec deltas | `<change-root>/<change-id>/specs/` | `./specs/` |
+| Traceability doc | `<change-root>/<change-id>/verification.md` | `./verification.md` |
+
+### DevBooks 2.0 Default Paths
+
+When using DevBooks 2.0 protocol:
+- `<change-root>` = `dev-playbooks/changes`
+- `<truth-root>` = `dev-playbooks/specs`
+
+**Example**:
+```
+project-root/
+├── dev-playbooks/                    # DevBooks root
+│   ├── changes/                      # <change-root>
+│   │   └── CHG-001/                  # Change package directory
+│   │       ├── proposal.md
+│   │       ├── design.md
+│   │       ├── tasks.md
+│   │       ├── verification.md
+│   │       ├── evidence/             # Evidence directory
+│   │       │   ├── red-baseline/     # Red baseline
+│   │       │   └── green-final/      # Green final
+│   │       └── specs/                # Spec deltas
+│   └── specs/                        # <truth-root>
+└── src/                              # Project code
+```
+
+### Path Verification Protocol
+
+**Before writing any file, verify**:
+1. Is the target path under `<change-root>/<change-id>/`?
+2. Are you accidentally using relative paths (`./`) that write to project root?
+3. Have you correctly resolved the actual value of `<change-root>`?
+
+**Common mistakes and corrections**:
+```bash
+# ❌ Wrong: writes to project root
+mkdir -p ./evidence/green-final/
+
+# ✅ Correct: writes to change package
+mkdir -p dev-playbooks/changes/CHG-001/evidence/green-final/
+
+# ❌ Wrong: relative path without change package
+tee evidence/test.log
+
+# ✅ Correct: full path
+tee dev-playbooks/changes/CHG-001/evidence/green-final/test.log
+```
+
+### Consequences of Path Violations
+
+If artifacts are written to wrong locations:
+1. Archive checks will fail (`check_evidence_closure` can't find evidence)
+2. Traceability matrix will break
+3. Change package will be incomplete, failing strict mode checks
+
+**When you discover path errors**:
+1. Immediately move files to correct location
+2. Check if similar artifacts have the same issue
+3. Update any references to the moved paths
+
+---
+
 ## 1. Verifiability Gate Protocol (Radical Honesty)
 
 You are the verifiability gatekeeper. Your responsibility is to anchor every output to evidence-backed facts and avoid hallucinations, guesses, or "self-confirming loops."
