@@ -141,6 +141,7 @@ devbooks change-evidence <change-id> --label green-final -- npm test
 ### Role Boundary Constraints
 - **Modifying `tests/**` is prohibited** (changes to tests must be handed back to Test Owner)
 - **Modifying `verification.md` is prohibited** (maintained by Test Owner)
+- **Modifying `verification.md` Status field is prohibited** (only Reviewer can set it to Done)
 - **Modifying `.devbooks/`, `build/`, or engineering configuration files is prohibited** (unless explicitly stated in proposal.md)
 
 ### Code Quality Constraints

@@ -40,6 +40,17 @@ Before execution, **must** search for configuration in the following order (stop
 
 Test Owner must produce a structured `verification.md` that serves as both test plan and traceability document.
 
+### Status Field Permissions
+
+| Status | Meaning | Who Can Set |
+|--------|---------|-------------|
+| `Draft` | Initial state | Auto-generated |
+| `Ready` | Test plan ready | **Test Owner** |
+| `Done` | Review passed | Reviewer (Test Owner/Coder prohibited) |
+| `Archived` | Archived | Spec Gardener |
+
+**Constraint**: After completing the test plan, Test Owner should set Status to `Ready`.
+
 ```markdown
 # Verification Plan: <change-id>
 

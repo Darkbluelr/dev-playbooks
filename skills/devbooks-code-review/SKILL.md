@@ -148,6 +148,15 @@ After completing code-review, the next step depends on the situation:
 | No spec deltas | Archive complete | No further skills needed |
 | Major issues found | Hand back to `devbooks-coder` | Fix issues before archive |
 
+### Reviewer Exclusive Permission: Set verification.md Status
+
+**Only Reviewer can set `verification.md` Status to `Done`**.
+
+After review passes, Reviewer must:
+1. Open `<change-root>/<change-id>/verification.md`
+2. Change `- Status: Ready` to `- Status: Done`
+3. This is a prerequisite for archive (`change-check.sh --mode archive` will verify)
+
 ### Output Template
 
 After completing code-review, output:
