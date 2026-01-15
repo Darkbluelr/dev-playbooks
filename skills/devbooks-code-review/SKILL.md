@@ -10,6 +10,34 @@ allowed-tools:
 
 # DevBooks: Code Review (Reviewer)
 
+## Workflow Position Awareness
+
+> **Core Principle**: Code Review executes after Test Owner Phase 2 verification, as the final review step before archiving.
+
+### My Position in the Overall Workflow
+
+```
+proposal → design → test-owner(phase1) → coder → test-owner(phase2) → [Code Review] → archive
+                                                                          ↓
+                                                              Readability/consistency/dependency review
+```
+
+### Code Review's Responsibility Boundaries
+
+| Allowed | Prohibited |
+|---------|------------|
+| Review code readability/consistency | ❌ Modify code files |
+| Set verification.md Status = Done | ❌ Discuss business correctness (that's Test Owner's job) |
+| Suggest improvements | ❌ Check off AC coverage matrix (that's Test Owner's job) |
+
+### Prerequisites
+
+- [ ] Test Owner Phase 2 completed (AC matrix checked)
+- [ ] Tests all green
+- [ ] evidence/green-final/ exists
+
+---
+
 ## Prerequisites: Configuration Discovery (Protocol Agnostic)
 
 - `<truth-root>`: Current truth directory root

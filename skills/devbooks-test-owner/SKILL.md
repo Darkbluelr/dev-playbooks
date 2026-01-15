@@ -12,6 +12,46 @@ allowed-tools:
 
 # DevBooks: Test Owner
 
+## Workflow Position Awareness
+
+> **Core Principle**: Test Owner has **dual-phase responsibilities** in the overall workflow, ensuring role isolation from Coder.
+
+### My Position in the Overall Workflow
+
+```
+proposal → design → [Test Owner Phase 1] → coder → [Test Owner Phase 2] → code-review → archive
+                         ↓                              ↓
+                    Red baseline output          Green verification + check off
+```
+
+### Test Owner's Dual-Phase Responsibilities
+
+| Phase | Trigger | Core Responsibility | Output |
+|-------|---------|---------------------|--------|
+| **Phase 1: Red Baseline** | After design.md is complete | Write tests, produce failure evidence | verification.md (Status=Ready), Red baseline |
+| **Phase 2: Green Verification** | After Coder completes | Verify tests pass, check off AC matrix | AC matrix checked, Status remains Ready (wait for Reviewer to set Done) |
+
+### Phase 2 Detailed Responsibilities (Critical!)
+
+When user says "Coder is done, please verify" or similar, Test Owner enters **Phase 2**:
+
+1. **Run all tests**: Execute `npm test` or project test command
+2. **Verify Green status**: Confirm all tests pass
+3. **Check off AC Coverage Matrix**: Change `[ ]` to `[x]` in verification.md AC Coverage Matrix
+4. **Collect Green evidence**: Save to `evidence/green-final/`
+5. **Output verification report**: Summarize test results and coverage
+
+### AC Coverage Matrix Checkbox Permissions (Important!)
+
+| Checkbox Location | Who Can Check | When to Check |
+|-------------------|---------------|---------------|
+| `[ ]` in AC Coverage Matrix | **Test Owner** | Phase 2 after verifying Green status |
+| Status field `Done` | Reviewer | After Code Review passes |
+
+**Prohibited**: Coder cannot check AC Coverage Matrix, cannot modify verification.md.
+
+---
+
 ## Prerequisites: Configuration Discovery (Protocol-Agnostic)
 
 - `<truth-root>`: Current truth directory root
@@ -339,28 +379,53 @@ During test writing, you **must immediately** write to `deviation-log.md` in the
 
 ## Completion Status and Routing
 
-### Completion Status Classification (MECE)
+### Phase Awareness (Critical!)
+
+Test Owner has two phases, completion status varies by phase:
+
+| Current Phase | How to Determine | Next Step After Completion |
+|---------------|------------------|---------------------------|
+| **Phase 1** | verification.md doesn't exist or Red baseline not produced | → Coder |
+| **Phase 2** | User says "verify/check off" and Coder has completed | → Code Review |
+
+### Phase 1 Completion Status Classification (MECE)
 
 | Code | Status | Determination Criteria | Next Step |
 |:----:|--------|------------------------|-----------|
-| ✅ | COMPLETED | Red baseline produced, no deviations | `devbooks-coder` (separate session) |
-| ⚠️ | COMPLETED_WITH_DEVIATION | Red baseline produced, deviation-log has pending records | `devbooks-design-backport` |
+| ✅ | PHASE1_COMPLETED | Red baseline produced, no deviations | `devbooks-coder` (separate session) |
+| ⚠️ | PHASE1_COMPLETED_WITH_DEVIATION | Red baseline produced, deviation-log has pending records | `devbooks-design-backport` |
 | ❌ | BLOCKED | Needs external input/decision | Record breakpoint, wait for user |
 | 💥 | FAILED | Test framework issues etc. | Fix and retry |
 
-### Status Determination Flow
+### Phase 2 Completion Status Classification (MECE)
+
+| Code | Status | Determination Criteria | Next Step |
+|:----:|--------|------------------------|-----------|
+| ✅ | PHASE2_VERIFIED | Tests all green, AC matrix checked | `devbooks-code-review` |
+| ❌ | PHASE2_FAILED | Tests not passing | Notify Coder to fix, or HANDOFF |
+| 🔄 | PHASE2_HANDOFF | Found issues with tests themselves | Fix tests then re-verify |
+
+### Phase Determination Flow
 
 ```
-1. Check if deviation-log.md has "| ❌" records
-   → Yes: COMPLETED_WITH_DEVIATION
+1. Check which phase we're in:
+   - verification.md doesn't exist → Phase 1
+   - verification.md exists but AC matrix all [ ] → Phase 1 or Phase 2 (depends on user request)
+   - User explicitly says "verify/check off/Coder is done" → Phase 2
 
-2. Check if Red baseline is produced
-   - verification.md exists with traceability matrix
-   - evidence/red-baseline/ exists
-   → No: BLOCKED or FAILED
+2. Phase 1 status determination:
+   a. Check if deviation-log.md has "| ❌" records
+      → Yes: PHASE1_COMPLETED_WITH_DEVIATION
+   b. Check if Red baseline is produced
+      → No: BLOCKED or FAILED
+   c. All above pass → PHASE1_COMPLETED
 
-3. All checks passed
-   → COMPLETED
+3. Phase 2 status determination:
+   a. Run tests, check if all green
+      → No: PHASE2_FAILED
+   b. Check if tests themselves have issues
+      → Yes: PHASE2_HANDOFF
+   c. All green and no issues → PHASE2_VERIFIED
 ```
 
 ### Routing Output Template (Required)
@@ -370,15 +435,21 @@ After completing test-owner, **must** output in this format:
 ```markdown
 ## Completion Status
 
-**Status**: ✅ COMPLETED / ⚠️ COMPLETED_WITH_DEVIATION / ❌ BLOCKED / 💥 FAILED
+**Phase**: Phase 1 (Red Baseline) / Phase 2 (Green Verification)
 
-**Red Baseline**: Produced / Not completed
+**Status**: ✅ PHASE1_COMPLETED / ✅ PHASE2_VERIFIED / ⚠️ ... / ❌ ... / 💥 ...
+
+**Red Baseline**: Produced / Not completed (Phase 1 only)
+
+**Green Verification**: All green / Has failures (Phase 2 only)
+
+**AC Matrix**: Checked N/M / Not checked (Phase 2 only)
 
 **Deviation Records**: Has N pending / None
 
 ## Next Step
 
-**Recommended**: `devbooks-xxx skill` (separate session)
+**Recommended**: `devbooks-xxx skill`
 
 **Reason**: [specific reason]
 
@@ -390,8 +461,11 @@ Run devbooks-xxx skill for change <change-id>
 
 | My Status | Next Step | Reason |
 |-----------|-----------|--------|
-| COMPLETED | `devbooks-coder` (separate session) | Red baseline produced, Coder implements to make Green |
-| COMPLETED_WITH_DEVIATION | `devbooks-design-backport` | Backport design first, then hand to Coder |
+| PHASE1_COMPLETED | `devbooks-coder` (separate session) | Red baseline produced, Coder implements to make Green |
+| PHASE1_COMPLETED_WITH_DEVIATION | `devbooks-design-backport` | Backport design first, then hand to Coder |
+| PHASE2_VERIFIED | `devbooks-code-review` | Tests all green, can proceed to code review |
+| PHASE2_FAILED | Notify Coder | Tests not passing, need Coder to fix |
+| PHASE2_HANDOFF | Fix tests | Tests themselves have issues, Test Owner fixes |
 | BLOCKED | Wait for user | Record breakpoint area |
 | FAILED | Fix and retry | Analyze failure reason |
 
@@ -399,6 +473,7 @@ Run devbooks-xxx skill for change <change-id>
 - **Role Isolation**: Coder must work in a **separate conversation/instance**
 - Test Owner and Coder cannot share the same session context
 - If deviations exist, must design-backport first before handing to Coder
+- **Phase 2 AC matrix checking can only be done by Test Owner**
 
 ---
 

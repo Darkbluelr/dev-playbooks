@@ -11,6 +11,40 @@ allowed-tools:
 
 # DevBooks: Design Backport
 
+## Workflow Position Awareness
+
+> **Core Principle**: Design Backport is now **primarily auto-invoked by Spec Gardener during archive phase**, users typically don't need to call it manually.
+
+### My Position in the Overall Workflow
+
+```
+proposal → design → test-owner → coder → test-owner(verify) → code-review → [Archive/Spec Gardener]
+                                    ↓                                              ↓
+                             Record deviations to deviation-log.md     Auto-invoke design-backport
+```
+
+### Design Decision: Auto Backport
+
+**Old Flow** (manual judgment required):
+```
+coder has deviations → user manually calls design-backport → then archive
+```
+
+**New Flow** (auto handling):
+```
+coder has deviations → spec-gardener auto-detects and backports during archive → archive
+```
+
+### When Manual Call is Still Needed
+
+| Scenario | Need Manual Call? |
+|----------|-------------------|
+| Normal flow (deviations in deviation-log.md) | ❌ Auto-handled during archive |
+| Need immediate backport (don't wait for archive) | ✅ Manual call |
+| Severe design-implementation conflict needs decision | ✅ Manual call and discuss |
+
+---
+
 ## Prerequisites: Configuration Discovery (Protocol-Agnostic)
 
 - `<truth-root>`: Current truth directory root

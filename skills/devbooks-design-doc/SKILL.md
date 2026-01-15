@@ -11,6 +11,28 @@ allowed-tools:
 
 # DevBooks: Design Document (Design Doc)
 
+## Workflow Position Awareness
+
+> **Core Principle**: Design Doc executes after Proposal is approved, serving as the starting point for implementation phase.
+
+### My Position in the Overall Workflow
+
+```
+proposal → [Design Doc] → spec-contract → implementation-plan → test-owner → coder → ...
+                 ↓
+        Define What/Constraints/AC
+```
+
+### Design Doc's Output
+
+- **What**: What to do (not how to do it)
+- **Constraints**: Constraint conditions
+- **AC-xxx**: Acceptance criteria (testable)
+
+**Key**: Design Doc does not write implementation steps, that's implementation-plan's responsibility.
+
+---
+
 ## Prerequisites: Configuration Discovery (Protocol Agnostic)
 
 - `<truth-root>`: Current truth directory root

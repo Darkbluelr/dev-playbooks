@@ -11,6 +11,42 @@ allowed-tools:
 
 # DevBooks: Implementation Plan
 
+## Workflow Position Awareness
+
+> **Core Principle**: Implementation Plan executes after Design Doc, providing task list for Test Owner and Coder.
+
+### My Position in the Overall Workflow
+
+```
+proposal → design → [Implementation Plan] → test-owner(phase1) → coder → ...
+                            ↓
+                    tasks.md (task list)
+```
+
+### Implementation Plan's Responsibilities
+
+| Allowed | Prohibited |
+|---------|------------|
+| Derive tasks from design.md | ❌ Reference tests/ (avoid implementation bias) |
+| Bind acceptance anchors (AC-xxx) | ❌ Write implementation code |
+| Split parallel tasks | ❌ Execute tasks |
+
+### Output: tasks.md Structure
+
+```markdown
+## Main Plan Area
+- [ ] MP1.1 Task description (AC-001)
+- [ ] MP1.2 Task description (AC-002)
+
+## Temporary Plan Area
+(urgent tasks)
+
+## Breakpoint Area
+(context switch resume info)
+```
+
+---
+
 ## Prerequisites: Configuration Discovery (Protocol-Agnostic)
 
 - `<truth-root>`: Current truth directory root

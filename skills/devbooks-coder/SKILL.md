@@ -12,6 +12,40 @@ allowed-tools:
 
 # DevBooks: Implementation Lead (Coder)
 
+## Workflow Position Awareness
+
+> **Core Principle**: Coder executes after Test Owner Phase 1 and hands off to Test Owner Phase 2 for verification upon completion.
+
+### My Position in the Overall Workflow
+
+```
+proposal → design → test-owner(phase1) → [Coder] → test-owner(phase2) → code-review → archive
+                                            ↓
+                                    Implement code, make tests green
+```
+
+### Coder's Responsibility Boundaries
+
+| Allowed | Prohibited |
+|---------|------------|
+| Modify `src/**` code | ❌ Modify `tests/**` |
+| Check off `tasks.md` items | ❌ Modify `verification.md` |
+| Record deviations to `deviation-log.md` | ❌ Check off AC coverage matrix |
+| Run tests to verify | ❌ Set verification.md Status |
+
+### Flow After Coder Completes
+
+1. **Tasks complete**: tasks.md all `[x]`
+2. **Tests green**: Run `npm test` to confirm passing
+3. **Hand off to Test Owner**: Notify Test Owner to enter Phase 2 verification
+4. **Wait for verification result**:
+   - Test Owner confirms green → Proceed to Code Review
+   - Test Owner finds issues → Coder fixes
+
+**Key Reminder**: After Coder completes, **do not go directly to Code Review**, first let Test Owner verify and check off.
+
+---
+
 ## Prerequisites: Configuration Discovery (Protocol-Agnostic)
 
 - `<truth-root>`: Current truth directory root
@@ -334,8 +368,8 @@ Run devbooks-xxx skill for change <change-id>
 
 | My Status | Next Step | Reason |
 |-----------|-----------|--------|
-| COMPLETED | `devbooks-code-review` | Review readability/consistency |
-| COMPLETED_WITH_DEVIATION | `devbooks-design-backport` | Backport design first, then review |
+| COMPLETED | `devbooks-test-owner` (Phase 2 verification) | Tasks complete, need Test Owner to verify and check off |
+| COMPLETED_WITH_DEVIATION | `devbooks-design-backport` | Backport design first, then let Test Owner verify |
 | HANDOFF (test issue) | `devbooks-test-owner` | Coder cannot modify tests |
 | BLOCKED | Wait for user | Record breakpoint area |
 | FAILED | Fix and retry | Analyze failure reason |
@@ -344,6 +378,7 @@ Run devbooks-xxx skill for change <change-id>
 - Coder **can never modify** `tests/**`
 - If test issues found, must HANDOFF to Test Owner (separate session)
 - If deviations exist, must design-backport first before continuing
+- **Coder must go through Test Owner Phase 2 verification before Code Review**
 
 ---
 

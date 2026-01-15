@@ -11,6 +11,36 @@ allowed-tools:
 
 # DevBooks: Spec Gardener
 
+## Workflow Position Awareness
+
+> **Core Principle**: Spec Gardener is the endpoint of the archive phase, responsible for merging change package artifacts into truth, **and automatically handling any pending backports**.
+
+### My Position in the Overall Workflow
+
+```
+proposal → design → test-owner → coder → test-owner(verify) → code-review → [Spec Gardener/Archive]
+                                                                                    ↓
+                                                               Auto backport + Merge to truth + Archive
+```
+
+### Spec Gardener's Responsibilities
+
+1. **Auto backport detection**: Check if deviation-log.md has pending backport records
+2. **Auto execute backport**: If pending records exist, automatically execute design backport
+3. **Merge to truth**: Merge specs/contracts/architecture into truth-root
+4. **Archive change package**: Set verification.md Status = Archived
+
+### Why Auto Backport in Archive Phase?
+
+**Design Decision**: Users only need to call skills linearly, no need to judge whether backport is needed.
+
+| Scenario | Old Design (Manual judgment) | New Design (Auto handling) |
+|----------|------------------------------|---------------------------|
+| Coder has deviations | User needs to call design-backport → then archive | Spec Gardener auto-detects and backports |
+| Coder has no deviations | Archive directly | Archive directly |
+
+---
+
 ## Prerequisites: Configuration Discovery (Protocol Agnostic)
 
 - `<truth-root>`: Current truth directory root
@@ -30,6 +60,51 @@ Before execution, **must** search for configuration in the following order (stop
 ---
 
 ## Core Responsibilities
+
+### 0. Auto Backport Detection and Handling (Required Before Archive)
+
+> **Design Decision**: Archive phase automatically handles all pending backports, users don't need to manually call design-backport.
+
+**Detection Flow**:
+
+```
+1. Read <change-root>/<change-id>/deviation-log.md
+2. Check if there are "| ❌" pending backport records
+   → Yes: Execute auto backport (steps 3-5)
+   → No: Skip, proceed directly to merge phase
+
+3. For each pending record, determine if it's Design-level content:
+   - DESIGN_GAP, CONSTRAINT_CHANGE, API_CHANGE → Need backport
+   - Pure implementation details (filename/classname/temp steps) → Don't backport, mark as IMPL_ONLY
+
+4. Execute design backport:
+   - Read design.md
+   - Update according to design-backport protocol's "backportable content scope"
+   - Add change record at the end of design.md
+
+5. Update deviation-log.md:
+   - Mark backported records as ✅
+   - Record backport time and archive batch
+```
+
+**Auto Backport Content Scope** (inherited from design-backport):
+
+| Backportable | Not Backportable |
+|--------------|------------------|
+| External semantics/user-visible behavior | Specific file paths, class/function names |
+| System-level immutable constraints (Invariants) | PR splits, task execution order |
+| Core data contracts and evolution strategies | Overly detailed algorithm pseudocode |
+| Cross-phase governance strategies | Script commands |
+| Key tradeoffs and decisions | Table/field names |
+
+**deviation-log.md Update Format**:
+
+```markdown
+| Time | Type | Description | Affected Files | Backported | Batch |
+|------|------|-------------|----------------|:----------:|-------|
+| 2024-01-15 10:30 | DESIGN_GAP | Concurrent scenario | tests/... | ✅ | archive-2024-01-16 |
+| 2024-01-15 11:00 | IMPL_ONLY | Variable rename | src/... | ⏭️ | (skipped) |
+```
 
 ### 1. Spec Merge and Maintenance
 
@@ -106,9 +181,33 @@ Detection rules reference: `skills/_shared/context-detection-template.md`
 
 | Mode | Trigger Condition | Behavior |
 |------|-------------------|----------|
-| **Archive Mode** | change-id provided and gates pass | Merge change package artifacts into truth-root |
+| **Archive Mode** | change-id provided and gates pass | **Auto backport** → Merge to truth-root → Set Status=Archived |
 | **Maintenance Mode** | No change-id | Execute deduplication, cleanup, organization operations |
 | **Check Mode** | With --dry-run parameter | Output suggestions only, no actual modifications |
+
+### Archive Mode Complete Flow
+
+```
+1. Pre-checks:
+   - [ ] Change package exists
+   - [ ] verification.md Status = Ready or Done
+   - [ ] evidence/green-final/ exists
+   - [ ] tasks.md all [x]
+
+2. Auto backport (if needed):
+   - [ ] Detect deviation-log.md
+   - [ ] Backport to design.md
+   - [ ] Update deviation-log.md marks
+
+3. Merge to truth:
+   - [ ] Merge specs/**
+   - [ ] Merge contracts/**
+   - [ ] Merge Architecture Impact to c4.md
+
+4. Archive:
+   - [ ] Set verification.md Status = Archived
+   - [ ] Output archive report
+```
 
 ### Detection Output Example
 
