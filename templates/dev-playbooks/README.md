@@ -146,7 +146,7 @@ Run devbooks-code-review skill for change add-oauth2
 **4) Archive stage**
 
 ```
-Run devbooks-spec-gardener skill for change add-oauth2
+Run devbooks-archiver skill for change add-oauth2
 ```
 
 ---
@@ -185,7 +185,7 @@ Run devbooks-spec-gardener skill for change add-oauth2
 
 | Skill | Description |
 |-------|-------------|
-| devbooks-spec-gardener | Maintain/dedupe specs |
+| devbooks-archiver | Maintain/dedupe specs |
 | devbooks-delivery-workflow | End-to-end delivery workflow |
 
 ### Standalone Skills

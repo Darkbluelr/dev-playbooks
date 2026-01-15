@@ -115,7 +115,7 @@
     <text x="125" y="95" font-family="Arial, sans-serif" font-size="12" fill="#4a5568" text-anchor="middle">Code Review</text>
 
     <rect x="20" y="120" width="210" height="40" rx="8" fill="white" stroke="#8e2de2" stroke-width="2"/>
-    <text x="125" y="145" font-family="Arial, sans-serif" font-size="12" fill="#4a5568" text-anchor="middle">Spec Gardener</text>
+    <text x="125" y="145" font-family="Arial, sans-serif" font-size="12" fill="#4a5568" text-anchor="middle">Archiver</text>
 
     <rect x="20" y="170" width="210" height="40" rx="8" fill="white" stroke="#8e2de2" stroke-width="2"/>
     <text x="125" y="195" font-family="Arial, sans-serif" font-size="12" fill="#4a5568" text-anchor="middle">Merge to truth-root</text>
@@ -194,7 +194,7 @@
       <tspan>Test Owner and Coder must work in separate conversations. "Done" is defined by test/build evidence, not AI self-declaration.</tspan>
     </text>
     <text x="0" y="35" font-family="Arial, sans-serif" font-size="10" fill="#a0aec0">
-      <tspan>Skills: devbooks-proposal-author → devbooks-design-doc → devbooks-implementation-plan → devbooks-test-owner → devbooks-coder → devbooks-code-review → devbooks-spec-gardener</tspan>
+      <tspan>Skills: devbooks-proposal-author → devbooks-design-doc → devbooks-implementation-plan → devbooks-test-owner → devbooks-coder → devbooks-code-review → devbooks-archiver</tspan>
     </text>
   </g>
 </svg>

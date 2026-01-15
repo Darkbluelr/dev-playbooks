@@ -13,7 +13,7 @@ allowed-tools:
 
 ## Workflow Position Awareness
 
-> **Core Principle**: Design Backport is now **primarily auto-invoked by Spec Gardener during archive phase**, users typically don't need to call it manually.
+> **Core Principle**: Design Backport is now **primarily auto-invoked by Archiver during archive phase**, users typically don't need to call it manually.
 
 ### My Position in the Overall Workflow
 
@@ -32,7 +32,7 @@ coder has deviations → user manually calls design-backport → then archive
 
 **New Flow** (auto handling):
 ```
-coder has deviations → spec-gardener auto-detects and backports during archive → archive
+coder has deviations → archiver auto-detects and backports during archive → archive
 ```
 
 ### When Manual Call is Still Needed

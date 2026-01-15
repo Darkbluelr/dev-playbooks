@@ -163,7 +163,7 @@ Checklist:
 - Update traceability statuses (DONE/BLOCKED/DEFERRED)
 - Update plan progress based on anchors only
 - Update value-stream evidence links in `verification.md`
-- Spec gardening (optional): use `devbooks-spec-gardener` to dedupe/merge/cleanup truth root
+- Spec gardening (optional): use `devbooks-archiver` to dedupe/merge/cleanup truth root
 
 ---
 

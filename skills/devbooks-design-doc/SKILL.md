@@ -100,7 +100,7 @@ The following change types **require** updating corresponding documentation:
 
 Design documents **must** include an "Architecture Impact" section declaring the impact of this change on system architecture. This is a key mechanism to ensure architecture changes go through verification closed-loops.
 
-> **Design Decision**: C4 architecture changes are no longer written directly to the truth directory by a standalone `devbooks-c4-map` skill. Instead, they are part of design.md and merged into truth by `devbooks-spec-gardener` after change acceptance.
+> **Design Decision**: C4 architecture changes are no longer written directly to the truth directory by a standalone `devbooks-c4-map` skill. Instead, they are part of design.md and merged into truth by `devbooks-archiver` after change acceptance.
 
 ### Template
 

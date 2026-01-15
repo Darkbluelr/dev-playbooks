@@ -128,7 +128,7 @@ deviation-log.md is a **persistent file** unaffected by compact. Even if convers
 | coder | HANDOFF (test issue) | `devbooks-test-owner` |
 | test-owner | COMPLETED | `devbooks-coder` |
 | test-owner | HANDOFF (design issue) | `devbooks-design-backport` |
-| code-review | COMPLETED (has spec delta) | `devbooks-spec-gardener` |
+| code-review | COMPLETED (has spec delta) | `devbooks-archiver` |
 | code-review | COMPLETED (no spec delta) | Archive complete |
 | Any | BLOCKED | Record breakpoint, wait for user |
 | Any | FAILED | Fix and retry current skill |

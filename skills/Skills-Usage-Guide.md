@@ -245,7 +245,7 @@ If you are not using DevBooks, replace `dev-playbooks/specs` / `dev-playbooks/ch
 
 ---
 
-## `devbooks-spec-gardener` (Spec Gardener)
+## `devbooks-archiver` (Archiver)
 
 - Purpose: before archiving, prune and maintain `<truth-root>` (dedupe/merge/remove stale/reorganize/fix consistency) to prevent spec sprawl.
 - When to use:
@@ -253,7 +253,7 @@ If you are not using DevBooks, replace `dev-playbooks/specs` / `dev-playbooks/ch
   - You found duplicate/overlapping/stale entries in `<truth-root>`
 - Copy-paste prompt:
   ```text
-  You are Spec Gardener. Explicitly use `devbooks-spec-gardener`.
+  You are Archiver. Explicitly use `devbooks-archiver`.
   Inputs: `dev-playbooks/changes/<change-id>/specs/**` + `dev-playbooks/specs/**` + `dev-playbooks/changes/<change-id>/design.md` (if any).
   You may modify only `dev-playbooks/specs/**` to merge/dedupe/categorize/delete stale items; do not modify the change package contents.
   Output in order: operation list (CREATE/UPDATE/MOVE/DELETE) → full content for every CREATE/UPDATE file → merge mapping summary → Open Questions (<=3).

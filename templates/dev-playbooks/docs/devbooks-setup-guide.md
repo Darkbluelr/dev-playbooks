@@ -132,7 +132,7 @@ Each change must declare which gates are covered; missing items require reasons:
 | Test Owner | `devbooks-test-owner` | `verification.md` + `tests/` |
 | Coder | `devbooks-coder` | Implement per tasks (no tests) |
 | Reviewer | `devbooks-code-review` | Review feedback |
-| Spec Gardener | `devbooks-spec-gardener` | Archive pruning + C4 merge |
+| Archiver | `devbooks-archiver` | Archive pruning + C4 merge |
 | Design Backport | `devbooks-design-backport` | Backport design gaps |
 
 ### Workflow-Based

@@ -806,7 +806,7 @@ ${DEVBOOKS_MARKERS.start}
 | \`devbooks-proposal-author\` | 创建变更提案 |
 | \`devbooks-design-doc\` | 创建设计文档 |
 | \`devbooks-test-owner / devbooks-coder\` | 执行实现 |
-| \`devbooks-spec-gardener\` | 归档变更包 |
+| \`devbooks-archiver\` | 归档变更包 |
 
 ${DEVBOOKS_MARKERS.end}
 `;
@@ -942,7 +942,7 @@ function generateAgentsContent(filename) {
 | \`devbooks-proposal-author\` | 创建变更提案 |
 | \`devbooks-design-doc\` | 创建设计文档 |
 | \`devbooks-test-owner / devbooks-coder\` | 执行实现（test-owner/coder/reviewer） |
-| \`devbooks-spec-gardener\` | 归档变更包 |
+| \`devbooks-archiver\` | 归档变更包 |
 
 ${DEVBOOKS_MARKERS.end}
 `;

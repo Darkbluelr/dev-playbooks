@@ -251,7 +251,7 @@ Default routing:
 Trigger signals: User says "archive/merge specs/close out/wrap up" etc.
 
 Default routing:
-- If spec deltas were produced this time: `devbooks-spec-gardener` (prune `<truth-root>/**` before archive merge)
+- If spec deltas were produced this time: `devbooks-archiver` (prune `<truth-root>/**` before archive merge)
 - If design decisions need to be written back: `devbooks-design-backport` (as needed)
 - If user documentation affected: `devbooks-docs-sync` (ensure docs consistent with code)
 
@@ -302,7 +302,7 @@ Trigger signals: User says "prototype first/quick validation/spike/--prototype/t
 
 ## DevBooks Skill Adaptation
 
-DevBooks uses `devbooks-proposal-author skill`, `devbooks-test-owner/coder skill`, `devbooks-spec-gardener skill` as entry points.
+DevBooks uses `devbooks-proposal-author skill`, `devbooks-test-owner/coder skill`, `devbooks-archiver skill` as entry points.
 Route according to A/B/C/D above, artifact paths follow `<truth-root>/<change-root>` mappings in project signposts.
 
 ---

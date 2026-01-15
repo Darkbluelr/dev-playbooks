@@ -172,7 +172,7 @@ After completing code-review, the next step depends on the situation:
 
 | Condition | Next Skill | Reason |
 |-----------|------------|--------|
-| Spec deltas exist | `devbooks-spec-gardener` | Merge specs into truth before archive |
+| Spec deltas exist | `devbooks-archiver` | Merge specs into truth before archive |
 | No spec deltas | Archive complete | No further skills needed |
 | Major issues found | Hand back to `devbooks-coder` | Fix issues before archive |
 
@@ -192,7 +192,7 @@ After completing code-review, output:
 ```markdown
 ## Recommended Next Step
 
-**Next: `devbooks-spec-gardener`** (if spec deltas exist)
+**Next: `devbooks-archiver`** (if spec deltas exist)
 OR
 **Archive complete** (if no spec deltas)
 

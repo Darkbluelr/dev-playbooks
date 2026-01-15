@@ -25,7 +25,7 @@ This document defines the canonical next step recommendations for each skill. Al
                               ↓
 ┌─────────────────────────────────────────────────────────────────┐
 │                     ARCHIVE STAGE                                │
-│                     spec-gardener                                │
+│                     archiver                                │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -45,11 +45,11 @@ This document defines the canonical next step recommendations for each skill. Al
 | `devbooks-implementation-plan` | `devbooks-test-owner` | Always (must be separate chat) |
 | `devbooks-test-owner` | `devbooks-coder` | After Red baseline (must be separate chat) |
 | `devbooks-coder` | `devbooks-code-review` | After all tasks completed |
-| `devbooks-code-review` | `devbooks-spec-gardener` | If spec deltas exist |
+| `devbooks-code-review` | `devbooks-archiver` | If spec deltas exist |
 | `devbooks-code-review` | Archive complete | If no spec deltas |
 | `devbooks-test-reviewer` | `devbooks-coder` | If test issues found, hand back |
 | `devbooks-design-backport` | `devbooks-implementation-plan` | Rerun plan after design update |
-| `devbooks-spec-gardener` | Archive complete | Always |
+| `devbooks-archiver` | Archive complete | Always |
 
 ## Critical Constraints
 

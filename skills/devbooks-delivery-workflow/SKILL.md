@@ -28,6 +28,58 @@ Before execution, **must** search for configuration in the following order (stop
 - Do not guess directory roots
 - Do not skip reading the rules document
 
+## Change Package Naming Convention (Mandatory)
+
+Change package ID (change-id) **must** follow this naming convention:
+
+### Format
+
+```
+<datetime>-<verb-prefixed-semantic-description>
+```
+
+### Rules
+
+| Component | Rule | Example |
+|-----------|------|---------|
+| Datetime | `YYYYMMDD-HHMM` format | `20240116-1030` |
+| Separator | Use `-` between datetime and semantic | `-` |
+| Semantic description | **Must start with a verb**, use lowercase and hyphens | `add-oauth2`, `fix-login-bug` |
+
+### Valid Examples
+
+```bash
+# ✅ Correct
+20240116-1030-add-oauth2-support
+20240116-1430-fix-user-auth-bug
+20240116-0900-refactor-payment-module
+20240115-2200-update-api-docs
+
+# ❌ Incorrect
+add-oauth2                    # Missing datetime
+20240116-oauth2               # Semantic doesn't start with verb
+2024-01-16-add-oauth2         # Wrong date format (shouldn't have -)
+oauth2-20240116               # Wrong order
+```
+
+### Common Verbs
+
+| Verb | Usage |
+|------|-------|
+| `add` | Add new feature |
+| `fix` | Fix defect |
+| `update` | Update existing feature |
+| `refactor` | Refactor code |
+| `remove` | Remove feature |
+| `improve` | Improve performance/experience |
+| `migrate` | Migrate data/system |
+
+### Why This Naming Convention?
+
+1. **Timestamp first**: Auto-sorts by time in archive directory
+2. **Verb prefix**: Clearly expresses change intent, aids code review
+3. **Lowercase hyphens**: Avoids cross-platform filename issues
+
 ## Reference Skeleton (Read as Needed)
 
 - Workflow: `references/delivery-acceptance-workflow.md`

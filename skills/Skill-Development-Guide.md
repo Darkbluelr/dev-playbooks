@@ -95,7 +95,7 @@ echo "ok: verification passed"
 
 ### 1.5 Truth Source Separation
 
-- **Read-only truth**: Skills may read from `<truth-root>/` but must not modify it directly (except for archive-related Skills such as `spec-gardener`).
+- **Read-only truth**: Skills may read from `<truth-root>/` but must not modify it directly (except for archive-related Skills such as `archiver`).
 - **Write to workspace**: Skills should write to `<change-root>/<change-id>/`.
 - **Archive is merge**: archiving merges workspace outputs back into truth.
 

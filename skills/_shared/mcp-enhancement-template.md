@@ -66,7 +66,7 @@ The following Skills do not depend on MCP and do not need an MCP Enhancement sec
 - devbooks-proposal-challenger (review-only)
 - devbooks-proposal-judge (verdict-only)
 - devbooks-design-backport (document backport)
-- devbooks-spec-gardener (file pruning)
+- devbooks-archiver (file pruning)
 - devbooks-test-reviewer (test review)
 
 For these Skills, the MCP Enhancement section should be:
