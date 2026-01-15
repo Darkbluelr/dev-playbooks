@@ -32,6 +32,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const CLI_COMMAND = 'dev-playbooks';
+const XDG_CONFIG_HOME = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
 
 // ============================================================================
 // Skills 支持级别定义
@@ -68,6 +69,18 @@ const AI_TOOLS = [
     slashDir: '.qoder/commands/devbooks',
     agentsDir: 'agents',
     globalDir: path.join(os.homedir(), '.qoder'),
+    instructionFile: 'AGENTS.md',
+    available: true
+  },
+  {
+    id: 'opencode',
+    name: 'OpenCode',
+    description: 'OpenCode AI CLI (compatible with oh-my-opencode)',
+    skillsSupport: SKILLS_SUPPORT.FULL,
+    slashDir: '.opencode/command',
+    agentsDir: '.opencode/agent',
+    skillsDir: path.join(XDG_CONFIG_HOME, 'opencode', 'skill'),
+    globalDir: path.join(XDG_CONFIG_HOME, 'opencode'),
     instructionFile: 'AGENTS.md',
     available: true
   },
@@ -113,17 +126,6 @@ const AI_TOOLS = [
     rulesDir: '.agent/rules',
     globalDir: path.join(os.homedir(), '.gemini', 'antigravity'),
     instructionFile: 'GEMINI.md',
-    available: true
-  },
-  {
-    id: 'opencode',
-    name: 'OpenCode',
-    description: 'OpenCode AI CLI',
-    skillsSupport: SKILLS_SUPPORT.RULES,
-    slashDir: '.opencode/commands/devbooks',
-    agentsDir: '.opencode/agent',
-    globalDir: path.join(os.homedir(), '.config', 'opencode'),
-    instructionFile: 'AGENTS.md',
     available: true
   },
 
@@ -473,11 +475,11 @@ function printSkillsSupportInfo() {
   console.log(chalk.gray('─'.repeat(50)));
   console.log();
 
-  console.log(chalk.green('★ 完整 Skills') + chalk.gray(' - Claude Code, Codex CLI, Qoder'));
+  console.log(chalk.green('★ 完整 Skills') + chalk.gray(' - Claude Code, Codex CLI, OpenCode, Qoder'));
   console.log(chalk.gray('   └ 独立的 Skills/Agents 系统，可按需调用，有独立上下文'));
   console.log();
 
-  console.log(chalk.blue('◆ Rules 系统') + chalk.gray(' - Cursor, Windsurf, Gemini, Antigravity, OpenCode, Continue'));
+  console.log(chalk.blue('◆ Rules 系统') + chalk.gray(' - Cursor, Windsurf, Gemini, Antigravity, Continue'));
   console.log(chalk.gray('   └ 规则自动应用于匹配的文件/场景，功能接近 Skills'));
   console.log();
 
@@ -550,8 +552,8 @@ function installSkills(toolIds, update = false) {
     const tool = AI_TOOLS.find(t => t.id === toolId);
     if (!tool || tool.skillsSupport !== SKILLS_SUPPORT.FULL) continue;
 
-    // Claude Code 和 Codex CLI 都支持相同格式的 Skills
-    if ((toolId === 'claude' || toolId === 'codex') && tool.skillsDir) {
+    // Claude Code / Codex CLI / OpenCode (incl. oh-my-opencode) share the same Skills format
+    if ((toolId === 'claude' || toolId === 'codex' || toolId === 'opencode') && tool.skillsDir) {
       const skillsSrcDir = path.join(__dirname, '..', 'skills');
       const skillsDestDir = tool.skillsDir;
 
@@ -606,6 +608,72 @@ function installSkills(toolIds, update = false) {
     // Qoder: 创建 agents 目录结构（但不复制 Skills，因为格式不同）
     if (toolId === 'qoder') {
       results.push({ tool: 'Qoder', type: 'agents', count: 0, total: 0, note: '需要手动创建 agents/' });
+    }
+  }
+
+  return results;
+}
+
+// ============================================================================
+// OpenCode: project-level command entrypoint (.opencode/command/devbooks.md)
+// ============================================================================
+
+function generateOpenCodeDevbooksCommand() {
+  return `---
+description: DevBooks workflow entrypoint (OpenCode / oh-my-opencode)
+---
+
+${DEVBOOKS_MARKERS.start}
+# DevBooks (OpenCode / oh-my-opencode)
+
+This project uses DevBooks for spec-driven development.
+
+## Quick start
+
+1. **Recommended entry (Router):** type \`/devbooks-router\` in chat
+2. Or use natural language: \`Run devbooks-router skill: <your request>\`
+
+> Note: In oh-my-opencode, installed Skills are also available as Slash Commands, so you can call them directly as \`/<skill-name>\`.
+
+## Common commands (use /<skill-name>)
+
+- \`/devbooks-router\`: workflow entry routing (recommends next step)
+- \`/devbooks-impact-analysis\`: impact analysis (cross-module / external contracts)
+- \`/devbooks-proposal-author\`: proposal stage (no coding)
+- \`/devbooks-design-doc\`: design doc (What/Constraints + AC)
+- \`/devbooks-implementation-plan\`: implementation plan (tasks.md)
+- \`/devbooks-test-owner\`: acceptance tests + traceability (separate chat)
+- \`/devbooks-coder\`: implement per tasks (do not modify tests/)
+- \`/devbooks-spec-gardener\`: spec pruning before archive
+
+## Hard constraints
+
+- Before answering or writing code: run config discovery and read the rules doc (\`.devbooks/config.yaml\` → \`dev-playbooks/project.md\` → \`project.md\`)
+- New features / breaking changes / architecture changes: create \`dev-playbooks/changes/<id>/\` and produce proposal/design/tasks/verification
+- Test Owner and Coder must be in separate conversations; Coder must not modify \`tests/**\`
+
+${DEVBOOKS_MARKERS.end}
+`;
+}
+
+function installOpenCodeCommands(toolIds, projectDir, update = false) {
+  const results = [];
+
+  if (!toolIds.includes('opencode')) return results;
+
+  const destDir = path.join(projectDir, '.opencode', 'command');
+  fs.mkdirSync(destDir, { recursive: true });
+
+  const destPath = path.join(destDir, 'devbooks.md');
+  const content = generateOpenCodeDevbooksCommand();
+
+  if (!fs.existsSync(destPath)) {
+    fs.writeFileSync(destPath, content);
+    results.push({ tool: 'OpenCode', type: 'command', path: destPath, action: 'created' });
+  } else if (update) {
+    const updated = updateManagedContent(destPath, content);
+    if (updated) {
+      results.push({ tool: 'OpenCode', type: 'command', path: destPath, action: 'updated' });
     }
   }
 
@@ -1084,6 +1152,12 @@ async function initCommand(projectDir, options) {
     console.log(chalk.gray(`  └ ${result.tool}: ${path.relative(projectDir, result.path)}`));
   }
 
+  // OpenCode: project-level command entrypoint (.opencode/command/devbooks.md)
+  const openCodeCmdResults = installOpenCodeCommands(selectedTools, projectDir);
+  for (const result of openCodeCmdResults) {
+    console.log(chalk.gray(`  └ ${result.tool}: ${path.relative(projectDir, result.path)}`));
+  }
+
   // Setup ignore files
   const ignoreSpinner = ora('Configuring ignore files...').start();
   const ignoreResults = setupIgnoreFiles(selectedTools, projectDir);
@@ -1190,6 +1264,14 @@ async function updateCommand(projectDir) {
   for (const result of instructionResults) {
     if (result.action === 'updated') {
       console.log(chalk.green('✓') + ` ${result.tool}: updated instruction file ${path.relative(projectDir, result.path)}`);
+    }
+  }
+
+  // OpenCode: update project-level command entrypoint (.opencode/command/devbooks.md)
+  const openCodeCmdResults = installOpenCodeCommands(configuredTools, projectDir, true);
+  for (const result of openCodeCmdResults) {
+    if (result.action === 'updated') {
+      console.log(chalk.green('✓') + ` ${result.tool}: updated command entrypoint ${path.relative(projectDir, result.path)}`);
     }
   }
 

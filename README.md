@@ -46,6 +46,7 @@ AI coding assistants are powerful, but often **unpredictable**:
 | **Claude Code** | Full Skills | `CLAUDE.md` |
 | **Codex CLI** | Full Skills | `AGENTS.md` |
 | **Qoder** | Full Skills | `AGENTS.md` |
+| **OpenCode (oh-my-opencode)** | Full Skills | `AGENTS.md` |
 | **Cursor** | Rules | `.cursor/rules/` |
 | **Windsurf** | Rules | `.windsurf/rules/` |
 | **Gemini CLI** | Rules | `GEMINI.md` |
@@ -84,6 +85,7 @@ After initialization:
 - Claude Code: `~/.claude/skills/devbooks-*`
 - Codex CLI: `~/.codex/skills/devbooks-*`
 - Qoder: `~/.qoder/` (manual setup required)
+- OpenCode: `~/.config/opencode/skill/devbooks-*`
 
 ### Quick integration
 
