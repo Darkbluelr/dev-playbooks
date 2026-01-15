@@ -73,6 +73,16 @@ Main Plan Area writing rules (mandatory):
 - Each task package must include: Purpose (Why), Deliverables, Impact Scope (Files/Modules), Acceptance Criteria, Dependencies, Risks.
 - Subtasks should go up to interface/contract/behavior boundaries, not function bodies.
 - Acceptance criteria must be observable and testable: specify which tests/acceptance checks to add/update and key metric thresholds.
+- **Task checkbox format (required)**: each subtask must use Markdown task list format `- [ ]` to support Coder plan persistence.
+  - Initial state must be `- [ ]` (not done)
+  - Coder will update to `- [x]` (done) immediately after completing the subtask
+  - The subtask title must be on the checkbox line (do not replace it with `#### MPx.y:` headings)
+  - Example:
+    ```markdown
+    ### MP1: Task Package Name
+    - [ ] MP1.1 Subtask description
+    - [ ] MP1.2 Subtask description
+    ```
 
 Temporary Plan Area rules (mandatory):
 - Only for off-plan high-priority tasks; include trigger reason, impact scope, minimal fix scope, regression test requirements.
