@@ -6,7 +6,6 @@ allowed-tools:
   - Grep
   - Read
   - Bash
-  - mcp__ckb__getStatus
 ---
 
 # DevBooks: Workflow Entry Guide (Router)
