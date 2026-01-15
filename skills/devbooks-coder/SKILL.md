@@ -53,7 +53,7 @@ proposal → design → test-owner(phase1) → [Coder] → test-owner(phase2) �
 
 Before execution, you **must** search for configuration in the following order (stop when found):
 1. `.devbooks/config.yaml` (if exists) -> Parse and use its mappings
-2. `dev-playbooks/project.md` (if exists) -> DevBooks 2.0 protocol, use default mappings
+2. `dev-playbooks/project.md` (if exists) -> Dev-Playbooks protocol, use default mappings
 3. `project.md` (if exists) -> template protocol, use default mappings
 5. If still unable to determine -> **Stop and ask the user**
 
@@ -161,7 +161,7 @@ GOOD: 3 tests failed, see <change-root>/<change-id>/evidence/green-final/test-ou
 
 **Correct path examples**:
 ```bash
-# DevBooks 2.0 default path
+# Dev-Playbooks default path
 dev-playbooks/changes/<change-id>/evidence/green-final/test-$(date +%Y%m%d-%H%M%S).log
 
 # Using the script

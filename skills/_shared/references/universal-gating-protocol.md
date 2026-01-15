@@ -39,9 +39,9 @@ From now on, each time you write files, restate the `<truth-root>` and `<change-
 | Spec deltas | `<change-root>/<change-id>/specs/` | `./specs/` |
 | Traceability doc | `<change-root>/<change-id>/verification.md` | `./verification.md` |
 
-### DevBooks 2.0 Default Paths
+### Dev-Playbooks Default Paths
 
-When using DevBooks 2.0 protocol:
+When using Dev-Playbooks protocol:
 - `<change-root>` = `dev-playbooks/changes`
 - `<truth-root>` = `dev-playbooks/specs`
 
