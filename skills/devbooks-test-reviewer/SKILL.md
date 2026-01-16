@@ -53,6 +53,34 @@ Before execution, you **must** search for configuration in the following order (
 - Must compare against `verification.md` to check if tests cover all ACs
 - If missing tests are found, clearly indicate the missing AC-ID
 
+### CON-ROLE-004: Only Review Test Code Quality, Not Runtime Results
+> Core principle: Test Reviewer focuses on "**how well tests are written**", not "**whether tests pass**"
+
+**Prohibited**:
+- Discussing whether tests Pass/Fail, Red/Green, or Skip
+- Commenting on "functionality not implemented" or "missing dependencies"
+- Providing implementation suggestions to Coder (e.g., "implement xxx command", "add xxx field")
+- Referencing workflow phases (e.g., "Red baseline phase", "this is expected behavior")
+- Judging test quality based on test runtime results
+
+**Allowed**:
+- Reviewing correctness and clarity of test assertions
+- Reviewing test structure and organization
+- Reviewing completeness of test scenarios (based on code analysis, not runtime results)
+
+### CON-ROLE-005: Coverage = Test Existence, Not Test Pass Status
+
+| Coverage Status | Definition | Judgment Criteria |
+|-----------------|------------|-------------------|
+| ✅ Covered | Corresponding test case exists for AC | Test/it block exists in test file |
+| ⚠️ Partially Covered | Test exists but scenarios incomplete | Missing boundary conditions, error paths, etc. |
+| ❌ Missing | No corresponding test case | No matching test code found |
+
+**Prohibited** from including the following in coverage assessment:
+- Test Skip status (skipped tests still count as "Covered")
+- Test Fail status (failing tests still count as "Covered")
+- Test runtime or performance
+
 ---
 
 ## Review Dimensions
@@ -104,11 +132,13 @@ Before execution, you **must** search for configuration in the following order (
 
 ## Coverage Analysis
 
+> **Note**: Coverage status is based on test code existence, not test runtime results (Pass/Fail/Skip).
+
 | AC-ID | Test File | Coverage Status | Notes |
 |-------|-----------|-----------------|-------|
-| AC-001 | test-a.ts | Covered | - |
-| AC-002 | - | Missing | Needs to be added |
-| AC-003 | test-b.ts | Partially Covered | Missing boundary conditions |
+| AC-001 | test-a.ts | ✅ Covered | Test case exists |
+| AC-002 | - | ❌ Missing | No corresponding test code |
+| AC-003 | test-b.ts | ⚠️ Partially Covered | Test exists but missing boundary conditions |
 
 ## Issue List
 
@@ -178,7 +208,7 @@ After completing the review, you **must** provide a clear conclusion:
 | Skill Name | devbooks-test-reviewer |
 | Phase | Apply |
 | Artifact | Review report (not written to change package) |
-| Constraints | CON-ROLE-001~003 |
+| Constraints | CON-ROLE-001~005 |
 
 ---
 
