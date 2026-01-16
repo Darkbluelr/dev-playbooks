@@ -28,7 +28,42 @@ Before execution, **must** search for configuration in the following order (stop
 
 ## Output Location
 
-- Recommended: Write to the Impact section of `<change-root>/<change-id>/proposal.md` (or create a separate analysis document and backfill later)
+- **Must** write to: The Impact section of `<change-root>/<change-id>/proposal.md`
+- Alternative: Separate `impact-analysis.md` file (to be backfilled to proposal.md later)
+
+## Output Behavior (Critical Constraint)
+
+> **Golden Rule**: **Write directly to document, do NOT output to conversation window**
+
+### Must Follow
+
+1. **Direct Write**: Use `Edit` or `Write` tool to write analysis results directly to target document
+2. **No Echo**: Do NOT display the complete analysis content in the conversation
+3. **Brief Notification**: After completion, only inform the user "Impact analysis written to `<file-path>`"
+
+### Correct vs Incorrect Behavior
+
+| Scenario | ❌ Incorrect Behavior | ✅ Correct Behavior |
+|----------|----------------------|---------------------|
+| Analysis complete | Output full Impact table in conversation | Use Edit tool to write to proposal.md |
+| Notify user | Repeat analysis content | "Impact analysis written to `changes/xxx/proposal.md`" |
+| Large results | Paginate output to conversation | Write all to file, inform file location |
+
+### Example Conversation
+
+```
+User: Analyze the impact of modifying UserService
+
+AI: [Uses Grep/CKB to analyze references]
+    [Uses Edit tool to write to proposal.md]
+
+    Impact analysis written to the Impact section of `changes/refactor-user/proposal.md`.
+    - Direct impact: 8 files
+    - Indirect impact: 12 files
+    - Risk level: Medium
+
+    Open the file to view details.
+```
 
 ## Execution Method
 
