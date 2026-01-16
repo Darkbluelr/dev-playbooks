@@ -14,41 +14,95 @@ allowed-tools:
 
 ## Workflow Position Awareness
 
-> **Core Principle**: Test Owner has **dual-phase responsibilities** in the overall workflow, ensuring role isolation from Coder.
+> **Core Principle**: Test Owner has **dual-phase responsibilities** in the overall workflow, achieving mental clarity through **mode labels** (not session isolation).
 
 ### My Position in the Overall Workflow
 
 ```
-proposal → design → [Test Owner Phase 1] → coder → [Test Owner Phase 2] → code-review → archive
-                         ↓                              ↓
-                    Red baseline output          Green verification + check off
+proposal → design → [TEST-OWNER] → [CODER] → [TEST-OWNER] → code-review → archive
+                         ↓              ↓           ↓
+                    Red baseline    Implement    Evidence audit
+                   (incremental)   (@smoke)     (no @full rerun)
 ```
+
+### AI Era Solo Development Optimization
+
+> **Important Change**: This protocol is optimized for AI programming + solo development scenarios, **removing the mandatory "separate session" requirement**.
+
+| Old Design | New Design | Reason |
+|------------|------------|--------|
+| Test Owner and Coder must use separate sessions | Same session, switch with `[TEST-OWNER]` / `[CODER]` mode labels | Reduce context rebuilding cost |
+| Phase 2 reruns full tests | Phase 2 defaults to **evidence audit**, optional sampling rerun | Avoid slow test multiple runs |
+| No test layering requirement | Mandatory test layering: `@smoke`/`@critical`/`@full` | Fast feedback loop |
 
 ### Test Owner's Dual-Phase Responsibilities
 
-| Phase | Trigger | Core Responsibility | Output |
-|-------|---------|---------------------|--------|
-| **Phase 1: Red Baseline** | After design.md is complete | Write tests, produce failure evidence | verification.md (Status=Ready), Red baseline |
-| **Phase 2: Green Verification** | After Coder completes | Verify tests pass, check off AC matrix | AC matrix checked, Status remains Ready (wait for Reviewer to set Done) |
+| Phase | Trigger | Core Responsibility | Test Run Method | Output |
+|-------|---------|---------------------|-----------------|--------|
+| **Phase 1: Red Baseline** | After design.md is complete | Write tests, produce failure evidence | Only run **incremental tests** (new/P0) | verification.md (Status=Ready), Red baseline |
+| **Phase 2: Green Verification** | After Coder completes + @full passes | **Audit evidence**, check off AC matrix | Default no rerun, optional sampling | AC matrix checked, Status=Verified |
 
 ### Phase 2 Detailed Responsibilities (Critical!)
 
 When user says "Coder is done, please verify" or similar, Test Owner enters **Phase 2**:
 
-1. **Run all tests**: Execute `npm test` or project test command
-2. **Verify Green status**: Confirm all tests pass
-3. **Check off AC Coverage Matrix**: Change `[ ]` to `[x]` in verification.md AC Coverage Matrix
-4. **Collect Green evidence**: Save to `evidence/green-final/`
-5. **Output verification report**: Summarize test results and coverage
+1. **Check prerequisites**: Confirm @full tests have passed (check CI results or `evidence/green-final/`)
+2. **Audit evidence** (default mode):
+   - Check test logs in `evidence/green-final/` directory
+   - Verify commit hash matches current code
+   - Confirm tests cover all ACs
+3. **Optional sampling rerun**: Sample verify high-risk ACs or questionable tests
+4. **Check off AC Coverage Matrix**: Change `[ ]` to `[x]` in verification.md AC Coverage Matrix
+5. **Set status to Verified**: Indicates test verification passed, waiting for Code Review
 
 ### AC Coverage Matrix Checkbox Permissions (Important!)
 
 | Checkbox Location | Who Can Check | When to Check |
 |-------------------|---------------|---------------|
-| `[ ]` in AC Coverage Matrix | **Test Owner** | Phase 2 after verifying Green status |
+| `[ ]` in AC Coverage Matrix | **Test Owner** | Phase 2 after evidence audit confirmed |
+| Status field `Verified` | **Test Owner** | After Phase 2 completion |
 | Status field `Done` | Reviewer | After Code Review passes |
 
 **Prohibited**: Coder cannot check AC Coverage Matrix, cannot modify verification.md.
+
+---
+
+## Test Layering and Run Strategy (Critical!)
+
+> **Core Principle**: Test layering is key to solving "slow tests blocking development".
+
+### Test Layering Labels (Must Use)
+
+| Label | Purpose | Who Runs | Expected Time | When to Run |
+|-------|---------|----------|---------------|-------------|
+| `@smoke` | Fast feedback, core paths | Coder runs frequently | Seconds | After each code change |
+| `@critical` | Key functionality verification | Coder before commit | Minutes | Before commit |
+| `@full` | Complete acceptance tests | CI runs async | Can be slow (hours) | Background/CI |
+
+### Test Run Strategy by Phase
+
+| Phase | What to Run | Purpose | Blocking/Async |
+|-------|-------------|---------|----------------|
+| **Test Owner Phase 1** | Only **newly written tests** | Confirm Red status | Sync (but incremental only) |
+| **Coder during dev** | `@smoke` | Fast feedback loop | Sync |
+| **Coder before commit** | `@critical` | Key path verification | Sync |
+| **Coder on completion** | `@full` (trigger CI) | Complete acceptance | **Async** (doesn't block dev) |
+| **Test Owner Phase 2** | **No run** (audit evidence) | Independent verification | N/A |
+
+### Async vs Sync Boundary (Critical!)
+
+```
+✅ Async: Dev iteration (Coder can start next change after completion, no waiting for @full)
+❌ Sync: Archive gate (Archive must wait for @full to pass)
+
+Timeline example:
+T1: Coder completes implementation, triggers @full async test → Status = Implementation Done
+T2: Coder can start next change (not blocked)
+T3: @full tests pass → Status = Ready for Phase 2
+T4: Test Owner audits evidence + checks off → Status = Verified
+T5: Code Review → Status = Done
+T6: Archive (at this point @full has definitely passed)
+```
 
 ---
 
@@ -86,10 +140,15 @@ Test Owner must produce a structured `verification.md` that serves as both test 
 |--------|---------|-------------|
 | `Draft` | Initial state | Auto-generated |
 | `Ready` | Test plan ready | **Test Owner** |
+| `Implementation Done` | Implementation complete, waiting for @full tests | **Coder** |
+| `Verified` | @full passed + evidence audit complete | **Test Owner** |
 | `Done` | Review passed | Reviewer (Test Owner/Coder prohibited) |
-| `Archived` | Archived | Spec Gardener |
+| `Archived` | Archived | Archiver |
 
-**Constraint**: After completing the test plan, Test Owner should set Status to `Ready`.
+**Key Constraints**:
+- `Verified` status requires @full tests to have passed
+- Only changes with `Verified` or `Done` status can be archived
+- Test Owner sets `Ready` after completing test plan, sets `Verified` after evidence audit
 
 ```markdown
 # Verification Plan: <change-id>
@@ -385,14 +444,14 @@ Test Owner has two phases, completion status varies by phase:
 
 | Current Phase | How to Determine | Next Step After Completion |
 |---------------|------------------|---------------------------|
-| **Phase 1** | verification.md doesn't exist or Red baseline not produced | → Coder |
-| **Phase 2** | User says "verify/check off" and Coder has completed | → Code Review |
+| **Phase 1** | verification.md doesn't exist or Red baseline not produced | → `[CODER]` mode |
+| **Phase 2** | User says "verify/check off" and @full tests have passed | → Code Review |
 
 ### Phase 1 Completion Status Classification (MECE)
 
 | Code | Status | Determination Criteria | Next Step |
 |:----:|--------|------------------------|-----------|
-| ✅ | PHASE1_COMPLETED | Red baseline produced, no deviations | `devbooks-coder` (separate session) |
+| ✅ | PHASE1_COMPLETED | Red baseline produced, no deviations | Switch to `[CODER]` mode |
 | ⚠️ | PHASE1_COMPLETED_WITH_DEVIATION | Red baseline produced, deviation-log has pending records | `devbooks-design-backport` |
 | ❌ | BLOCKED | Needs external input/decision | Record breakpoint, wait for user |
 | 💥 | FAILED | Test framework issues etc. | Fix and retry |
@@ -401,8 +460,9 @@ Test Owner has two phases, completion status varies by phase:
 
 | Code | Status | Determination Criteria | Next Step |
 |:----:|--------|------------------------|-----------|
-| ✅ | PHASE2_VERIFIED | Tests all green, AC matrix checked | `devbooks-code-review` |
-| ❌ | PHASE2_FAILED | Tests not passing | Notify Coder to fix, or HANDOFF |
+| ✅ | PHASE2_VERIFIED | Evidence audit passed, AC matrix checked | `devbooks-code-review` |
+| ⏳ | PHASE2_WAITING | @full tests still running | Wait for CI to complete |
+| ❌ | PHASE2_FAILED | @full tests not passing | Notify Coder to fix |
 | 🔄 | PHASE2_HANDOFF | Found issues with tests themselves | Fix tests then re-verify |
 
 ### Phase Determination Flow
@@ -421,11 +481,13 @@ Test Owner has two phases, completion status varies by phase:
    c. All above pass → PHASE1_COMPLETED
 
 3. Phase 2 status determination:
-   a. Run tests, check if all green
+   a. Check if @full tests have completed
+      → No: PHASE2_WAITING
+   b. Check if @full tests passed
       → No: PHASE2_FAILED
-   b. Check if tests themselves have issues
+   c. Check if tests themselves have issues
       → Yes: PHASE2_HANDOFF
-   c. All green and no issues → PHASE2_VERIFIED
+   d. Audit evidence, confirm coverage → PHASE2_VERIFIED
 ```
 
 ### Routing Output Template (Required)
@@ -437,11 +499,13 @@ After completing test-owner, **must** output in this format:
 
 **Phase**: Phase 1 (Red Baseline) / Phase 2 (Green Verification)
 
-**Status**: ✅ PHASE1_COMPLETED / ✅ PHASE2_VERIFIED / ⚠️ ... / ❌ ... / 💥 ...
+**Status**: ✅ PHASE1_COMPLETED / ✅ PHASE2_VERIFIED / ⏳ PHASE2_WAITING / ...
 
 **Red Baseline**: Produced / Not completed (Phase 1 only)
 
-**Green Verification**: All green / Has failures (Phase 2 only)
+**@full Tests**: Passed / Running / Failed (Phase 2 only)
+
+**Evidence Audit**: Completed / Pending (Phase 2 only)
 
 **AC Matrix**: Checked N/M / Not checked (Phase 2 only)
 
@@ -449,31 +513,29 @@ After completing test-owner, **must** output in this format:
 
 ## Next Step
 
-**Recommended**: `devbooks-xxx skill`
+**Recommended**: Switch to `[CODER]` mode / `devbooks-xxx skill`
 
 **Reason**: [specific reason]
-
-### How to invoke
-Run devbooks-xxx skill for change <change-id>
 ```
 
 ### Specific Routing Rules
 
 | My Status | Next Step | Reason |
 |-----------|-----------|--------|
-| PHASE1_COMPLETED | `devbooks-coder` (separate session) | Red baseline produced, Coder implements to make Green |
+| PHASE1_COMPLETED | Switch to `[CODER]` mode | Red baseline produced, Coder implements to make Green |
 | PHASE1_COMPLETED_WITH_DEVIATION | `devbooks-design-backport` | Backport design first, then hand to Coder |
-| PHASE2_VERIFIED | `devbooks-code-review` | Tests all green, can proceed to code review |
-| PHASE2_FAILED | Notify Coder | Tests not passing, need Coder to fix |
+| PHASE2_VERIFIED | `devbooks-code-review` | Evidence audit passed, can proceed to code review |
+| PHASE2_WAITING | Wait for CI | @full tests still running |
+| PHASE2_FAILED | Notify Coder to fix | Tests not passing, need Coder to fix |
 | PHASE2_HANDOFF | Fix tests | Tests themselves have issues, Test Owner fixes |
 | BLOCKED | Wait for user | Record breakpoint area |
 | FAILED | Fix and retry | Analyze failure reason |
 
 **Critical Constraints**:
-- **Role Isolation**: Coder must work in a **separate conversation/instance**
-- Test Owner and Coder cannot share the same session context
+- **Mode switching replaces session isolation**: Use `[TEST-OWNER]` / `[CODER]` labels to switch modes
 - If deviations exist, must design-backport first before handing to Coder
 - **Phase 2 AC matrix checking can only be done by Test Owner**
+- **Phase 2 can only check off after @full tests have passed**
 
 ---
 

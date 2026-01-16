@@ -14,15 +14,26 @@ allowed-tools:
 
 ## Workflow Position Awareness
 
-> **Core Principle**: Coder executes after Test Owner Phase 1 and hands off to Test Owner Phase 2 for verification upon completion.
+> **Core Principle**: Coder executes after Test Owner Phase 1, achieving mental clarity through **mode labels** (not session isolation).
 
 ### My Position in the Overall Workflow
 
 ```
-proposal → design → test-owner(phase1) → [Coder] → test-owner(phase2) → code-review → archive
-                                            ↓
-                                    Implement code, make tests green
+proposal → design → [TEST-OWNER] → [CODER] → [TEST-OWNER] → code-review → archive
+                                      ↓              ↓
+                               Implement+fast track    Evidence audit
+                              (@smoke/@critical)      (no @full rerun)
 ```
+
+### AI Era Solo Development Optimization
+
+> **Important Change**: This protocol is optimized for AI programming + solo development scenarios, **removing the mandatory "separate session" requirement**.
+
+| Old Design | New Design | Reason |
+|------------|------------|--------|
+| Test Owner and Coder must use separate sessions | Same session, switch with `[TEST-OWNER]` / `[CODER]` mode labels | Reduce context rebuilding cost |
+| Coder runs full tests and waits | Coder runs fast track (`@smoke`/`@critical`), `@full` triggered async | Fast iteration |
+| Completion goes directly to Test Owner | Completion status is `Implementation Done`, wait for @full | Async doesn't block, archive is sync |
 
 ### Coder's Responsibility Boundaries
 
@@ -31,18 +42,60 @@ proposal → design → test-owner(phase1) → [Coder] → test-owner(phase2) �
 | Modify `src/**` code | ❌ Modify `tests/**` |
 | Check off `tasks.md` items | ❌ Modify `verification.md` |
 | Record deviations to `deviation-log.md` | ❌ Check off AC coverage matrix |
-| Run tests to verify | ❌ Set verification.md Status |
+| Run fast track tests (`@smoke`/`@critical`) | ❌ Set verification.md Status to Verified/Done |
+| Trigger `@full` tests (CI/background) | ❌ Wait for @full completion (can start next change) |
 
 ### Flow After Coder Completes
 
-1. **Tasks complete**: tasks.md all `[x]`
-2. **Tests green**: Run `npm test` to confirm passing
-3. **Hand off to Test Owner**: Notify Test Owner to enter Phase 2 verification
-4. **Wait for verification result**:
-   - Test Owner confirms green → Proceed to Code Review
-   - Test Owner finds issues → Coder fixes
+1. **Fast track tests green**: `@smoke` + `@critical` pass
+2. **Trigger @full**: Commit code, CI starts running @full tests async
+3. **Status change**: Set change status to `Implementation Done`
+4. **Can start next change** (not blocked)
+5. **Wait for @full results**:
+   - @full passes → Test Owner enters Phase 2 to audit evidence
+   - @full fails → Coder fixes
 
-**Key Reminder**: After Coder completes, **do not go directly to Code Review**, first let Test Owner verify and check off.
+**Key Reminders**:
+- After Coder completes, status is `Implementation Done`, **not directly to Code Review**
+- Dev iteration is async (can start next change), but archive is sync (must wait for @full to pass)
+
+---
+
+## Test Layering and Run Strategy (Critical!)
+
+> **Core Principle**: Coder only runs fast track tests, @full tests are triggered async, not blocking dev iteration.
+
+### Test Layering Labels
+
+| Label | Purpose | When Coder Runs | Expected Time |
+|-------|---------|-----------------|---------------|
+| `@smoke` | Fast feedback, core paths | After each code change | Seconds |
+| `@critical` | Key functionality verification | Before commit | Minutes |
+| `@full` | Complete acceptance tests | **Don't run**, trigger CI async | Can be slow |
+
+### Coder's Test Run Strategy
+
+```bash
+# During development: frequently run @smoke
+npm test -- --grep "@smoke"
+
+# Before commit: run @critical
+npm test -- --grep "@smoke|@critical"
+
+# After commit: CI automatically runs @full (Coder doesn't wait)
+git push  # triggers CI
+# → Coder can start next task
+```
+
+### Async vs Sync Boundary
+
+| Action | Blocking/Async | Description |
+|--------|----------------|-------------|
+| `@smoke` tests | Sync | Run immediately after each change |
+| `@critical` tests | Sync | Must pass before commit |
+| `@full` tests | **Async** | CI runs in background, doesn't block Coder |
+| Start next change | **Not blocked** | Coder can start immediately |
+| Archive | **Blocked** | Must wait for @full to pass |
 
 ---
 
@@ -319,26 +372,29 @@ During implementation, you **must immediately** write to `deviation-log.md` in t
 
 | Code | Status | Determination Criteria | Next Step |
 |:----:|--------|------------------------|-----------|
-| ✅ | COMPLETED | All tasks done, no deviations | `devbooks-code-review` |
-| ⚠️ | COMPLETED_WITH_DEVIATION | Tasks done, deviation-log has pending records | `devbooks-design-backport` |
-| 🔄 | HANDOFF | Found test issues needing modification | `devbooks-test-owner` |
+| ✅ | IMPLEMENTATION_DONE | Fast track tests green, @full triggered, no deviations | Switch to `[TEST-OWNER]` wait for @full |
+| ⚠️ | IMPLEMENTATION_DONE_WITH_DEVIATION | Fast track green, deviation-log has pending records | `devbooks-design-backport` |
+| 🔄 | HANDOFF | Found test issues needing modification | Switch to `[TEST-OWNER]` mode to fix tests |
 | ❌ | BLOCKED | Needs external input/decision | Record breakpoint, wait for user |
-| 💥 | FAILED | Gates not passed | Fix and retry |
+| 💥 | FAILED | Fast track tests not passing | Fix and retry |
 
 ### Status Determination Flow
 
 ```
 1. Check if deviation-log.md has "| ❌" records
-   → Yes: COMPLETED_WITH_DEVIATION
+   → Yes: IMPLEMENTATION_DONE_WITH_DEVIATION
 
 2. Check if tests/ modification needed
-   → Yes: HANDOFF to test-owner
+   → Yes: HANDOFF to [TEST-OWNER] mode
 
-3. Check if tasks.md is fully completed
-   → No: BLOCKED or FAILED
+3. Check if fast track tests (@smoke + @critical) all pass
+   → No: FAILED
 
-4. All checks passed
-   → COMPLETED
+4. Check if tasks.md is fully completed
+   → No: BLOCKED or continue implementation
+
+5. All checks passed, trigger @full
+   → IMPLEMENTATION_DONE
 ```
 
 ### Routing Output Template (Required)
@@ -348,37 +404,41 @@ After completing coder, you **must** output in this format:
 ```markdown
 ## Completion Status
 
-**Status**: ✅ COMPLETED / ⚠️ COMPLETED_WITH_DEVIATION / 🔄 HANDOFF / ❌ BLOCKED / 💥 FAILED
+**Status**: ✅ IMPLEMENTATION_DONE / ⚠️ ... / 🔄 HANDOFF / ❌ BLOCKED / 💥 FAILED
 
 **Task Progress**: X/Y completed
+
+**Fast Track Tests**: @smoke ✅ / @critical ✅
+
+**@full Tests**: Triggered (CI running async)
 
 **Deviation Records**: Has N pending / None
 
 ## Next Step
 
-**Recommended**: `devbooks-xxx skill`
+**Recommended**: Switch to `[TEST-OWNER]` mode wait for @full / `devbooks-xxx skill`
 
 **Reason**: [specific reason]
 
-### How to invoke
-Run devbooks-xxx skill for change <change-id>
+**Note**: Can start next change, no need to wait for @full completion
 ```
 
 ### Specific Routing Rules
 
 | My Status | Next Step | Reason |
 |-----------|-----------|--------|
-| COMPLETED | `devbooks-test-owner` (Phase 2 verification) | Tasks complete, need Test Owner to verify and check off |
-| COMPLETED_WITH_DEVIATION | `devbooks-design-backport` | Backport design first, then let Test Owner verify |
-| HANDOFF (test issue) | `devbooks-test-owner` | Coder cannot modify tests |
+| IMPLEMENTATION_DONE | Switch to `[TEST-OWNER]` mode (wait for @full) | Fast track green, wait for @full to pass then audit evidence |
+| IMPLEMENTATION_DONE_WITH_DEVIATION | `devbooks-design-backport` | Backport design first |
+| HANDOFF (test issue) | Switch to `[TEST-OWNER]` mode | Coder cannot modify tests |
 | BLOCKED | Wait for user | Record breakpoint area |
 | FAILED | Fix and retry | Analyze failure reason |
 
 **Critical Constraints**:
 - Coder **can never modify** `tests/**`
-- If test issues found, must HANDOFF to Test Owner (separate session)
+- If test issues found, must switch to `[TEST-OWNER]` mode to handle
 - If deviations exist, must design-backport first before continuing
-- **Coder must go through Test Owner Phase 2 verification before Code Review**
+- **Coder completion status is `Implementation Done`, must wait for @full to pass before entering Test Owner Phase 2**
+- **Mode switching replaces session isolation**: Use `[TEST-OWNER]` / `[CODER]` labels to switch modes
 
 ---
 
