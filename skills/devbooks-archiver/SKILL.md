@@ -120,6 +120,32 @@ Merge change package spec artifacts into `<truth-root>`:
 | `<change-root>/<change-id>/specs/**` | `<truth-root>/specs/**` | Incremental merge |
 | `<change-root>/<change-id>/contracts/**` | `<truth-root>/contracts/**` | Versioned merge |
 
+**Spec Metadata Update** (must execute during merge):
+
+When merging specs into truth-root, the following metadata must be updated:
+
+```yaml
+# Update in each merged/referenced spec file header
+---
+last_referenced_by: <change-id>           # Last change package referencing this spec
+last_verified: <archive-date>             # Last verification date
+health: active                            # Health status: active | stale | deprecated
+---
+```
+
+**Metadata Update Rules**:
+
+| Scenario | Update Behavior |
+|----------|-----------------|
+| New Spec | Create complete metadata header |
+| Modify existing Spec | Update `last_referenced_by` and `last_verified` |
+| Spec referenced by design doc but not modified | Update only `last_referenced_by` |
+| Marked as deprecated | Set `health: deprecated` |
+
+**Building Reference Traceability Chain**:
+
+During archiving, archiver automatically scans the "Affected Specs" declared in design.md and updates the `last_referenced_by` field for these Specs, even if they weren't directly modified. This establishes a reverse traceability chain from Specs to change packages.
+
 ### Step 4: Architecture Merge
 
 > **Design Decision**: C4 architecture changes are recorded in design.md's Architecture Impact section and merged into truth by Archiver during archiving.

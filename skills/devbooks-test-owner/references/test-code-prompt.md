@@ -11,6 +11,10 @@ Inputs (provided by me):
 - Design/spec documents
 - Test methodology references (see: `references/test-driven-development.md`)
 
+**Required Spec Truth Reading** (mandatory before testing):
+- `<truth-root>/specs/**`: existing spec files
+- Purpose: auto-generate test skeletons from contracts (Preconditions/Postconditions/Invariants) and state machines
+
 Artifact locations (directory conventions; protocol-agnostic):
 - Test plan + traceability should live at: `<change-root>/<change-id>/verification.md`
 - Test code changes live in the repo’s normal place (e.g., `tests/`), but traceability matrices and MANUAL-* checklists should live in the change package (`verification.md`), not scattered into external `docs/`
@@ -62,6 +66,16 @@ Core principles (must follow):
 2) **Behavior-first, implementation-agnostic**: assert outputs/contract shapes/events/invariants; avoid asserting private call counts or internal step ordering.
 3) **Deterministic and reproducible**: default to offline, no real external services; freeze time; fix random seeds; use fakes/mocks; fixed inputs.
 4) **Few but strong (risk-driven)**: prioritize the highest-risk failure modes (isolation, idempotency/replay, quality gates, error cascades, contract drift).
+
+**Contract Tests from Spec Truth** (must follow):
+- **Invariants → invariant tests**: each `[Invariant]` or `INV-xxx` in Specs must have a corresponding test
+- **Preconditions → precondition tests**: each `PRE-xxx` generates two tests: (1) success when satisfied (2) rejection when violated
+- **Postconditions → postcondition tests**: each `POST-xxx` generates result verification tests
+- **State Machine → transition tests**: if Spec contains state machine, generate:
+  - All legal transition path tests
+  - All forbidden transition rejection tests
+  - Terminal state cannot exit tests
+- **REQ coverage traceability**: each test must annotate which REQ-xxx/INV-xxx/PRE-xxx/POST-xxx it covers (in comments or verification.md)
 
 Coverage targets (debate edition; guidance only):
 

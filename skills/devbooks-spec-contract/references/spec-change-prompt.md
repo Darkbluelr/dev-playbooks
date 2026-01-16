@@ -18,6 +18,10 @@ Inputs (provided by me):
 - Project profile (if present; follow formatting conventions first): `<truth-root>/_meta/project-profile.md`
 - Glossary / ubiquitous language (if present): `<truth-root>/_meta/glossary.md`
 
+**Spec Truth Conflict Detection** (must complete before writing):
+- **Must read existing Specs**: before writing spec delta, read all specs under `<truth-root>/specs/**`
+- **Purpose**: detect conflicts between new spec delta and existing Specs
+
 Hard constraints (must follow):
 - Output a **spec delta**, not a design doc, not an implementation plan, not code
 - Do not write implementation details (class names/function names/specific production file paths/library calls)
@@ -25,6 +29,13 @@ Hard constraints (must follow):
 - Specs must be verifiable: each Requirement must map to a test anchor or human evidence
 - Avoid duplicating capabilities: search/reuse/modify existing capability specs first; create a new capability only when necessary
 - Ubiquitous language: if `<truth-root>/_meta/glossary.md` exists, you must use those terms; do not invent new terms
+
+**Conceptual Integrity Guardian** (conflict detection rules):
+- **Terminology conflict**: does the new spec use terminology inconsistent with existing specs? (e.g., `Order.status` vs `Order.state`)
+- **Rule conflict**: do new spec rules contradict existing spec rules? (e.g., "paid orders can be cancelled" vs "paid orders cannot be cancelled")
+- **Boundary conflict**: does the new spec's responsibility overlap with existing specs? (e.g., two specs both claim ownership of payment logic)
+- **Invariant compatibility**: does the new spec violate Invariants declared in existing specs?
+- **Conflict report**: if conflicts are detected, declare them at the top of the spec delta with resolution suggestions; archiving is forbidden until conflicts are resolved
 
 Workshop (internal step; do not output separately):
 - Before writing the spec, run a “virtual three-amigos workshop” (business/dev/test) and incorporate consensus + edge examples into Requirements/Scenarios; do not output workshop notes.

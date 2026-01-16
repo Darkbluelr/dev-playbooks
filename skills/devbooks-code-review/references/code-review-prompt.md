@@ -13,6 +13,10 @@ Inputs (provided by me):
 - Glossary / ubiquitous language (if present): `<truth-root>/_meta/glossary.md`
 - High-ROI pitfalls list (if present): `<truth-root>/engineering/pitfalls.md`
 
+**Required Spec Truth Reading** (mandatory before review):
+- `<truth-root>/specs/**`: existing spec files
+- Purpose: verify code naming/structure aligns with terminology and contracts defined in Specs
+
 Hard constraints (must follow):
 1) Output only review findings and concrete change suggestions; do not directly modify `tests/` or design documents.
 2) Do not debate business correctness (tests/specs decide that); focus only on maintainability and engineering quality.
@@ -63,6 +67,12 @@ Review focus (must cover):
 - Are there new terms not defined in `glossary.md`? (If so, recommend updating the glossary first.)
 - Is the same concept named inconsistently across modules (e.g., User/Account/Member mixed)?
 - Is Entity vs Value Object modeled correctly? (Entity has an ID; VO has no ID and is immutable.)
+
+**Spec Truth Terminology Alignment** (must check):
+- Do code names match terminology defined in `<truth-root>/specs/`?
+- Do state names/enum values match state machine definitions in Specs?
+- Do method names reflect actions/transitions in Specs? (e.g., `cancel()` corresponds to `order --[cancel]--> cancelled`)
+- If naming inconsistencies are found, mark as "terminology drift risk" and recommend unification
 
 ---
 

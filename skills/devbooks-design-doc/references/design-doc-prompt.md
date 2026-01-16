@@ -18,6 +18,10 @@ Inputs (provided by me):
 - Chat history
 - Glossary / ubiquitous language (if present): `<truth-root>/_meta/glossary.md`
 
+**Required Spec Truth Reading** (mandatory before designing):
+- `<truth-root>/specs/**`: existing spec files (REQ/Invariants/Contracts)
+- Purpose: ensure design does not conflict with existing specs and explicitly references affected specs
+
 Tasks:
 1) Output a design doc (not an implementation plan, not code).
 2) The doc must be concrete enough to drive acceptance and task decomposition: clear boundaries, contracts, red lines, and acceptance.
@@ -182,7 +186,13 @@ Limits:
 
 Additional requirements (for traceability in large projects):
 - Explicitly list affected capabilities/modules/external contracts (names and boundaries only; no implementation)
-- If external interfaces/APIs/events/data structures are involved: specify versioning strategy in the “Core data and event contracts” section (`schema_version`, compatibility window, migration/replay principles)
-- If architecture boundaries change: add an optional **C4 Delta** subsection under “Target architecture” describing what C1/C2/C3 elements were added/modified/removed (full maps are maintained by the C4 map maintainer)
+- If external interfaces/APIs/events/data structures are involved: specify versioning strategy in the "Core data and event contracts" section (`schema_version`, compatibility window, migration/replay principles)
+- If architecture boundaries change: add an optional **C4 Delta** subsection under "Target architecture" describing what C1/C2/C3 elements were added/modified/removed (full maps are maintained by the C4 map maintainer)
+
+**Spec Truth Reference Requirements** (core traceability):
+- **Must declare affected existing Specs**: list spec files under `<truth-root>/specs/` impacted by this design
+- **Must reference REQ/Invariant**: each constraint in the design must trace back to REQ-xxx or INV-xxx in Specs
+- **Gap declaration**: if design cannot satisfy an existing REQ, explicitly declare it as a Gap with justification
+- **Terminology consistency**: domain terms must match `<truth-root>/_meta/glossary.md`; new terms must be declared and proposed for glossary addition
 
 Now output the Design Doc in Markdown. Do not output extra explanations.

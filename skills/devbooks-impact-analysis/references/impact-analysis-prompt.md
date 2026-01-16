@@ -17,6 +17,10 @@ Input materials (provided by me):
 - Current truth source: `<truth-root>/`
 - Codebase (read-only analysis)
 
+**Required Spec Truth Reading** (mandatory before analysis):
+- `<truth-root>/specs/**`: existing spec files
+- Purpose: identify which existing Specs (REQ/Invariants/Contracts) are impacted by this change
+
 Hard constraints (must follow):
 - Impact analysis first, code later
 - No "decorative/surface refactors" unless they directly reduce risk for this change
@@ -53,6 +57,19 @@ Output format (MECE):
        - Are external system/API changes isolated by ACL? (External model changes must not leak into internal models)
        - Are there direct calls to external APIs bypassing the adapter layer?
        - If adding external dependency: suggested ACL interface definition
+   - **F. Affected Spec Truth** (required):
+     - List spec files under `<truth-root>/specs/` impacted by this change
+     - For each affected Spec, mark impact type:
+       - `[BREAK]`: breaks existing REQ/Invariant (needs Spec update or redesign)
+       - `[EXTEND]`: extends existing capability (needs new REQ/Scenario)
+       - `[DEPRECATE]`: deprecates existing capability (needs Spec marked deprecated)
+     - Output format:
+       ```
+       Affected Specs:
+       - [EXTEND] specs/order/spec.md - add cancel order scenario
+       - [BREAK] specs/payment/spec.md - INV-002 "paid orders cannot be cancelled" needs modification
+       - [DEPRECATE] specs/legacy-checkout/spec.md - entire spec deprecated
+       ```
 4) Compatibility and Risks
    - Breaking changes (explicitly mark if any)
    - Migration/rollback paths
