@@ -81,11 +81,21 @@ npx dev-playbooks@latest init
 
 ### Install targets
 
-After initialization:
-- Claude Code: `~/.claude/skills/devbooks-*`
-- Codex CLI: `~/.codex/skills/devbooks-*`
-- Qoder: `~/.qoder/` (manual setup required)
-- OpenCode: `~/.config/opencode/skill/devbooks-*`
+During initialization, you can choose the Skills installation scope:
+
+| Scope | Description | Path Example |
+|-------|-------------|--------------|
+| **Project** (default) | Available only in this project | `.claude/skills/devbooks-*` |
+| **Global** | Shared across all projects | `~/.claude/skills/devbooks-*` |
+
+```bash
+# Interactive selection
+dev-playbooks init
+
+# Non-interactive
+dev-playbooks init --tools claude --scope project  # Project-level
+dev-playbooks init --tools claude --scope global   # Global
+```
 
 ### Quick integration
 
@@ -194,6 +204,7 @@ Run devbooks-archiver skill for change add-oauth2
 |-------|-------------|
 | devbooks-entropy-monitor | System entropy metrics |
 | devbooks-brownfield-bootstrap | Brownfield project bootstrap |
+| devbooks-convergence-audit | Convergence audit (anti-deception design) |
 
 ---
 

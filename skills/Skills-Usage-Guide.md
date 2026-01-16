@@ -344,6 +344,54 @@ If you are not using DevBooks, replace `dev-playbooks/specs` / `dev-playbooks/ch
 
 ---
 
+## `devbooks-test-reviewer` (Test Reviewer) [New]
+
+- Purpose: review test quality in `tests/` (coverage, boundary conditions, readability, maintainability); output review comments only; do not modify code.
+- When to use:
+  - After Test Owner completes tests, an independent quality review is needed
+  - You want to find coverage gaps, missing boundary conditions, and maintainability issues
+- Copy-paste prompt:
+  ```text
+  You are Test Reviewer. Explicitly use `devbooks-test-reviewer`.
+  Review test quality only (coverage/boundary conditions/readability/maintainability); do not modify code.
+  Inputs: `tests/**` + `dev-playbooks/changes/<change-id>/verification.md` (if present)
+  Output: coverage gaps / missing boundary conditions / maintainability risks / improvement suggestions.
+  ```
+
+---
+
+## `devbooks-convergence-audit` (Convergence Auditor) [New]
+
+- Purpose: evaluate DevBooks workflow convergence using "evidence-first, distrust declarations" principle; detect "Sisyphus anti-pattern" and "false completion". Actively verify rather than trust document assertions.
+- Anti-confusion design: never trust any assertion in documents (Status: Done, AC checked, etc.); must confirm through verifiable evidence.
+- When to use:
+  - You want to evaluate true workflow convergence (not document claims)
+  - You suspect a change package is "false completion" or has "stale evidence"
+  - You want to detect Sisyphus trap (repeated rework without convergence)
+- Copy-paste prompt:
+  ```text
+  You are Convergence Auditor. Explicitly use `devbooks-convergence-audit`.
+  First read: `dev-playbooks/project.md` (if present)
+  Goal: perform a convergence audit on a specified change package.
+
+  Execute with anti-confusion principles:
+  1) Read all documents under `dev-playbooks/changes/<change-id>/`
+  2) Verify each "declaration" (Status=Done, AC checked, etc.) against evidence
+  3) Actually run tests for verification (if possible)
+  4) Output: declaration vs evidence comparison table + trustworthiness score + confusion detection results
+
+  Change package: <change-id>
+  truth-root: dev-playbooks/specs
+  change-root: dev-playbooks/changes
+  ```
+- Trustworthiness scoring:
+  - 90-100: ✅ Trustworthy convergence, continue current workflow
+  - 70-89: ⚠️ Partially trustworthy, needs additional verification
+  - 50-69: 🟠 Questionable, parts need rework
+  - < 50: 🔴 Untrustworthy (Sisyphus trap), needs full review
+
+---
+
 ## Generating SCIP Index (Manual)
 
 If you need graph-based code understanding (call graph, impact analysis, symbol references), you can generate a SCIP index manually:
