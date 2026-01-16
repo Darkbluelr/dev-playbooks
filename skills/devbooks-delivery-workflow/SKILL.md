@@ -1,6 +1,6 @@
 ---
 name: devbooks-delivery-workflow
-description: devbooks-delivery-workflow: Run a change through a traceable closed-loop workflow (Design->Plan->Trace->Verify->Implement->Archive), with clear DoD, traceability matrix, and role isolation (Test Owner and Coder separation). Use when the user says "run closed-loop/delivery acceptance/traceability matrix/DoD/close and archive/acceptance workflow" etc.
+description: "devbooks-delivery-workflow: Complete closed-loop orchestrator that runs in AI programming tools with sub-agent support, automatically orchestrating the full Proposal→Design→Spec→Plan→Test→Implement→Review→Archive workflow. Use when the user says 'run closed-loop/complete delivery/end-to-end flow/automated change workflow' etc."
 allowed-tools:
   - Glob
   - Grep
@@ -8,9 +8,12 @@ allowed-tools:
   - Write
   - Edit
   - Bash
+  - Task
 ---
 
-# DevBooks: Delivery Acceptance Workflow (Closed-Loop Skeleton)
+# DevBooks: Delivery Acceptance Workflow (Complete Closed-Loop Orchestrator)
+
+> **Positioning**: This Skill is an **orchestration layer**, not a daily-use Skill. It runs in AI programming tools with sub-agent support (e.g., Claude Code with Task tool) to automatically orchestrate complete change closed-loops.
 
 ## Prerequisites: Configuration Discovery (Protocol-Agnostic)
 
@@ -28,57 +31,83 @@ Before execution, **must** search for configuration in the following order (stop
 - Do not guess directory roots
 - Do not skip reading the rules document
 
-## Change Package Naming Convention (Mandatory)
+## Core Responsibility: Complete Closed-Loop Orchestration
 
-Change package ID (change-id) **must** follow this naming convention:
+This Skill's core capability is **orchestrating sub-agents to complete the full change closed-loop**.
 
-### Format
+### Closed-Loop Flow (8 Stages)
 
 ```
-<datetime>-<verb-prefixed-semantic-description>
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  1. Propose │ ──▶ │  2. Design  │ ──▶ │  3. Spec    │ ──▶ │  4. Plan    │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+       │                                                           │
+       ▼                                                           ▼
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  8. Archive │ ◀── │  7. Review  │ ◀── │  6. Code    │ ◀── │  5. Test    │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
 ```
 
-### Rules
+### Stage Details and Corresponding Skills
 
-| Component | Rule | Example |
-|-----------|------|---------|
-| Datetime | `YYYYMMDD-HHMM` format | `20240116-1030` |
-| Separator | Use `-` between datetime and semantic | `-` |
-| Semantic description | **Must start with a verb**, use lowercase and hyphens | `add-oauth2`, `fix-login-bug` |
+| Stage | Skill | Artifact | Role |
+|-------|-------|----------|------|
+| 1. Propose | `devbooks-proposal-author` | proposal.md | Author |
+| 1.5 Challenge (optional) | `devbooks-proposal-challenger` | Challenge comments | Challenger |
+| 1.6 Judge (optional) | `devbooks-proposal-judge` | Decision | Judge |
+| 2. Design | `devbooks-design-doc` | design.md | Designer |
+| 3. Spec | `devbooks-spec-contract` | specs/*.md | Spec Owner |
+| 4. Plan | `devbooks-implementation-plan` | tasks.md | Planner |
+| 5. Test | `devbooks-test-owner` | verification.md + tests/ | Test Owner |
+| 6. Code | `devbooks-coder` | src/ implementation | Coder |
+| 7. Review | `devbooks-code-review` | Review comments | Reviewer |
+| 7.5 Test Review (optional) | `devbooks-test-reviewer` | Test review | Test Reviewer |
+| 8. Archive | `devbooks-archiver` | Archived to truth source | Archiver |
 
-### Valid Examples
+### Orchestration Logic
+
+```
+1. Receive user requirement
+2. Call proposal-author to create proposal (auto-generate change-id)
+3. [Optional] Call proposal-challenger to challenge proposal
+4. [Optional] Call proposal-judge to adjudicate
+5. Call design-doc to create design document
+6. [If external contracts] Call spec-contract to define specs
+7. Call implementation-plan to create implementation plan
+8. Call test-owner to write tests (independent Agent)
+9. Call coder to implement features (independent Agent)
+10. Call code-review to review code
+11. [Optional] Call test-reviewer to review tests
+12. Call archiver to archive to truth source
+```
+
+### Role Isolation Constraints
+
+**Key Principle**: Test Owner and Coder must use **independent Agent instances/sessions**.
+
+| Role | Isolation Requirement | Reason |
+|------|----------------------|--------|
+| Test Owner | Independent Agent | Prevent Coder from tampering with tests |
+| Coder | Independent Agent | Prevent Coder from seeing test implementation details |
+| Reviewer | Independent Agent (recommended) | Maintain review objectivity |
+
+### Gate Checkpoints
+
+After each stage completes, call `change-check.sh` to verify:
 
 ```bash
-# ✅ Correct
-20240116-1030-add-oauth2-support
-20240116-1430-fix-user-auth-bug
-20240116-0900-refactor-payment-module
-20240115-2200-update-api-docs
+# Proposal stage check
+change-check.sh <change-id> --mode proposal
 
-# ❌ Incorrect
-add-oauth2                    # Missing datetime
-20240116-oauth2               # Semantic doesn't start with verb
-2024-01-16-add-oauth2         # Wrong date format (shouldn't have -)
-oauth2-20240116               # Wrong order
+# Implementation stage check (Test Owner)
+change-check.sh <change-id> --mode apply --role test-owner
+
+# Implementation stage check (Coder)
+change-check.sh <change-id> --mode apply --role coder
+
+# Pre-archive check
+change-check.sh <change-id> --mode archive
 ```
-
-### Common Verbs
-
-| Verb | Usage |
-|------|-------|
-| `add` | Add new feature |
-| `fix` | Fix defect |
-| `update` | Update existing feature |
-| `refactor` | Refactor code |
-| `remove` | Remove feature |
-| `improve` | Improve performance/experience |
-| `migrate` | Migrate data/system |
-
-### Why This Naming Convention?
-
-1. **Timestamp first**: Auto-sorts by time in archive directory
-2. **Verb prefix**: Clearly expresses change intent, aids code review
-3. **Lowercase hyphens**: Avoids cross-platform filename issues
 
 ## Reference Skeleton (Read as Needed)
 

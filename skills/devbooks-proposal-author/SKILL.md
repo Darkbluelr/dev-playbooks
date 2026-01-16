@@ -32,6 +32,66 @@ Before execution, you **must** search for configuration in the following order (
 1. **Proposal Authoring**: Produce clear, reviewable, and actionable change proposals
 2. **Design Decision Interaction**: For design choices that cannot be objectively judged as better or worse (where A and B are both viable depending on preferences), present options to users for their decision rather than deciding unilaterally
 
+## Change Package Naming Convention (Mandatory)
+
+Change package ID (change-id) **must** follow this naming convention:
+
+### Format
+
+```
+<datetime>-<verb-prefixed-semantic-description>
+```
+
+### Rules
+
+| Component | Rule | Example |
+|-----------|------|---------|
+| Datetime | `YYYYMMDD-HHMM` format | `20240116-1030` |
+| Separator | Use `-` between datetime and semantic | `-` |
+| Semantic description | **Must start with a verb**, use lowercase and hyphens | `add-oauth2`, `fix-login-bug` |
+
+### Examples
+
+```bash
+# ✅ Correct
+20240116-1030-add-oauth2-support
+20240116-1430-fix-user-auth-bug
+20240116-0900-refactor-payment-module
+20240115-2200-update-api-docs
+
+# ❌ Incorrect
+add-oauth2                    # Missing datetime
+20240116-oauth2               # Semantic doesn't start with verb
+2024-01-16-add-oauth2         # Wrong date format (shouldn't have -)
+oauth2-20240116               # Wrong order
+```
+
+### Common Verbs
+
+| Verb | Usage |
+|------|-------|
+| `add` | Add new feature |
+| `fix` | Fix defect |
+| `update` | Update existing feature |
+| `refactor` | Refactor code |
+| `remove` | Remove feature |
+| `improve` | Improve performance/experience |
+| `migrate` | Migrate data/system |
+
+### Why This Naming Convention?
+
+1. **Timestamp first**: Auto-sorts by time in archive directory
+2. **Verb prefix**: Clearly expresses change intent, aids code review
+3. **Lowercase hyphens**: Avoids cross-platform filename issues
+
+### Creating Change Package
+
+After determining the change-id, call the scaffold script to initialize the change package:
+
+```bash
+change-scaffold.sh <change-id> --project-root <repo-root> --change-root <change-root> --truth-root <truth-root>
+```
+
 ## Artifact Location
 
 - Proposal: `<change-root>/<change-id>/proposal.md`
