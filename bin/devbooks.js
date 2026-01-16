@@ -24,7 +24,7 @@ import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import { spawn } from 'child_process';
-import { checkbox, confirm } from '@inquirer/prompts';
+import { checkbox, confirm, select } from '@inquirer/prompts';
 import chalk from 'chalk';
 import ora from 'ora';
 
@@ -43,6 +43,15 @@ const SKILLS_SUPPORT = {
   RULES: 'rules',    // Rules 类似系统（自动应用的规则）
   AGENTS: 'agents',  // Agents/自定义指令（项目级指令文件）
   BASIC: 'basic'     // 仅基础指令（无独立 Skills 概念）
+};
+
+// ============================================================================
+// Skills Install Scope
+// ============================================================================
+
+const INSTALL_SCOPE = {
+  GLOBAL: 'global',   // Global installation (~/.claude/skills etc.)
+  PROJECT: 'project'  // Project-level installation (.claude/skills etc.)
 };
 
 // ============================================================================
@@ -540,12 +549,68 @@ async function promptToolSelection(projectDir) {
   return selectedTools;
 }
 
+async function promptInstallScope(projectDir, selectedTools) {
+  // Check if any tools support full Skills
+  const fullSupportTools = selectedTools.filter(id => {
+    const tool = AI_TOOLS.find(t => t.id === id);
+    return tool && tool.skillsSupport === SKILLS_SUPPORT.FULL;
+  });
+
+  if (fullSupportTools.length === 0) {
+    return INSTALL_SCOPE.PROJECT; // No full Skills support tools, default to project-level
+  }
+
+  // Load saved config
+  const config = loadConfig(projectDir);
+  const savedScope = config.installScope;
+
+  console.log();
+  console.log(chalk.bold('📦 Skills Installation Location'));
+  console.log(chalk.gray('─'.repeat(50)));
+  console.log();
+
+  const scope = await select({
+    message: 'Where should Skills be installed?',
+    choices: [
+      {
+        name: `Project-level ${chalk.gray('(.claude/skills etc., only for this project)')}`,
+        value: INSTALL_SCOPE.PROJECT,
+        description: 'Recommended: Skills stay with the project, no impact on other projects'
+      },
+      {
+        name: `Global ${chalk.gray('(~/.claude/skills etc., shared across all projects)')}`,
+        value: INSTALL_SCOPE.GLOBAL,
+        description: 'All projects share the same set of Skills'
+      }
+    ],
+    default: savedScope || INSTALL_SCOPE.PROJECT
+  });
+
+  return scope;
+}
+
 
 // ============================================================================
-// 安装 Skills（Claude Code, Codex CLI, Qoder）
+// Install Skills (Claude Code, Codex CLI, Qoder)
 // ============================================================================
 
-function installSkills(toolIds, update = false) {
+function getSkillsDestDir(tool, scope, projectDir) {
+  // Determine destination directory based on install scope
+  if (scope === INSTALL_SCOPE.PROJECT) {
+    // Project-level installation: use relative path within project directory
+    if (tool.id === 'claude') {
+      return path.join(projectDir, '.claude', 'skills');
+    } else if (tool.id === 'codex') {
+      return path.join(projectDir, '.codex', 'skills');
+    } else if (tool.id === 'opencode') {
+      return path.join(projectDir, '.opencode', 'skill');
+    }
+  }
+  // Global installation: use tool's defined global directory
+  return tool.skillsDir;
+}
+
+function installSkills(toolIds, projectDir, scope = INSTALL_SCOPE.GLOBAL, update = false) {
   const results = [];
 
   for (const toolId of toolIds) {
@@ -555,7 +620,7 @@ function installSkills(toolIds, update = false) {
     // Claude Code / Codex CLI / OpenCode (incl. oh-my-opencode) share the same Skills format
     if ((toolId === 'claude' || toolId === 'codex' || toolId === 'opencode') && tool.skillsDir) {
       const skillsSrcDir = path.join(__dirname, '..', 'skills');
-      const skillsDestDir = tool.skillsDir;
+      const skillsDestDir = getSkillsDestDir(tool, scope, projectDir);
 
       if (!fs.existsSync(skillsSrcDir)) continue;
 
@@ -601,13 +666,15 @@ function installSkills(toolIds, update = false) {
         type: 'skills',
         count: installedCount,
         total: skillDirs.length,
-        removed: removedCount
+        removed: removedCount,
+        scope: scope,
+        path: skillsDestDir
       });
     }
 
-    // Qoder: 创建 agents 目录结构（但不复制 Skills，因为格式不同）
+    // Qoder: Create agents directory structure (but don't copy Skills, different format)
     if (toolId === 'qoder') {
-      results.push({ tool: 'Qoder', type: 'agents', count: 0, total: 0, note: '需要手动创建 agents/' });
+      results.push({ tool: 'Qoder', type: 'agents', count: 0, total: 0, note: 'Manual agents/ creation required' });
     }
   }
 
@@ -1006,27 +1073,38 @@ function createProjectStructure(projectDir) {
 }
 
 // ============================================================================
-// 保存配置
+// Save Configuration
 // ============================================================================
 
-function saveConfig(toolIds, projectDir) {
+function saveConfig(toolIds, projectDir, installScope = INSTALL_SCOPE.PROJECT) {
   const configPath = path.join(projectDir, '.devbooks', 'config.yaml');
 
-  // 读取现有配置或创建新配置
+  // Read existing config or create new
   let configContent = '';
   if (fs.existsSync(configPath)) {
     configContent = fs.readFileSync(configPath, 'utf-8');
   }
 
-  // 更新 ai_tools 部分
+  // Update ai_tools section
   const toolsYaml = `ai_tools:\n${toolIds.map(id => `  - ${id}`).join('\n')}`;
 
   if (configContent.includes('ai_tools:')) {
-    // 替换现有的 ai_tools 部分
+    // Replace existing ai_tools section
     configContent = configContent.replace(/ai_tools:[\s\S]*?(?=\n\w|\n$|$)/, toolsYaml + '\n');
   } else {
-    // 追加 ai_tools 部分
+    // Append ai_tools section
     configContent = configContent.trimEnd() + '\n\n' + toolsYaml + '\n';
+  }
+
+  // Update install_scope section
+  const scopeYaml = `install_scope: ${installScope}`;
+
+  if (configContent.includes('install_scope:')) {
+    // Replace existing install_scope section
+    configContent = configContent.replace(/install_scope:.*/, scopeYaml);
+  } else {
+    // Append install_scope section
+    configContent = configContent.trimEnd() + '\n\n' + scopeYaml + '\n';
   }
 
   fs.writeFileSync(configPath, configContent);
@@ -1036,38 +1114,42 @@ function loadConfig(projectDir) {
   const configPath = path.join(projectDir, '.devbooks', 'config.yaml');
 
   if (!fs.existsSync(configPath)) {
-    return { aiTools: [] };
+    return { aiTools: [], installScope: null };
   }
 
   const content = fs.readFileSync(configPath, 'utf-8');
-  const match = content.match(/ai_tools:\s*([\s\S]*?)(?=\n\w|\n$|$)/);
 
-  if (!match) {
-    return { aiTools: [] };
-  }
+  // Parse ai_tools
+  const toolsMatch = content.match(/ai_tools:\s*([\s\S]*?)(?=\n\w|\n$|$)/);
+  const tools = toolsMatch
+    ? toolsMatch[1]
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.startsWith('-'))
+        .map(line => line.replace(/^-\s*/, '').trim())
+    : [];
 
-  const tools = match[1]
-    .split('\n')
-    .map(line => line.trim())
-    .filter(line => line.startsWith('-'))
-    .map(line => line.replace(/^-\s*/, '').trim());
+  // Parse install_scope
+  const scopeMatch = content.match(/install_scope:\s*(\w+)/);
+  const installScope = scopeMatch ? scopeMatch[1] : null;
 
-  return { aiTools: tools };
+  return { aiTools: tools, installScope };
 }
 
 // ============================================================================
-// Init 命令
+// Init Command
 // ============================================================================
 
 async function initCommand(projectDir, options) {
   console.log();
   console.log(chalk.cyan('╔══════════════════════════════════════╗'));
-  console.log(chalk.cyan('║') + chalk.bold('         DevBooks 初始化向导         ') + chalk.cyan('║'));
+  console.log(chalk.cyan('║') + chalk.bold('       DevBooks Initialization        ') + chalk.cyan('║'));
   console.log(chalk.cyan('╚══════════════════════════════════════╝'));
   console.log();
 
-  // 确定选择的工具
+  // Determine selected tools
   let selectedTools;
+  let installScope = INSTALL_SCOPE.PROJECT; // Default to project-level installation
 
   if (options.tools) {
     if (options.tools === 'all') {
@@ -1079,27 +1161,35 @@ async function initCommand(projectDir, options) {
         AI_TOOLS.some(tool => tool.id === t)
       );
     }
-    console.log(chalk.blue('ℹ') + ` 非交互式模式：${selectedTools.length > 0 ? selectedTools.join(', ') : '无'}`);
+    console.log(chalk.blue('ℹ') + ` Non-interactive mode: ${selectedTools.length > 0 ? selectedTools.join(', ') : 'none'}`);
+
+    // In non-interactive mode, check --scope option
+    if (options.scope) {
+      installScope = options.scope === 'global' ? INSTALL_SCOPE.GLOBAL : INSTALL_SCOPE.PROJECT;
+    }
   } else {
     selectedTools = await promptToolSelection(projectDir);
+
+    // Interactive scope selection
+    installScope = await promptInstallScope(projectDir, selectedTools);
   }
 
-  // 创建项目结构
-  const spinner = ora('创建项目结构...').start();
+  // Create project structure
+  const spinner = ora('Creating project structure...').start();
   const templateCount = createProjectStructure(projectDir);
-  spinner.succeed(`创建了 ${templateCount} 个模板文件`);
+  spinner.succeed(`Created ${templateCount} template files`);
 
-  // 保存配置
-  saveConfig(selectedTools, projectDir);
+  // Save configuration (including install scope)
+  saveConfig(selectedTools, projectDir, installScope);
 
   if (selectedTools.length === 0) {
     console.log();
-    console.log(chalk.green('✓') + ' DevBooks 项目结构已创建！');
-    console.log(chalk.gray(`  运行 \`${CLI_COMMAND} init\` 并选择 AI 工具来配置集成。`));
+    console.log(chalk.green('✓') + ' DevBooks project structure created!');
+    console.log(chalk.gray(`  Run \`${CLI_COMMAND} init\` and select AI tools to configure integration.`));
     return;
   }
 
-  // 安装 Skills（仅完整支持的工具）
+  // Install Skills (only for full support tools)
   const fullSupportTools = selectedTools.filter(id => {
     const tool = AI_TOOLS.find(t => t.id === id);
     return tool && tool.skillsSupport === SKILLS_SUPPORT.FULL;
@@ -1107,12 +1197,16 @@ async function initCommand(projectDir, options) {
 
   if (fullSupportTools.length > 0) {
     const skillsSpinner = ora('Installing Skills...').start();
-    const skillsResults = installSkills(fullSupportTools);
+    const skillsResults = installSkills(fullSupportTools, projectDir, installScope);
     skillsSpinner.succeed('Skills installed');
 
     for (const result of skillsResults) {
       if (result.count > 0) {
-        console.log(chalk.gray(`  └ ${result.tool}: ${result.count}/${result.total} ${result.type}`));
+        const scopeLabel = result.scope === INSTALL_SCOPE.PROJECT ? 'project-level' : 'global';
+        console.log(chalk.gray(`  └ ${result.tool}: ${result.count}/${result.total} ${result.type} (${scopeLabel})`));
+        if (result.path) {
+          console.log(chalk.gray(`    → ${result.path}`));
+        }
       } else if (result.note) {
         console.log(chalk.gray(`  └ ${result.tool}: ${result.note}`));
       }
@@ -1127,14 +1221,14 @@ async function initCommand(projectDir, options) {
     }
   }
 
-  // 安装 Rules（Rules 类似系统的工具）
+  // Install Rules (for Rules-like system tools)
   const rulesTools = selectedTools.filter(id => {
     const tool = AI_TOOLS.find(t => t.id === id);
     return tool && tool.skillsSupport === SKILLS_SUPPORT.RULES;
   });
 
   if (rulesTools.length > 0) {
-    const rulesSpinner = ora('安装 Rules...').start();
+    const rulesSpinner = ora('Installing Rules...').start();
     const rulesResults = installRules(rulesTools, projectDir);
     rulesSpinner.succeed(`创建了 ${rulesResults.length} 个规则文件`);
 
@@ -1213,6 +1307,7 @@ async function updateCommand(projectDir) {
   // Load config
   const config = loadConfig(projectDir);
   const configuredTools = config.aiTools;
+  const installScope = config.installScope || INSTALL_SCOPE.PROJECT;
 
   if (configuredTools.length === 0) {
     console.log(chalk.yellow('⚠') + ` No AI tools configured. Run \`${CLI_COMMAND} init\` to configure.`);
@@ -1223,13 +1318,17 @@ async function updateCommand(projectDir) {
     const tool = AI_TOOLS.find(t => t.id === id);
     return tool ? tool.name : id;
   });
-  console.log(chalk.blue('ℹ') + ` Detected configured tools: ${toolNames.join(', ')}`);
+  const scopeLabel = installScope === INSTALL_SCOPE.PROJECT ? 'project-level' : 'global';
+  console.log(chalk.blue('ℹ') + ` Detected configured tools: ${toolNames.join(', ')} (${scopeLabel} installation)`);
 
-  // Update Skills (global directory)
-  const skillsResults = installSkills(configuredTools, true);
+  // Update Skills (using saved install scope from config)
+  const skillsResults = installSkills(configuredTools, projectDir, installScope, true);
   for (const result of skillsResults) {
     if (result.count > 0) {
       console.log(chalk.green('✓') + ` ${result.tool} ${result.type}: updated ${result.count}/${result.total}`);
+      if (result.path) {
+        console.log(chalk.gray(`    → ${result.path}`));
+      }
     }
     if (result.removed && result.removed > 0) {
       console.log(chalk.green('✓') + ` ${result.tool} ${result.type}: removed ${result.removed} obsolete skills`);
@@ -1356,31 +1455,33 @@ async function migrateCommand(projectDir, options) {
 }
 
 // ============================================================================
-// 帮助信息
+// Help Information
 // ============================================================================
 
 function showHelp() {
   console.log();
   console.log(chalk.bold('DevBooks') + ' - AI-agnostic spec-driven development workflow');
   console.log();
-  console.log(chalk.cyan('用法:'));
-  console.log(`  ${CLI_COMMAND} init [path] [options]              初始化 DevBooks`);
-  console.log(`  ${CLI_COMMAND} update [path]                      更新已配置的工具`);
-  console.log(`  ${CLI_COMMAND} migrate --from <framework> [opts]  从其他框架迁移`);
+  console.log(chalk.cyan('Usage:'));
+  console.log(`  ${CLI_COMMAND} init [path] [options]              Initialize DevBooks`);
+  console.log(`  ${CLI_COMMAND} update [path]                      Update configured tools`);
+  console.log(`  ${CLI_COMMAND} migrate --from <framework> [opts]  Migrate from other frameworks`);
   console.log();
-  console.log(chalk.cyan('选项:'));
-  console.log('  --tools <tools>    非交互式指定 AI 工具');
-  console.log('                     可用值: all, none, 或逗号分隔的工具 ID');
-  console.log('  --from <framework> 迁移来源框架 (openspec, speckit)');
-  console.log('  --dry-run          模拟运行，不实际修改文件');
-  console.log('  --keep-old         迁移后保留原目录');
-  console.log('  --force            强制重新执行所有步骤');
-  console.log('  -h, --help         显示此帮助信息');
+  console.log(chalk.cyan('Options:'));
+  console.log('  --tools <tools>    Non-interactive AI tool selection');
+  console.log('                     Values: all, none, or comma-separated tool IDs');
+  console.log('  --scope <scope>    Skills installation location (non-interactive mode)');
+  console.log('                     Values: project (default), global');
+  console.log('  --from <framework> Migration source framework (openspec, speckit)');
+  console.log('  --dry-run          Dry run, no actual file modifications');
+  console.log('  --keep-old         Keep original directory after migration');
+  console.log('  --force            Force re-execute all steps');
+  console.log('  -h, --help         Show this help message');
   console.log('  -v, --version      Show version');
   console.log();
-  console.log(chalk.cyan('支持的 AI 工具:'));
+  console.log(chalk.cyan('Supported AI Tools:'));
 
-  // 按 Skills 支持级别分组显示
+  // Group tools by Skills support level
   const groupedTools = {
     [SKILLS_SUPPORT.FULL]: [],
     [SKILLS_SUPPORT.RULES]: [],
@@ -1393,43 +1494,44 @@ function showHelp() {
   }
 
   console.log();
-  console.log(chalk.green('  ★ 完整 Skills 支持:'));
+  console.log(chalk.green('  ★ Full Skills Support:'));
   for (const tool of groupedTools[SKILLS_SUPPORT.FULL]) {
     console.log(`    ${tool.id.padEnd(15)} ${tool.name}`);
   }
 
   console.log();
-  console.log(chalk.blue('  ◆ Rules 系统支持:'));
+  console.log(chalk.blue('  ◆ Rules System Support:'));
   for (const tool of groupedTools[SKILLS_SUPPORT.RULES]) {
     console.log(`    ${tool.id.padEnd(15)} ${tool.name}`);
   }
 
   console.log();
-  console.log(chalk.yellow('  ● 自定义指令支持:'));
+  console.log(chalk.yellow('  ● Custom Instructions Support:'));
   for (const tool of groupedTools[SKILLS_SUPPORT.AGENTS]) {
     console.log(`    ${tool.id.padEnd(15)} ${tool.name}`);
   }
 
   console.log();
   console.log();
-  console.log(chalk.cyan('示例:'));
-  console.log(`  ${CLI_COMMAND} init                        # 交互式初始化`);
-  console.log(`  ${CLI_COMMAND} init my-project             # 在 my-project 目录初始化`);
-  console.log(`  ${CLI_COMMAND} init --tools claude,cursor  # 非交互式`);
-  console.log(`  ${CLI_COMMAND} update                      # 更新已配置的工具`);
-  console.log(`  ${CLI_COMMAND} migrate --from openspec     # 从 OpenSpec 迁移`);
-  console.log(`  ${CLI_COMMAND} migrate --from speckit      # 从 spec-kit 迁移`);
-  console.log(`  ${CLI_COMMAND} migrate --from openspec --dry-run  # 模拟迁移`);
+  console.log(chalk.cyan('Examples:'));
+  console.log(`  ${CLI_COMMAND} init                        # Interactive initialization`);
+  console.log(`  ${CLI_COMMAND} init my-project             # Initialize in my-project directory`);
+  console.log(`  ${CLI_COMMAND} init --tools claude,cursor  # Non-interactive (project-level by default)`);
+  console.log(`  ${CLI_COMMAND} init --tools claude --scope global  # Non-interactive (global installation)`);
+  console.log(`  ${CLI_COMMAND} update                      # Update configured tools`);
+  console.log(`  ${CLI_COMMAND} migrate --from openspec     # Migrate from OpenSpec`);
+  console.log(`  ${CLI_COMMAND} migrate --from speckit      # Migrate from spec-kit`);
+  console.log(`  ${CLI_COMMAND} migrate --from openspec --dry-run  # Dry run migration`);
 }
 
 // ============================================================================
-// 主入口
+// Main Entry
 // ============================================================================
 
 async function main() {
   const args = process.argv.slice(2);
 
-  // 解析参数
+  // Parse arguments
   let command = null;
   let projectPath = null;
   const options = {};
@@ -1445,6 +1547,8 @@ async function main() {
       process.exit(0);
     } else if (arg === '--tools') {
       options.tools = args[++i];
+    } else if (arg === '--scope') {
+      options.scope = args[++i];
     } else if (arg === '--from') {
       options.from = args[++i];
     } else if (arg === '--dry-run') {
