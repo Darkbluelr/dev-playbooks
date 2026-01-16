@@ -196,7 +196,6 @@ Run devbooks-archiver skill for change add-oauth2
 | Skill | Description |
 |-------|-------------|
 | devbooks-archiver | Maintain/dedupe specs |
-| devbooks-delivery-workflow | End-to-end delivery workflow |
 
 ### Standalone Skills
 
@@ -205,6 +204,14 @@ Run devbooks-archiver skill for change add-oauth2
 | devbooks-entropy-monitor | System entropy metrics |
 | devbooks-brownfield-bootstrap | Brownfield project bootstrap |
 | devbooks-convergence-audit | Convergence audit (anti-deception design) |
+
+### Orchestration Layer (For tools with sub-agent support)
+
+| Skill | Description |
+|-------|-------------|
+| devbooks-delivery-workflow | Complete closed-loop orchestrator, auto-orchestrates Proposal→Design→Spec→Plan→Test→Code→Review→Archive workflow |
+
+> **Note**: `devbooks-delivery-workflow` is an orchestration layer Skill, designed for AI programming tools with sub-agent support (e.g., Claude Code with Task tool). It calls sub-agents to execute each stage's Skill, completing the full change closed-loop.
 
 ---
 

@@ -5,17 +5,17 @@
  *
  * AI-agnostic spec-driven development workflow
  *
- * 用法：
- *   dev-playbooks-cn init [path] [options]
- *   dev-playbooks-cn update [path]
- *   dev-playbooks-cn migrate --from <framework> [options]
+ * Usage:
+ *   dev-playbooks init [path] [options]
+ *   dev-playbooks update [path]           # Update CLI and configured tools
+ *   dev-playbooks migrate --from <framework> [options]
  *
- * 选项：
- *   --tools <tools>    非交互式指定 AI 工具：all, none, 或逗号分隔的列表
- *   --from <framework> 迁移来源框架：openspec, speckit
- *   --dry-run          模拟运行，不实际修改文件
- *   --keep-old         迁移后保留原目录
- *   --help             显示帮助信息
+ * Options:
+ *   --tools <tools>    Non-interactive tool selection: all, none, or comma-separated list
+ *   --from <framework> Migration source: openspec, speckit
+ *   --dry-run          Dry run, don't modify files
+ *   --keep-old         Keep old directory after migration
+ *   --help             Show help
  *   --version          Show version
  */
 
@@ -314,6 +314,70 @@ function getCliVersion() {
   } catch {
     return 'unknown';
   }
+}
+
+/**
+ * Check if a new version is available on npm
+ * @returns {Promise<{hasUpdate: boolean, latestVersion: string|null, currentVersion: string}>}
+ */
+async function checkNpmUpdate() {
+  const currentVersion = getCliVersion();
+  try {
+    const { execSync } = await import('child_process');
+    const latestVersion = execSync(`npm view ${CLI_COMMAND} version`, {
+      encoding: 'utf-8',
+      timeout: 10000,
+      stdio: ['pipe', 'pipe', 'pipe']
+    }).trim();
+
+    if (latestVersion && latestVersion !== currentVersion) {
+      // Simple semver comparison
+      const current = currentVersion.split('.').map(Number);
+      const latest = latestVersion.split('.').map(Number);
+      const hasUpdate = latest[0] > current[0] ||
+        (latest[0] === current[0] && latest[1] > current[1]) ||
+        (latest[0] === current[0] && latest[1] === current[1] && latest[2] > current[2]);
+      return { hasUpdate, latestVersion, currentVersion };
+    }
+    return { hasUpdate: false, latestVersion, currentVersion };
+  } catch {
+    // Network error or timeout, silently ignore
+    return { hasUpdate: false, latestVersion: null, currentVersion };
+  }
+}
+
+/**
+ * Perform npm global update
+ * @returns {Promise<boolean>} Whether the update succeeded
+ */
+async function performNpmUpdate() {
+  return new Promise((resolve) => {
+    const spinner = ora(`Updating ${CLI_COMMAND}...`).start();
+    const child = spawn('npm', ['install', '-g', CLI_COMMAND], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      shell: true
+    });
+
+    let stderr = '';
+    child.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        spinner.succeed(`${CLI_COMMAND} updated to latest version`);
+        resolve(true);
+      } else {
+        spinner.fail(`Update failed: ${stderr || 'Unknown error'}`);
+        resolve(false);
+      }
+    });
+
+    child.on('error', (err) => {
+      spinner.fail(`Update failed: ${err.message}`);
+      resolve(false);
+    });
+  });
 }
 
 // ============================================================================
@@ -1297,7 +1361,32 @@ async function updateCommand(projectDir) {
   console.log(chalk.bold('DevBooks Update'));
   console.log();
 
-  // Check if initialized
+  // 1. Check if CLI has a new version
+  const spinner = ora('Checking for CLI updates...').start();
+  const { hasUpdate, latestVersion, currentVersion } = await checkNpmUpdate();
+
+  if (hasUpdate) {
+    spinner.info(`New version available: ${currentVersion} → ${latestVersion}`);
+    const shouldUpdate = await confirm({
+      message: `Update ${CLI_COMMAND} to ${latestVersion}?`,
+      default: true
+    });
+
+    if (shouldUpdate) {
+      const success = await performNpmUpdate();
+      if (success) {
+        console.log(chalk.blue('ℹ') + ` Please run \`${CLI_COMMAND} update\` again to update project files.`);
+        return;
+      }
+      // Update failed, continue with local file updates
+    }
+  } else {
+    spinner.succeed(`CLI is up to date (v${currentVersion})`);
+  }
+
+  console.log();
+
+  // 2. Check if initialized (update project files)
   const configPath = path.join(projectDir, '.devbooks', 'config.yaml');
   if (!fs.existsSync(configPath)) {
     console.log(chalk.red('✗') + ` DevBooks config not found. Please run \`${CLI_COMMAND} init\` first.`);
@@ -1464,7 +1553,7 @@ function showHelp() {
   console.log();
   console.log(chalk.cyan('Usage:'));
   console.log(`  ${CLI_COMMAND} init [path] [options]              Initialize DevBooks`);
-  console.log(`  ${CLI_COMMAND} update [path]                      Update configured tools`);
+  console.log(`  ${CLI_COMMAND} update [path]                      Update CLI and configured tools`);
   console.log(`  ${CLI_COMMAND} migrate --from <framework> [opts]  Migrate from other frameworks`);
   console.log();
   console.log(chalk.cyan('Options:'));
@@ -1518,7 +1607,7 @@ function showHelp() {
   console.log(`  ${CLI_COMMAND} init my-project             # Initialize in my-project directory`);
   console.log(`  ${CLI_COMMAND} init --tools claude,cursor  # Non-interactive (project-level by default)`);
   console.log(`  ${CLI_COMMAND} init --tools claude --scope global  # Non-interactive (global installation)`);
-  console.log(`  ${CLI_COMMAND} update                      # Update configured tools`);
+  console.log(`  ${CLI_COMMAND} update                      # Update CLI and Skills`);
   console.log(`  ${CLI_COMMAND} migrate --from openspec     # Migrate from OpenSpec`);
   console.log(`  ${CLI_COMMAND} migrate --from speckit      # Migrate from spec-kit`);
   console.log(`  ${CLI_COMMAND} migrate --from openspec --dry-run  # Dry run migration`);
