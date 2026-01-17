@@ -67,6 +67,93 @@ When user says "Coder is done, please verify" or similar, Test Owner enters **Ph
 
 ---
 
+## 🚨 ABSOLUTE RULES
+
+> **These rules have no exceptions. Violation means failure.**
+
+### Rule 1: No Stub Tests
+
+```
+❌ FORBIDDEN: Test function body is empty (pass / return)
+❌ FORBIDDEN: Test contains skip / pytest.skip / @skip
+❌ FORBIDDEN: Test contains TODO / FIXME / not_implemented
+❌ FORBIDDEN: Test only has assert True or assert 1 == 1
+❌ FORBIDDEN: Test raises NotImplementedError
+
+✅ REQUIRED: Every test has real assertions
+✅ REQUIRED: Every test can run independently
+✅ REQUIRED: Test failures give meaningful error messages
+```
+
+**Stub Test Examples (All FORBIDDEN)**:
+
+```python
+# ❌ Empty function body
+def test_login():
+    pass
+
+# ❌ Skip marker
+def test_login():
+    pytest.skip("not implemented yet")
+
+# ❌ TODO placeholder
+def test_login():
+    # TODO: implement this test
+    assert True
+
+# ❌ Meaningless assertion
+def test_login():
+    assert 1 == 1
+
+# ❌ Raises not implemented exception
+def test_login():
+    raise NotImplementedError("pending")
+```
+
+**Proper Test Example**:
+
+```python
+# ✅ Real test with assertions
+def test_login_returns_jwt():
+    # Arrange
+    user = create_test_user(email="test@example.com", password="secret")
+
+    # Act
+    result = login_service.login(email="test@example.com", password="secret")
+
+    # Assert
+    assert result.token is not None
+    assert result.token.startswith("eyJ")
+    assert result.user_id == user.id
+```
+
+### Rule 2: No Demo Mode (NO DEMO MODE)
+
+```
+❌ FORBIDDEN: Treating test writing as "demonstration" or "showcase"
+❌ FORBIDDEN: Claiming "tests written" when files are empty or don't exist
+❌ FORBIDDEN: Outputting test plan without actually creating test files
+❌ FORBIDDEN: Using "simulate", "assume" instead of actually writing tests
+
+✅ REQUIRED: Every claimed test must be a real file
+✅ REQUIRED: Files must contain executable test code
+✅ REQUIRED: Red baseline evidence must come from actually running tests
+```
+
+### Rule 3: Tests Must Not Be Decoupled from AC
+
+```
+❌ FORBIDDEN: Tests not associated with any AC
+❌ FORBIDDEN: AC without corresponding tests
+❌ FORBIDDEN: Tests pass but AC not actually verified
+
+✅ REQUIRED: Every AC has at least one test
+✅ REQUIRED: Every test is linked to a specific AC-xxx
+✅ REQUIRED: verification.md AC Coverage Matrix has 100% test mapping
+```
+
+---
+
 ## Test Layering and Run Strategy (Critical!)
 
 > **Core Principle**: Test layering is key to solving "slow tests blocking development".

@@ -58,6 +58,86 @@ allowed-tools:
 ✅ REQUIRED: All checks pass before executing archive
 ```
 
+### Rule 4: No Demo Mode (NO DEMO MODE)
+
+```
+❌ FORBIDDEN: Treating workflow as "demonstration" or "showcase"
+❌ FORBIDDEN: Outputting "demo complete", "workflow demonstration" etc.
+❌ FORBIDDEN: Claiming completion when artifacts don't exist or are empty
+❌ FORBIDDEN: Using "simulate", "assume", "if" instead of actual execution
+
+✅ REQUIRED: Every stage must produce real, verifiable artifacts
+✅ REQUIRED: Artifacts must be written to filesystem (verifiable via ls/cat)
+✅ REQUIRED: Use "executed", "completed", "created" for actual actions
+✅ REQUIRED: If cannot actually execute, stop immediately and inform user
+```
+
+**Signs of Demo Mode**:
+- Using words like "demonstration", "showcase", "simulate"
+- Claiming completion without actual file writes
+- Providing "Option A/B" instead of executing next step
+- Outputting "recommendations for next steps" instead of continuing
+
+### Rule 5: Must Not Ignore REVISE REQUIRED
+
+```
+❌ FORBIDDEN: Continuing to next stage after receiving REVISE REQUIRED
+❌ FORBIDDEN: Claiming "completed" after receiving REVISE REQUIRED
+❌ FORBIDDEN: Providing "options" for user to choose after REVISE REQUIRED
+❌ FORBIDDEN: Continuing execution after receiving REJECTED
+
+✅ REQUIRED: Judge returns REVISE → go back to Stage 1 to rewrite proposal
+✅ REQUIRED: Judge returns REJECTED → stop workflow, inform user
+✅ REQUIRED: Test-Review returns REVISE REQUIRED → go back to Stage 7 to fix tests
+✅ REQUIRED: Code-Review returns REVISE REQUIRED → go back to Stage 8 to fix code
+✅ REQUIRED: After fixing, re-execute review stage until it passes
+```
+
+**Rollback Execution Flow**:
+```
+Test-Review REVISE REQUIRED:
+    → Go back to Stage 7 (Test-Red)
+    → Fix test issues
+    → Re-execute Stages 7-9
+    → Loop until Test-Review passes
+
+Code-Review REVISE REQUIRED:
+    → Go back to Stage 8 (Code)
+    → Fix code issues
+    → Re-execute Stages 8-10
+    → Loop until Code-Review passes
+```
+
+### Rule 6: Must Not Proceed with Partial Completion
+
+```
+❌ FORBIDDEN: Entering next stage when tasks.md completion rate < 100%
+❌ FORBIDDEN: Entering next stage when test coverage < AC requirements
+❌ FORBIDDEN: Entering Code stage when stub tests exist (skip/todo/not_implemented)
+❌ FORBIDDEN: Entering Review stage when unimplemented functions exist (raise NotImplementedError)
+
+✅ REQUIRED: When Stage 7 completes, all tests must be real and executable
+✅ REQUIRED: When Stage 8 completes, tasks.md all tasks 100% complete
+✅ REQUIRED: If scope too large, must split change package, cannot partially complete
+```
+
+**Definition of Stub Tests**:
+```python
+# All of the following are stub tests, FORBIDDEN:
+def test_something():
+    pass
+
+def test_something():
+    pytest.skip("not implemented")
+
+def test_something():
+    # TODO: implement
+    assert True
+
+def test_something():
+    raise NotImplementedError
+```
+
 ---
 
 ## Prerequisites: Configuration Discovery (Protocol-Agnostic)
