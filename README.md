@@ -97,6 +97,20 @@ dev-playbooks init --tools claude --scope project  # Project-level
 dev-playbooks init --tools claude --scope global   # Global
 ```
 
+### Update
+
+Use the `update` command to update both CLI and project Skills:
+
+```bash
+dev-playbooks update
+```
+
+The update command will:
+1. **Check for CLI updates**: Automatically detects new versions on npm and prompts to update
+2. **Update project files**: Updates Skills, rule files, instruction files, etc.
+
+> **Tip**: No need to manually run `npm install -g dev-playbooks` anymore - the `update` command handles it automatically.
+
 ### Quick integration
 
 DevBooks uses two directory roots:
