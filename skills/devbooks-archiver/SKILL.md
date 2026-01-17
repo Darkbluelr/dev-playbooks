@@ -12,6 +12,36 @@ allowed-tools:
 
 # DevBooks: Archiver
 
+## 🚨 ABSOLUTE RULES
+
+> **These rules have no exceptions. Violation means failure.**
+
+### Rule 1: Must Not Skip Script Validation
+
+```
+❌ FORBIDDEN: Executing archive without running change-check.sh
+❌ FORBIDDEN: Continuing archive when change-check.sh returns non-zero
+❌ FORBIDDEN: Manually skipping or bypassing script check
+
+✅ REQUIRED: Run change-check.sh --mode strict before archive
+✅ REQUIRED: Script must return 0 to continue
+✅ REQUIRED: Stop and output complete error info on script failure
+```
+
+### Rule 2: Must Not Archive with Fake Completion
+
+```
+❌ FORBIDDEN: Archiving when evidence/green-final/ doesn't exist or is empty
+❌ FORBIDDEN: Archiving when verification.md AC coverage < 100%
+❌ FORBIDDEN: Archiving when tasks.md has incomplete tasks
+
+✅ REQUIRED: All check items must pass
+✅ REQUIRED: Green evidence directory non-empty
+✅ REQUIRED: AC coverage 100%
+```
+
+---
+
 ## Workflow Position Awareness
 
 > **Core Principle**: Archiver is the **single entry point** for the archive phase, responsible for completing all finalization work from code review to change package archival.
@@ -62,10 +92,48 @@ Before execution, **must** search for configuration in the following order (stop
 
 ## Complete Archive Flow
 
-### Step 1: Pre-checks
+### Step 0: Run Mandatory Validation Script (MANDATORY)
+
+> **This is the first action of archiving, cannot be skipped.**
+
+```bash
+# Must run this command
+change-check.sh <change-id> --mode strict
+```
+
+**Execution Rules**:
+
+| Script Return Value | Behavior |
+|--------------------|----------|
+| `0` (success) | Continue with subsequent steps |
+| non-zero (failure) | **Stop immediately**, output complete error info, do not execute any archive operations |
+
+**Script Check Contents** (--mode strict):
+
+- Change package existence
+- verification.md status and AC coverage rate
+- evidence/green-final/ exists and non-empty
+- tasks.md task completion rate
+- All gate checks
+
+**Output Format on Failure**:
+
+```
+❌ Archive Pre-check Failed
+
+Script output:
+<complete output from change-check.sh>
+
+Suggested actions:
+- Fix issues based on errors above
+- Re-run change-check.sh --mode strict
+- Confirm all checks pass before retrying archive
+```
+
+### Step 1: Pre-checks (Secondary Confirmation After Script Passes)
 
 ```markdown
-Pre-check checklist:
+Pre-check checklist (already validated by script, this is secondary confirmation):
 - [ ] Change package exists (<change-root>/<change-id>/)
 - [ ] verification.md Status = Ready or Done
 - [ ] evidence/green-final/ exists and is non-empty
@@ -234,7 +302,7 @@ Detection rules reference: `skills/_shared/context-detection-template.md`
 
 | Mode | Trigger Condition | Behavior |
 |------|-------------------|----------|
-| **Archive Mode** | change-id provided and gates pass | Execute complete archive flow (6 steps) |
+| **Archive Mode** | change-id provided and gates pass | Execute complete archive flow (7 steps: 0-6) |
 | **Maintenance Mode** | No change-id | Execute truth-root deduplication, cleanup, organization |
 | **Check Mode** | With --dry-run parameter | Output plan only, no actual modifications/moves |
 
@@ -245,7 +313,13 @@ Detection rules reference: `skills/_shared/context-detection-template.md`
 │                    Archive Mode Flow                         │
 ├─────────────────────────────────────────────────────────────┤
 │                                                             │
-│  1. Pre-checks                                              │
+│  0. Run mandatory validation script (MANDATORY)             │
+│     └─ change-check.sh <change-id> --mode strict           │
+│              │                                               │
+│              ├─ Returns non-zero → ❌ Stop, output error    │
+│              │                                               │
+│              ▼ Returns 0                                     │
+│  1. Pre-checks (secondary confirmation)                     │
 │     ├─ Change package exists?                               │
 │     ├─ verification.md Status = Ready/Done?                 │
 │     ├─ evidence/green-final/ exists?                        │

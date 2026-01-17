@@ -13,7 +13,52 @@ allowed-tools:
 
 # DevBooks: Delivery Acceptance Workflow (Complete Closed-Loop Orchestrator)
 
-> **Positioning**: This Skill is an **orchestration layer**, not a daily-use Skill. It runs in AI programming tools with sub-agent support (e.g., Claude Code with Task tool) to automatically orchestrate complete change closed-loops.
+> **Positioning**: This Skill is a **pure orchestration layer**, not an execution layer. It only **calls sub-agents**, never performs any change work itself.
+
+---
+
+## 🚨 ABSOLUTE RULES
+
+> **These rules have no exceptions. Violation means failure.**
+
+### Rule 1: Main Agent Must Not Work Directly
+
+```
+❌ FORBIDDEN: Main Agent writing proposal.md / design.md / tests/ / src/ directly
+❌ FORBIDDEN: Main Agent modifying any change package content directly
+❌ FORBIDDEN: Main Agent skipping sub-agent calls
+
+✅ REQUIRED: All work completed through Task tool sub-agent calls
+✅ REQUIRED: Every stage has corresponding sub-agent call
+✅ REQUIRED: Main Agent only orchestrates, waits, and verifies
+```
+
+### Rule 2: Must Not Skip Any Mandatory Stage
+
+```
+❌ FORBIDDEN: Skipping Challenger/Judge stages
+❌ FORBIDDEN: Skipping Test-Reviewer stage
+❌ FORBIDDEN: Skipping Code-Review stage
+❌ FORBIDDEN: Skipping Green-Verify stage
+❌ FORBIDDEN: Archiving without passing strict check
+
+✅ REQUIRED: Complete execution of all 12 mandatory stages
+✅ REQUIRED: Sub-agent must return success before continuing to next stage
+```
+
+### Rule 3: Must Not Archive with Fake Completion
+
+```
+❌ FORBIDDEN: Archiving when evidence/green-final/ doesn't exist or is empty
+❌ FORBIDDEN: Archiving when verification.md AC coverage < 100%
+❌ FORBIDDEN: Archiving when tasks.md has incomplete tasks
+❌ FORBIDDEN: Archiving when change-check.sh --mode strict fails
+
+✅ REQUIRED: Archiver sub-agent runs check script first
+✅ REQUIRED: All checks pass before executing archive
+```
+
+---
 
 ## Prerequisites: Configuration Discovery (Protocol-Agnostic)
 
@@ -31,57 +76,209 @@ Before execution, **must** search for configuration in the following order (stop
 - Do not guess directory roots
 - Do not skip reading the rules document
 
-## Core Responsibility: Complete Closed-Loop Orchestration
-
-This Skill's core capability is **orchestrating sub-agents to complete the full change closed-loop**.
-
-### Closed-Loop Flow (8 Stages)
+## Complete Closed-Loop Flow (12 Mandatory Stages)
 
 ```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  1. Propose │ ──▶ │  2. Design  │ ──▶ │  3. Spec    │ ──▶ │  4. Plan    │
-└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
-       │                                                           │
-       ▼                                                           ▼
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│  8. Archive │ ◀── │  7. Review  │ ◀── │  6. Code    │ ◀── │  5. Test    │
-└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│                      Mandatory Flow (No Optional Stages)                  │
+├──────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌─────────┐   ┌───────────┐   ┌─────────┐   ┌─────────┐                │
+│  │1.Propose│──▶│2.Challenge│──▶│ 3.Judge │──▶│4.Design │                │
+│  └─────────┘   └───────────┘   └─────────┘   └─────────┘                │
+│       │                                            │                     │
+│       │              ┌─────────────────────────────┘                     │
+│       │              ▼                                                   │
+│       │        ┌─────────┐   ┌─────────┐   ┌─────────┐                  │
+│       │        │ 5.Spec  │──▶│ 6.Plan  │──▶│7.Test-R │                  │
+│       │        └─────────┘   └─────────┘   └─────────┘                  │
+│       │                                          │                       │
+│       │              ┌───────────────────────────┘                       │
+│       │              ▼                                                   │
+│       │        ┌─────────┐   ┌──────────┐   ┌──────────┐                │
+│       │        │ 8.Code  │──▶│9.TestRev │──▶│10.CodeRev│                │
+│       │        └─────────┘   └──────────┘   └──────────┘                │
+│       │                                            │                     │
+│       │              ┌─────────────────────────────┘                     │
+│       │              ▼                                                   │
+│       │        ┌───────────┐   ┌─────────┐                              │
+│       └───────▶│11.GreenV  │──▶│12.Archive│                              │
+│                └───────────┘   └─────────┘                              │
+│                                                                          │
+└──────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Stage Details and Corresponding Skills
+### Stage Details and Sub-Agent Calls
 
-| Stage | Skill | Artifact | Role |
-|-------|-------|----------|------|
-| 1. Propose | `devbooks-proposal-author` | proposal.md | Author |
-| 1.5 Challenge (optional) | `devbooks-proposal-challenger` | Challenge comments | Challenger |
-| 1.6 Judge (optional) | `devbooks-proposal-judge` | Decision | Judge |
-| 2. Design | `devbooks-design-doc` | design.md | Designer |
-| 3. Spec | `devbooks-spec-contract` | specs/*.md | Spec Owner |
-| 4. Plan | `devbooks-implementation-plan` | tasks.md | Planner |
-| 5. Test | `devbooks-test-owner` | verification.md + tests/ | Test Owner |
-| 6. Code | `devbooks-coder` | src/ implementation | Coder |
-| 7. Review | `devbooks-code-review` | Review comments | Reviewer |
-| 7.5 Test Review (optional) | `devbooks-test-reviewer` | Test review | Test Reviewer |
-| 8. Archive | `devbooks-archiver` | Archived to truth source | Archiver |
+| # | Stage | Sub-Agent | Skill | Artifact | Mandatory |
+|---|-------|-----------|-------|----------|-----------|
+| 1 | Propose | `devbooks-proposal-author` | devbooks-proposal-author | proposal.md | ✅ |
+| 2 | Challenge | `devbooks-challenger` | devbooks-proposal-challenger | Challenge opinions | ✅ |
+| 3 | Judge | `devbooks-judge` | devbooks-proposal-judge | Decision Log | ✅ |
+| 4 | Design | `devbooks-designer` | devbooks-design-doc | design.md | ✅ |
+| 5 | Spec | `devbooks-spec-owner` | devbooks-spec-contract | specs/*.md | ✅ |
+| 6 | Plan | `devbooks-planner` | devbooks-implementation-plan | tasks.md | ✅ |
+| 7 | Test-Red | `devbooks-test-owner` | devbooks-test-owner | verification.md + tests/ | ✅ |
+| 8 | Code | `devbooks-coder` | devbooks-coder | src/ implementation | ✅ |
+| 9 | Test-Review | `devbooks-reviewer` | devbooks-test-reviewer | Test review opinions | ✅ |
+| 10 | Code-Review | `devbooks-reviewer` | devbooks-code-review | Code review opinions | ✅ |
+| 11 | Green-Verify | `devbooks-test-owner` | devbooks-test-owner | evidence/green-final/ | ✅ |
+| 12 | Archive | `devbooks-archiver` | devbooks-archiver | Archived to archive/ | ✅ |
 
-### Orchestration Logic
+---
 
+## Orchestration Logic (Pseudocode)
+
+```python
+def run_delivery_workflow(user_requirement):
+    """
+    Main Agent only executes this orchestration logic, does no actual work
+    """
+
+    # ==================== Stage 1: Propose ====================
+    change_id = call_subagent("devbooks-proposal-author", {
+        "task": "Create change proposal",
+        "requirement": user_requirement
+    })
+    verify_output(f"{change_root}/{change_id}/proposal.md")
+
+    # ==================== Stage 2: Challenge ====================
+    challenge_result = call_subagent("devbooks-challenger", {
+        "task": "Challenge proposal",
+        "change_id": change_id
+    })
+    # Never skip, run even if no challenges found
+
+    # ==================== Stage 3: Judge ====================
+    judge_result = call_subagent("devbooks-judge", {
+        "task": "Adjudicate proposal",
+        "change_id": change_id,
+        "challenge_result": challenge_result
+    })
+    if judge_result == "REJECTED":
+        return "Proposal rejected, workflow terminated"
+    if judge_result == "REVISE":
+        # Return to Stage 1, rewrite proposal
+        return run_delivery_workflow(revised_requirement)
+    # judge_result == "APPROVED" continue
+
+    # ==================== Stage 4: Design ====================
+    call_subagent("devbooks-designer", {
+        "task": "Create design document",
+        "change_id": change_id
+    })
+    verify_output(f"{change_root}/{change_id}/design.md")
+
+    # ==================== Stage 5: Spec ====================
+    call_subagent("devbooks-spec-owner", {
+        "task": "Define spec contracts",
+        "change_id": change_id
+    })
+    # specs/ directory may be empty (when no external contracts)
+
+    # ==================== Stage 6: Plan ====================
+    call_subagent("devbooks-planner", {
+        "task": "Create implementation plan",
+        "change_id": change_id
+    })
+    verify_output(f"{change_root}/{change_id}/tasks.md")
+
+    # ==================== Stage 7: Test-Red ====================
+    # Must use independent Agent session
+    call_subagent("devbooks-test-owner", {
+        "task": "Write tests and establish Red baseline",
+        "change_id": change_id,
+        "isolation": "required"  # Mandatory isolation
+    })
+    verify_output(f"{change_root}/{change_id}/verification.md")
+    verify_output(f"{change_root}/{change_id}/evidence/red-baseline/")
+
+    # ==================== Stage 8: Code ====================
+    # Must use independent Agent session
+    call_subagent("devbooks-coder", {
+        "task": "Implement features per tasks.md",
+        "change_id": change_id,
+        "isolation": "required"  # Mandatory isolation
+    })
+
+    # ==================== Stage 9: Test-Review ====================
+    test_review_result = call_subagent("devbooks-reviewer", {
+        "task": "Review test quality",
+        "change_id": change_id,
+        "review_type": "test-review"
+    })
+    if test_review_result == "REVISE REQUIRED":
+        # Return to Stage 7, fix test issues
+        goto_stage(7)
+
+    # ==================== Stage 10: Code-Review ====================
+    code_review_result = call_subagent("devbooks-reviewer", {
+        "task": "Review code quality",
+        "change_id": change_id,
+        "review_type": "code-review"
+    })
+    if code_review_result == "REVISE REQUIRED":
+        # Return to Stage 8, fix code issues
+        goto_stage(8)
+
+    # ==================== Stage 11: Green-Verify ====================
+    # Must use independent Agent session (same Test Owner as Stage 7)
+    call_subagent("devbooks-test-owner", {
+        "task": "Run all tests and collect Green evidence",
+        "change_id": change_id,
+        "isolation": "required",
+        "phase": "green-verify"
+    })
+    verify_output(f"{change_root}/{change_id}/evidence/green-final/")
+
+    # ==================== Stage 12: Archive ====================
+    # Archiver will automatically run change-check.sh --mode strict
+    call_subagent("devbooks-archiver", {
+        "task": "Execute archive",
+        "change_id": change_id
+    })
+
+    return "Closed-loop complete"
 ```
-1. Receive user requirement
-2. Call proposal-author to create proposal (auto-generate change-id)
-3. [Optional] Call proposal-challenger to challenge proposal
-4. [Optional] Call proposal-judge to adjudicate
-5. Call design-doc to create design document
-6. [If external contracts] Call spec-contract to define specs
-7. Call implementation-plan to create implementation plan
-8. Call test-owner to write tests (independent Agent)
-9. Call coder to implement features (independent Agent)
-10. Call code-review to review code
-11. [Optional] Call test-reviewer to review tests
-12. Call archiver to archive to truth source
+
+---
+
+## Sub-Agent Call Templates
+
+### Call Format
+
+Use Task tool to call sub-agents:
+
+```markdown
+## Calling devbooks-proposal-author sub-agent
+
+Please execute the following task:
+- Use devbooks-proposal-author skill
+- Create change proposal for: [requirement description]
+- Generate compliant change-id
+- Output change-id and proposal.md path when done
 ```
 
-### Role Isolation Constraints
+### Stage Call Examples
+
+| Stage | Sub-Agent | Call Prompt |
+|-------|-----------|-------------|
+| 1 | devbooks-proposal-author | "Use devbooks-proposal-author skill to create proposal for [requirement]" |
+| 2 | devbooks-challenger | "Use devbooks-proposal-challenger skill to challenge change [change-id]" |
+| 3 | devbooks-judge | "Use devbooks-proposal-judge skill to adjudicate change [change-id]" |
+| 4 | devbooks-designer | "Use devbooks-design-doc skill to create design doc for change [change-id]" |
+| 5 | devbooks-spec-owner | "Use devbooks-spec-contract skill to define specs for change [change-id]" |
+| 6 | devbooks-planner | "Use devbooks-implementation-plan skill to create plan for change [change-id]" |
+| 7 | devbooks-test-owner | "Use devbooks-test-owner skill to write tests and establish Red baseline for change [change-id]" |
+| 8 | devbooks-coder | "Use devbooks-coder skill to implement features for change [change-id]" |
+| 9 | devbooks-reviewer | "Use devbooks-test-reviewer skill to review tests for change [change-id]" |
+| 10 | devbooks-reviewer | "Use devbooks-code-review skill to review code for change [change-id]" |
+| 11 | devbooks-test-owner | "Use devbooks-test-owner skill to run all tests and collect Green evidence for change [change-id]" |
+| 12 | devbooks-archiver | "Use devbooks-archiver skill to archive change [change-id]" |
+
+---
+
+## Role Isolation Constraints
 
 **Key Principle**: Test Owner and Coder must use **independent Agent instances/sessions**.
 
