@@ -98,7 +98,7 @@ change-scaffold.sh <change-id> --project-root <repo-root> --change-root <change-
 
 ## Execution Method
 
-1) First read and follow: `~/.claude/skills/_shared/references/universal-gating-protocol.md` (verifiability + structural quality gating).
+1) First read and follow: `~/.claude/skills/_shared/references/ai-behavior-guidelines.md` (verifiability + structural quality gating).
 2) Strictly follow the complete prompt output: `references/proposal-authoring-prompt.md`.
 
 ---

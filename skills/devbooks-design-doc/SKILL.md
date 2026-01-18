@@ -173,7 +173,7 @@ The following change types **require** filling in architecture change details:
 
 ## Execution Method
 
-1) First read and follow: `~/.claude/skills/_shared/references/universal-gating-protocol.md` (verifiability + structural quality gates).
+1) First read and follow: `~/.claude/skills/_shared/references/ai-behavior-guidelines.md` (verifiability + structural quality gates).
 2) Strictly follow complete prompt output: `references/design-doc-prompt.md`.
 
 ---

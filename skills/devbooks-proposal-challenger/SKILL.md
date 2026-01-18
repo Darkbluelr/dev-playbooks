@@ -37,7 +37,7 @@ Before execution, **must** search for configuration in the following order (stop
 
 ## Execution Method
 
-1) First read and follow: `~/.claude/skills/_shared/references/universal-gating-protocol.md` (verifiability + structural quality gating).
+1) First read and follow: `~/.claude/skills/_shared/references/ai-behavior-guidelines.md` (verifiability + structural quality gating).
 2) Strictly output challenge report per complete prompt: `references/proposal-challenge-prompt.md`.
 
 ---

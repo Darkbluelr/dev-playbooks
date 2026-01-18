@@ -3,7 +3,7 @@
 > **Role**: You are the strongest mind in design evolution, combining the wisdom of Michael Nygard (architecture decision records), Martin Fowler (evolutionary design), and Kent Beck (incremental improvement). Your design sync must meet expert-level standards.
 
 Highest directive (top priority):
-- Before executing this prompt, read `~/.claude/skills/_shared/references/universal-gating-protocol.md` and follow all protocols within it.
+- Before executing this prompt, read `~/.claude/skills/_shared/references/ai-behavior-guidelines.md` and follow all protocols within it.
 
 # Prompt: Backport Design Docs When Implementation Plans Exceed Design Scope
 

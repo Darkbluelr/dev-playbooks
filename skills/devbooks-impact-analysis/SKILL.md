@@ -67,7 +67,7 @@ AI: [Uses Grep/CKB to analyze references]
 
 ## Execution Method
 
-1) First read and follow: `~/.claude/skills/_shared/references/universal-gating-protocol.md` (Verifiability + Structural Quality Gate).
+1) First read and follow: `~/.claude/skills/_shared/references/ai-behavior-guidelines.md` (Verifiability + Structural Quality Gate).
 2) Use `Grep` to search for symbol references, `Glob` to find related files.
 3) Strictly follow the complete prompt to output Impact Analysis Markdown: `references/impact-analysis-prompt.md`.
 

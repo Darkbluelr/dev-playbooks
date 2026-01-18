@@ -58,7 +58,7 @@ Before execution, you **must** search for configuration in the following order (
 
 ### Standard Process
 
-1) First read and follow: `~/.claude/skills/_shared/references/universal-gating-protocol.md`
+1) First read and follow: `~/.claude/skills/_shared/references/ai-behavior-guidelines.md`
 2) Specification part: Output Requirements/Scenarios per `references/spec-change-prompt.md`
 3) Contract part: Output contract plan per `references/contract-and-data-definition-prompt.md`
 4) **Implicit change detection (as needed)**: `references/implicit-change-detection-prompt.md`

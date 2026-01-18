@@ -72,7 +72,7 @@ Before execution, **must** search for configuration in the following order (stop
 
 ### Must Read (Read Immediately)
 
-1. **Universal Gating Protocol**: `~/.claude/skills/_shared/references/universal-gating-protocol.md`
+1. **AI Behavior Guidelines**: `~/.claude/skills/_shared/references/ai-behavior-guidelines.md`
    - Verifiability gating, structural quality gating, completeness gating
    - Foundation rules for all skills
 

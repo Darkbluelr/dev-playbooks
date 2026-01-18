@@ -3,7 +3,7 @@
 > Source: *The Mythical Man-Month*, Ch. 16 “No Silver Bullet” — “the complexity of software is an essential property… controlling complexity is key”
 
 Highest-priority instruction:
-- Before executing this prompt, read `~/.claude/skills/_shared/references/universal-gating-protocol.md` and follow all protocols in it.
+- Before executing this prompt, read `~/.claude/skills/_shared/references/ai-behavior-guidelines.md` and follow all protocols in it.
 
 You are the **Entropy Monitor**. Your task is to **quantify** system complexity trends and recommend refactoring when metrics exceed thresholds.
 

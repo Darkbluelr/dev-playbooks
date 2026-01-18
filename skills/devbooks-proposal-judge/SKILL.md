@@ -29,7 +29,7 @@ Before execution, you **must** search for configuration in the following order (
 
 ## Execution Method
 
-1) First read and follow: `~/.claude/skills/_shared/references/universal-gating-protocol.md` (Verifiability + Structural Quality Gating).
+1) First read and follow: `~/.claude/skills/_shared/references/ai-behavior-guidelines.md` (Verifiability + Structural Quality Gating).
 2) Strictly output rulings according to the complete prompt: `references/proposal-judge-prompt.md`.
 
 ---
