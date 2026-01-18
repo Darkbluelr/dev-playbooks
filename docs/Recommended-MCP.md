@@ -2,7 +2,7 @@
 
 > Detailed configuration and usage guide for MCP servers recommended by this repo.
 >
-> Date: 2025-12-30
+> Date: 2026-01-18
 > Scope: User scope (available to all projects)
 
 ---
@@ -10,17 +10,14 @@
 ## Table of contents
 
 1. [Overview](#overview)
-2. [TaskMaster AI](#taskmaster-ai)
-3. [CKB (Code Knowledge Backend)](#ckb-code-knowledge-backend)
-4. [tree-sitter-mcp](#tree-sitter-mcp)
-5. [Context7](#context7)
-6. [GitHub MCP Server](#github-mcp-server)
-7. [Playwright MCP](#playwright-mcp)
-8. [Configuration locations](#configuration-locations)
-9. [Common use cases](#common-use-cases)
-10. [Troubleshooting](#troubleshooting)
-11. [Maintenance and updates](#maintenance-and-updates)
-12. [References](#references)
+2. [Context7](#context7)
+3. [GitHub MCP Server](#github-mcp-server)
+4. [Playwright MCP](#playwright-mcp)
+5. [Configuration locations](#configuration-locations)
+6. [Common use cases](#common-use-cases)
+7. [Troubleshooting](#troubleshooting)
+8. [Maintenance and updates](#maintenance-and-updates)
+9. [References](#references)
 
 ---
 
@@ -30,9 +27,6 @@
 
 | Server | Type | Scope | Primary capability |
 |---|---|---|---|
-| **task-master** | Task management | User scope | AI-driven task management |
-| **ckb** | Code analysis | User scope | Symbol search, references, impact analysis |
-| **tree-sitter-mcp** | Code search | User scope | Semantic code search and analysis |
 | **context7** | Docs | User scope | Fetch up-to-date library docs and examples |
 | **github** | GitHub integration | User scope | Repos, issues, PRs, actions automation |
 | **playwright** | Browser automation | User scope | Web automation, scraping, and interaction |
@@ -40,346 +34,6 @@
 **Config file**: `~/.claude.json` (top-level `mcpServers` field)
 
 **Scope**: all projects
-
----
-
-## TaskMaster AI
-
-### Basics
-
-- **npm package**: `task-master-ai`
-- **Type**: AI-driven task management system
-- **Install**: `npx` (auto-download)
-- **Docs**: https://docs.task-master.dev
-- **GitHub**: https://github.com/eyaltoledano/claude-task-master
-
-### Capabilities
-
-- Task management: create/update/delete/search
-- Priority management: high/medium/low
-- Status tracking: todo/in-progress/done
-- AI suggestions and analysis
-- Natural-language interaction
-- Multi-model support (Claude/GPT/etc.)
-
-### Configuration
-
-```json
-{
-  "mcpServers": {
-    "task-master": {
-      "command": "npx",
-      "args": ["-y", "task-master-ai"],
-      "env": {
-        "ANTHROPIC_API_KEY": "sk-...",
-        "ANTHROPIC_BASE_URL": "https://anyrouter.top",
-        "OPENAI_API_KEY": "sk-...",
-        "OPENAI_BASE_URL": "https://anyrouter.top/v1",
-        "TASK_MASTER_TOOLS": "core"
-      }
-    }
-  }
-}
-```
-
-### Environment variables
-
-| Variable | Required | Description |
-|---|:---:|---|
-| `ANTHROPIC_API_KEY` | yes | API key for Claude models |
-| `ANTHROPIC_BASE_URL` | no | Custom Anthropic API endpoint |
-| `OPENAI_API_KEY` | no | API key for OpenAI models |
-| `OPENAI_BASE_URL` | no | Custom OpenAI API endpoint |
-| `TASK_MASTER_TOOLS` | no | Enabled toolset: `core`/`standard`/`all`/comma-separated list |
-
-### Toolset selection (`TASK_MASTER_TOOLS`)
-
-Note: `task-master-ai` reads `TASK_MASTER_TOOLS` (not `TASK_MASTER_TOOL_MODE`).
-
-Common values:
-- `core`: minimal toolset (default/recommended)
-- `standard`: standard toolset
-- `all`: enable everything
-- `tool_a,tool_b,...`: custom allowlist (comma-separated)
-
-### Usage examples
-
-Create a task:
-```
-Use task-master to create a task: finish MCP configuration docs
-```
-
-List tasks:
-```
-Use task-master to list all open tasks
-```
-
-Update task status:
-```
-Use task-master to mark the task as completed
-```
-
-Search tasks:
-```
-Use task-master to search tasks about "docs"
-```
-
-### Model configuration (optional)
-
-```bash
-# interactive setup
-npx task-master-ai models --setup
-
-# or set explicitly
-npx task-master-ai models --set-main=gpt-4o
-npx task-master-ai models --set-research=claude-3-5-sonnet-20241022
-npx task-master-ai models --set-fallback=gpt-3.5-turbo
-```
-
-Config file location: `~/.taskmaster/config.json`
-
-### Supported API providers
-
-- Anthropic (Claude)
-- OpenAI (GPT-4, GPT-3.5)
-- Perplexity
-- Google (Gemini)
-- Mistral
-- Groq
-- OpenRouter
-- xAI (Grok)
-- Azure OpenAI
-- Ollama (local)
-
----
-
-## CKB (Code Knowledge Backend)
-
-### Basics
-
-- **Version**: 7.5.0
-- **Type**: language-agnostic code understanding layer
-- **Install path**: `/usr/local/bin/ckb`
-- **GitHub**: https://github.com/simplyliz/codemcp
-
-### Capabilities
-
-- Symbol search: functions/classes/variables
-- Find references: all usages
-- Impact analysis: estimate blast radius
-- Architecture view: structure and dependencies
-- Git integration: blame + history
-
-### Backend support
-
-- **LSP** (Language Server Protocol): Python, TypeScript, Go, etc.
-- **SCIP**: precomputed index (Go/Java/TypeScript, etc.)
-- **Git**: repository history and blame
-
-### Configuration
-
-```json
-{
-  "mcpServers": {
-    "ckb": {
-      "command": "/usr/local/bin/ckb",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-### Installation steps
-
-#### 1) Install the CKB binary
-
-```bash
-# clone
-cd ~/Projects/mcps
-git clone https://github.com/simplyliz/codemcp.git
-cd codemcp
-
-# Go proxy settings (useful in some regions)
-export GOPROXY=https://goproxy.cn,direct
-export GOSUMDB=sum.golang.google.cn
-
-# build
-go build -o ckb ./cmd/ckb
-
-# install
-sudo cp ckb /usr/local/bin/ckb
-sudo chmod +x /usr/local/bin/ckb
-
-# verify
-ckb --version
-```
-
-#### 2) Install Python LSP support
-
-```bash
-pip3 install python-lsp-server
-
-# verify
-python3 -m pylsp --version
-```
-
-#### 3) Initialize CKB for a project
-
-```bash
-cd /path/to/your/project
-ckb init
-```
-
-This creates `.ckb/config.json`.
-
-### Project config file
-
-Location: `<project>/.ckb/config.json`
-
-```json
-{
-  "backends": {
-    "lsp": {
-      "enabled": true,
-      "servers": {
-        "python": {
-          "command": "python3",
-          "args": ["-m", "pylsp"]
-        }
-      }
-    },
-    "git": {
-      "enabled": true
-    }
-  }
-}
-```
-
-### Usage examples
-
-Symbol search:
-```
-Use CKB to search for FastAPI symbols in this project
-```
-
-Find references:
-```
-Use CKB to find all references to the get_user function
-```
-
-Impact analysis:
-```
-Use CKB to analyze the impact of modifying the User class
-```
-
-### Common commands
-
-```bash
-# system status
-ckb status
-
-# search symbols
-ckb search <symbol>
-
-# find references
-ckb refs <symbol>
-
-# architecture overview
-ckb arch
-
-# diagnostics
-ckb doctor
-```
-
-### Supported languages
-
-- Python (via LSP)
-- TypeScript/JavaScript (via LSP)
-- Go (via SCIP + LSP)
-- Java (via SCIP)
-- Any project with a Git history
-
-### Notes
-
-Each project must be initialized separately: even though the CKB MCP server is configured at user scope, you still need to run `ckb init` per project to create project-specific configuration.
-
----
-
-## tree-sitter-mcp
-
-### Basics
-
-- **npm package**: `@nendo/tree-sitter-mcp`
-- **Type**: semantic code search
-- **Install**: `npx` (auto-download)
-- **GitHub**: https://github.com/nendo/tree-sitter-mcp
-
-### Capabilities
-
-- Real-time parsing (no prebuilt index required)
-- Structural search (code-aware search)
-- AST-level queries
-- Multi-language support
-- Lightweight (minimal configuration)
-
-### Configuration
-
-```json
-{
-  "mcpServers": {
-    "tree-sitter-mcp": {
-      "command": "npx",
-      "args": ["-y", "@nendo/tree-sitter-mcp", "--mcp"]
-    }
-  }
-}
-```
-
-### Highlights
-
-- Auto-installs on first use
-- Auto-updates to latest via npx
-- No local installation maintenance
-- Works for any project (no init required)
-- Zero-config
-
-### Usage examples
-
-Analyze file structure:
-```
-Use tree-sitter to analyze the structure of backend/main.py
-```
-
-Find function definitions:
-```
-Use tree-sitter to find all async function definitions
-```
-
-Pattern search:
-```
-Use tree-sitter to find all try-except blocks
-```
-
-### Supported languages
-
-- Python
-- JavaScript/TypeScript
-- Go
-- Rust
-- C/C++
-- Java
-- Ruby
-- and more
-
-### Comparison
-
-| Feature | tree-sitter-mcp | CKB |
-|---|---|---|
-| Installation complexity | easy (auto) | medium (build) |
-| Project initialization | not required | required |
-| Semantic understanding | medium | high |
-| Find references | basic | full |
-| Best for | fast search | deep analysis |
 
 ---
 
@@ -506,17 +160,6 @@ Context7 supports standard HTTPS proxy environment variables:
 export https_proxy=http://proxy.example.com:8080
 export HTTPS_PROXY=http://proxy.example.com:8080
 ```
-
-### Comparison
-
-| Feature | Context7 | CKB | tree-sitter-mcp |
-|---|---|---|---|
-| Installation complexity | easy (auto) | medium (build) | easy (auto) |
-| Documentation source | online/latest | local code | local code |
-| Version-aware docs | yes | no | no |
-| Up-to-date examples | yes | no | no |
-| Offline | no | yes | yes |
-| Best for | library docs | local deep analysis | local fast search |
 
 ### Troubleshooting
 
@@ -1320,9 +963,6 @@ npx playwright install
 ```json
 {
   "mcpServers": {
-    "task-master": { },
-    "ckb": { },
-    "tree-sitter-mcp": { },
     "context7": { },
     "github": { },
     "playwright": { }
@@ -1342,34 +982,9 @@ If you use Codex CLI and want to reuse the same MCP set:
 - **Recommended**: use the repo script to sync from Claude config to Codex: `scripts/sync_mcp_from_claude_to_codex.py`
 - **Guide**: `mcp_codex.md`
 
-### Project-specific configuration
-
-- **CKB**: `<project>/.ckb/config.json`
-- **TaskMaster**: `~/.taskmaster/config.json` (optional)
-
 ---
 
 ## Common use cases
-
-TaskMaster AI is a good fit for:
-- task tracking and project planning
-- todos and progress reporting
-- refactor planning
-- bug tracking
-
-CKB is a good fit for:
-- architecture understanding in large codebases
-- symbol reference lookups
-- impact analysis before changes
-- git blame/history analysis
-- dependency tracking
-
-tree-sitter-mcp is a good fit for:
-- fast code search
-- structural/semantic analysis
-- new or temporary projects (no init required)
-- lightweight code understanding
-- pattern matching
 
 Context7 is a good fit for:
 - querying the latest library docs and APIs
@@ -1398,58 +1013,12 @@ Playwright MCP is a good fit for:
 
 ## Troubleshooting
 
-TaskMaster fails to start:
-- missing API key
-- API endpoint not reachable
-- npx download issues
-
-```bash
-# print env keys from config
-cat ~/.claude.json | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-env = data['mcpServers']['task-master']['env']
-print('env keys:', list(env.keys()))
-"
-
-# test API reachability
-curl -I https://anyrouter.top
-```
-
-CKB shows `LSP not ready`:
-```bash
-python3 -m pylsp --version
-cat .ckb/config.json
-ckb init
-```
-
-tree-sitter-mcp first run is slow:
-- `npx` needs to download packages (expected)
-
 Context7/GitHub/Playwright:
 - see their respective sections for specific troubleshooting steps
 
 ---
 
 ## Maintenance and updates
-
-Update TaskMaster:
-```bash
-# npx uses latest automatically; nothing to do
-```
-
-Update CKB:
-```bash
-cd ~/Projects/mcps/codemcp
-git pull
-go build -o ckb ./cmd/ckb
-sudo cp ckb /usr/local/bin/ckb
-```
-
-Update tree-sitter-mcp:
-```bash
-# npx -y downloads latest automatically; nothing to do
-```
 
 Update Context7:
 ```bash
@@ -1470,19 +1039,6 @@ npx playwright install
 ---
 
 ## References
-
-TaskMaster AI:
-- https://docs.task-master.dev
-- https://github.com/eyaltoledano/claude-task-master
-- https://www.npmjs.com/package/task-master-ai
-
-CKB:
-- https://github.com/simplyliz/codemcp
-- https://mcp.lobehub.com/
-
-tree-sitter-mcp:
-- https://github.com/nendo/tree-sitter-mcp
-- https://www.npmjs.com/package/@nendo/tree-sitter-mcp
 
 Context7:
 - https://context7.com
@@ -1512,6 +1068,6 @@ General:
 
 ---
 
-**Document updated**: 2025-12-30
+**Document updated**: 2026-01-18
 **Author**: Claude Code
 **Maintenance**: update configs and usage notes periodically
