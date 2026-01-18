@@ -443,7 +443,7 @@ Prevent large outputs from polluting context:
 
 ## Execution Method
 
-1) First read and follow: `_shared/references/universal-gating-protocol.md` (Verifiability + Structural Quality Gates).
+1) First read and follow: `~/.claude/skills/_shared/references/universal-gating-protocol.md` (Verifiability + Structural Quality Gates).
 2) Read methodology reference: `references/test-driven-development.md` (read when needed).
 3) Read test layering guide: `references/test-layering-strategy.md`.
 4) Strictly follow the complete prompt: `references/test-code-prompt.md`.

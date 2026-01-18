@@ -281,7 +281,7 @@ archived-by: devbooks-archiver
 
 ## Execution Method
 
-1) First read and follow: `_shared/references/universal-gating-protocol.md` (verifiability + structural quality gates).
+1) First read and follow: `~/.claude/skills/_shared/references/universal-gating-protocol.md` (verifiability + structural quality gates).
 2) Strictly execute the complete prompt: `references/archiver-prompt.md`.
 
 ---

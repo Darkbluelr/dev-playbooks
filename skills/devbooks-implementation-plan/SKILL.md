@@ -69,7 +69,7 @@ Before execution, **must** search for configuration in the following order (stop
 
 ## Execution Method
 
-1) First read and follow: `_shared/references/universal-gating-protocol.md` (Verifiability + Structural Quality Gating).
+1) First read and follow: `~/.claude/skills/_shared/references/universal-gating-protocol.md` (Verifiability + Structural Quality Gating).
 2) Strictly output according to the complete prompt: `references/implementation-plan-prompt.md` (Derive only from design, do not reference tests/).
 
 ---

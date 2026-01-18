@@ -287,7 +287,7 @@ fi
 
 ## Execution Method
 
-1) First read and follow: `_shared/references/universal-gating-protocol.md` (verifiability + structural quality gating).
+1) First read and follow: `~/.claude/skills/_shared/references/universal-gating-protocol.md` (verifiability + structural quality gating).
 2) Read low-risk modification techniques: `references/low-risk-modification-techniques.md` (read when needed).
 3) Execute strictly according to the complete prompt: `references/code-implementation-prompt.md`.
 

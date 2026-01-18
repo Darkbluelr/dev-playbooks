@@ -5,7 +5,7 @@
 > Source: *The Mythical Man-Month*, Ch. 7 “The Tower of Babel” — “teams gradually change program behavior, implicitly changing conventions without systematic evaluation”
 
 Highest-priority instruction:
-- Before executing this prompt, read `_shared/references/universal-gating-protocol.md` and follow all protocols in it.
+- Before executing this prompt, read `~/.claude/skills/_shared/references/universal-gating-protocol.md` and follow all protocols in it.
 
 You are the **Implicit Change Detector**. Your task is to identify **changes that are not declared in proposal/design but will change system behavior in practice**.
 

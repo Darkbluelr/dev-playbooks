@@ -1,11 +1,22 @@
 # DevBooks Skills Quick Reference (Purpose / When to Use / Copy-Paste Prompts)
 
+## Path Conventions
+
+### Project-Internal Paths (Relative Paths)
 Default paths (DevBooks project layout):
 - `<truth-root>` = `dev-playbooks/specs`
 - `<change-root>` = `dev-playbooks/changes`
 - `<change-id>` = the change package directory name for this change (verb-first)
 
-If you are not using DevBooks, replace `dev-playbooks/specs` / `dev-playbooks/changes` with the `<truth-root>` / `<change-root>` defined by your project’s “signpost” file (e.g. `project.md`, `AGENTS.md`, or your protocol config).
+If you are not using DevBooks, replace `dev-playbooks/specs` / `dev-playbooks/changes` with the `<truth-root>` / `<change-root>` defined by your project's "signpost" file (e.g. `project.md`, `AGENTS.md`, or your protocol config).
+
+### Skills Shared Resources Paths (Absolute Paths)
+Shared resources referenced by Skills (e.g. `_shared/references/`) are located in the global skills installation directory:
+- **Claude Code**: `~/.claude/skills/_shared/`
+- **Codex CLI**: `~/.codex/skills/_shared/`
+- **OpenCode**: `~/.config/opencode/skill/_shared/`
+
+In SKILL.md prompts, the `~/.claude/skills/_shared/` path should be replaced with the corresponding absolute path for your tool.
 
 ---
 
