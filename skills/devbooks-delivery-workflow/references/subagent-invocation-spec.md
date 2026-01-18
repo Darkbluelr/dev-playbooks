@@ -27,7 +27,7 @@ Please execute the following task:
 | 7 | devbooks-test-owner | "Use devbooks-test-owner skill to write tests and establish Red baseline for change [change-id]" |
 | 8 | devbooks-coder | "Use devbooks-coder skill to implement functionality for change [change-id]" |
 | 9 | devbooks-reviewer | "Use devbooks-test-reviewer skill to review tests for change [change-id]" |
-| 10 | devbooks-reviewer | "Use devbooks-code-review skill to review code for change [change-id]" |
+| 10 | devbooks-reviewer | "Use devbooks-reviewer skill to review code for change [change-id]" |
 | 11 | devbooks-test-owner | "Use devbooks-test-owner skill to run all tests and collect Green evidence for change [change-id]" |
 | 12 | devbooks-archiver | "Use devbooks-archiver skill to archive change [change-id]" |
 

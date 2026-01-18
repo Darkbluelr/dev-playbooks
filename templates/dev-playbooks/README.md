@@ -140,7 +140,7 @@ Run devbooks-coder skill for change add-oauth2
 **3) Review stage**
 
 ```
-Run devbooks-code-review skill for change add-oauth2
+Run devbooks-reviewer skill for change add-oauth2
 ```
 
 **4) Archive stage**
@@ -178,7 +178,7 @@ Run devbooks-archiver skill for change add-oauth2
 
 | Skill | Description |
 |-------|-------------|
-| devbooks-code-review | Code review (readability/consistency) |
+| devbooks-reviewer | Code review (readability/consistency) |
 | devbooks-test-reviewer | Test quality and coverage review |
 
 ### Archive stage

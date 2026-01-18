@@ -44,9 +44,9 @@ This document defines the canonical next step recommendations for each skill. Al
 | `devbooks-spec-contract` | `devbooks-implementation-plan` | Always (NEVER recommend test-owner/coder directly) |
 | `devbooks-implementation-plan` | `devbooks-test-owner` | Always (must be separate chat) |
 | `devbooks-test-owner` | `devbooks-coder` | After Red baseline (must be separate chat) |
-| `devbooks-coder` | `devbooks-code-review` | After all tasks completed |
-| `devbooks-code-review` | `devbooks-archiver` | If spec deltas exist |
-| `devbooks-code-review` | Archive complete | If no spec deltas |
+| `devbooks-coder` | `devbooks-reviewer` | After all tasks completed |
+| `devbooks-reviewer` | `devbooks-archiver` | If spec deltas exist |
+| `devbooks-reviewer` | Archive complete | If no spec deltas |
 | `devbooks-test-reviewer` | `devbooks-coder` | If test issues found, hand back |
 | `devbooks-design-backport` | `devbooks-implementation-plan` | Rerun plan after design update |
 | `devbooks-archiver` | Archive complete | Always |

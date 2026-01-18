@@ -220,7 +220,7 @@ In SKILL.md prompts, the `~/.claude/skills/_shared/` path should be replaced wit
 
 ---
 
-## `devbooks-code-review` (Reviewer)
+## `devbooks-reviewer` (Reviewer)
 
 - Purpose: review readability/consistency/dependency health/code smells; output actionable suggestions only; do not judge business correctness.
 - Hotspot-first review: call `mcp__ckb__getHotspots` before reviewing; prioritize by risk:
@@ -232,7 +232,7 @@ In SKILL.md prompts, the `~/.claude/skills/_shared/` path should be replaced wit
   - You want to discover coupling/dependency direction/complexity/smells
 - Copy-paste prompt:
   ```text
-  You are Reviewer. Explicitly use `devbooks-code-review`.
+  You are Reviewer. Explicitly use `devbooks-reviewer`.
   Review only readability/consistency/dependency health/code smells; do not discuss business correctness; do not modify `tests/` or design.
   Inputs: code changes + `dev-playbooks/specs/**` (as needed for profile/glossary/anti-patterns).
   Output: severe issues / maintainability risks / consistency suggestions / suggested quality gates to add.

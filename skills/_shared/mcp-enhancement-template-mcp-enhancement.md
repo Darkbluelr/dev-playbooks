@@ -84,7 +84,7 @@ The following Skills depend on MCP and require the full MCP Enhancement section:
 | Skill | MCP Dependencies | Enhanced Features |
 |-------|------------------|-------------------|
 | devbooks-coder | mcp__ckb__getHotspots | Hotspot warnings |
-| devbooks-code-review | mcp__ckb__getHotspots | Hotspot highlighting |
+| devbooks-reviewer | mcp__ckb__getHotspots | Hotspot highlighting |
 | devbooks-impact-analysis | mcp__ckb__analyzeImpact, findReferences | Precise impact analysis |
 | devbooks-brownfield-bootstrap | mcp__ckb__* | COD model generation |
 | devbooks-router | mcp__ckb__getStatus | Index availability detection |

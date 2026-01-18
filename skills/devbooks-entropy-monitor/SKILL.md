@@ -105,7 +105,7 @@ Goals of entropy measurement:
 
 | Skill | Relationship |
 |-------|--------------|
-| devbooks-code-review | Entropy measurement is **not** embedded in every review, runs as independent task |
+| devbooks-reviewer | Entropy measurement is **not** embedded in every review, runs as independent task |
 | devbooks-proposal-author | Entropy reports can serve as data support for refactoring proposals |
 | devbooks-impact-analysis | Changes in high-entropy areas require more careful impact analysis |
 

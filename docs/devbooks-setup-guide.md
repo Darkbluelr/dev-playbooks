@@ -131,7 +131,7 @@ Each change must declare which gates are covered; missing items require reasons:
 | Planner | `devbooks-implementation-plan` | `tasks.md` |
 | Test Owner | `devbooks-test-owner` | `verification.md` + `tests/` |
 | Coder | `devbooks-coder` | Implement per tasks (no tests) |
-| Reviewer | `devbooks-code-review` | Review feedback |
+| Reviewer | `devbooks-reviewer` | Review feedback |
 | Archiver | `devbooks-archiver` | Archive pruning + C4 merge |
 | Design Backport | `devbooks-design-backport` | Backport design gaps |
 
@@ -185,6 +185,6 @@ The AI can automatically select Skills based on user intent:
 | User Intent | Auto Route |
 |-------------|------------|
 | "Fix bug", "find issue" | `devbooks-impact-analysis` → `devbooks-coder` |
-| "Refactor", "optimize code" | `devbooks-code-review` → `devbooks-coder` |
+| "Refactor", "optimize code" | `devbooks-reviewer` → `devbooks-coder` |
 | "New feature", "implement XX" | `devbooks-router` → full loop |
 | "Write tests", "add tests" | `devbooks-test-owner` |

@@ -156,7 +156,7 @@ Checklist:
 - Run all A-class anchors in scope (tests + static checks + build)
 - Prefer machine-readable outputs (json/xml) for traceability and tooling
 - Execute B/C anchors with evidence
-- Optional review: use `devbooks-code-review` for maintainability feedback
+- Optional review: use `devbooks-reviewer` for maintainability feedback
 
 ### Step 7: Close-out
 

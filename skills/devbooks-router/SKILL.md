@@ -68,7 +68,7 @@ fi
 
 **Degraded Mode Notes**:
 - Without index, `devbooks-impact-analysis` degrades to Grep text search (reduced accuracy)
-- Without index, `devbooks-code-review` cannot obtain call graph context
+- Without index, `devbooks-reviewer` cannot obtain call graph context
 - Recommend completing index generation before the Apply phase
 
 ## Your Task
@@ -228,7 +228,7 @@ LSC (Large-Scale Codemods) recommendations:
 Trigger signals: User says "review/code smells/maintainability/dependency risks/consistency" etc.
 
 Default routing:
-- `devbooks-code-review` (output actionable suggestions; do not change business conclusions or tests)
+- `devbooks-reviewer` (output actionable suggestions; do not change business conclusions or tests)
 - `devbooks-test-reviewer` (review test quality, coverage, edge cases)
 
 ### D) Docs Sync (Documentation Sync)

@@ -18,7 +18,7 @@ This document defines the design principles and constraints you must follow when
 
 | Skill type | Idempotency requirement | Examples |
 |---|---|---|
-| **Verification / checks** | Must be idempotent (must not modify files) | `change-check.sh`, `guardrail-check.sh`, `devbooks-code-review` |
+| **Verification / checks** | Must be idempotent (must not modify files) | `change-check.sh`, `guardrail-check.sh`, `devbooks-reviewer` |
 | **Generators** | Must explicitly define “overwrite vs incremental” behavior | `change-scaffold.sh`, `devbooks-design-doc`, `devbooks-proposal-author` |
 | **Editors** | Must be safe to rerun | `devbooks-spec-gardener`, `devbooks-design-backport` |
 

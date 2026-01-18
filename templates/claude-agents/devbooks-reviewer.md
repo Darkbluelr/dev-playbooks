@@ -1,7 +1,7 @@
 ---
 name: devbooks-reviewer
 description: DevBooks Reviewer subagent: Executes code review and test review, outputs actionable suggestions.
-skills: devbooks-code-review, devbooks-test-reviewer
+skills: devbooks-reviewer, devbooks-test-reviewer
 ---
 
 # DevBooks Reviewer Subagent

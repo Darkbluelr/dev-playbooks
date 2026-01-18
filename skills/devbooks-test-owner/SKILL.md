@@ -296,7 +296,7 @@ Detection rules reference: `~/.claude/skills/_shared/context-detection-template.
 
 | Code | Status | Determination Criteria | Next Step |
 |:----:|--------|------------------------|-----------|
-| ✅ | PHASE2_VERIFIED | Evidence audit passed, AC matrix checked | `devbooks-code-review` |
+| ✅ | PHASE2_VERIFIED | Evidence audit passed, AC matrix checked | `devbooks-reviewer` |
 | ⏳ | PHASE2_WAITING | @full tests still running | Wait for CI to complete |
 | ❌ | PHASE2_FAILED | @full tests not passing | Notify Coder to fix |
 | 🔄 | PHASE2_HANDOFF | Found issues with tests themselves | Fix tests then re-verify |

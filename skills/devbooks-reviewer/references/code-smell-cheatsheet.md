@@ -402,7 +402,7 @@ class PaymentService:
 - *Refactoring: Improving the Design of Existing Code* (2nd Edition) — Martin Fowler
 - *Clean Architecture* — Robert C. Martin (Chapter: Component Coupling)
 - Dev Playbooks debate-revised evaluation notes
-- `devbooks-code-review` checklists
+- `devbooks-reviewer` checklists
 
 ---
 

@@ -163,7 +163,7 @@ Before execution, **must** search for configuration in the following order (stop
 | 7 | Test-Red | `devbooks-test-owner` | devbooks-test-owner | verification.md + tests/ | ✅ |
 | 8 | Code | `devbooks-coder` | devbooks-coder | src/ implementation | ✅ |
 | 9 | Test-Review | `devbooks-reviewer` | devbooks-test-reviewer | Test review opinions | ✅ |
-| 10 | Code-Review | `devbooks-reviewer` | devbooks-code-review | Code review opinions | ✅ |
+| 10 | Code-Review | `devbooks-reviewer` | devbooks-reviewer | Code review opinions | ✅ |
 | 11 | Green-Verify | `devbooks-test-owner` | devbooks-test-owner | evidence/green-final/ | ✅ |
 | 12 | Archive | `devbooks-archiver` | devbooks-archiver | Archived to archive/ | ✅ |
 
