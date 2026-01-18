@@ -380,6 +380,195 @@ async function performNpmUpdate() {
   });
 }
 
+/**
+ * Display version changelog summary
+ * @param {string} fromVersion - Current version
+ * @param {string} toVersion - Target version
+ */
+async function displayVersionChangelog(fromVersion, toVersion) {
+  try {
+    // Try to fetch CHANGELOG from GitHub
+    const { execSync } = await import('child_process');
+    const changelogUrl = `https://raw.githubusercontent.com/Darkbluelr/dev-playbooks/master/CHANGELOG.md`;
+
+    // Use curl to fetch CHANGELOG (if available)
+    let changelog = '';
+    try {
+      changelog = execSync(`curl -s -m 5 "${changelogUrl}"`, {
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
+    } catch {
+      // If fetch fails, show simplified info
+      console.log(chalk.cyan('📋 Version Changelog'));
+      console.log(chalk.gray('─'.repeat(60)));
+      console.log(chalk.yellow('⚠ Unable to fetch detailed changelog, please visit:'));
+      console.log(chalk.blue(`   https://github.com/Darkbluelr/dev-playbooks/releases/tag/v${toVersion}`));
+      return;
+    }
+
+    // Parse CHANGELOG, extract changes for relevant versions
+    const changes = parseChangelog(changelog, fromVersion, toVersion);
+
+    if (changes.length === 0) {
+      console.log(chalk.cyan('📋 Version Changelog'));
+      console.log(chalk.gray('─'.repeat(60)));
+      console.log(chalk.yellow('⚠ No detailed changelog found, please visit:'));
+      console.log(chalk.blue(`   https://github.com/Darkbluelr/dev-playbooks/releases/tag/v${toVersion}`));
+      return;
+    }
+
+    // Display changelog summary
+    console.log(chalk.cyan('📋 Version Changelog'));
+    console.log(chalk.gray('─'.repeat(60)));
+
+    for (const change of changes) {
+      console.log();
+      console.log(chalk.bold.green(`## ${change.version}`));
+      if (change.date) {
+        console.log(chalk.gray(`   Release date: ${change.date}`));
+      }
+      console.log();
+
+      // Display main changes (limit to first 10 lines)
+      const highlights = change.content.split('\n')
+        .filter(line => line.trim().length > 0)
+        .slice(0, 10);
+
+      for (const line of highlights) {
+        if (line.startsWith('###')) {
+          console.log(chalk.bold.yellow(line));
+        } else if (line.startsWith('####')) {
+          console.log(chalk.bold(line));
+        } else if (line.startsWith('- ✅') || line.startsWith('- ✓')) {
+          console.log(chalk.green(line));
+        } else if (line.startsWith('- ⚠️') || line.startsWith('- ❌')) {
+          console.log(chalk.yellow(line));
+        } else if (line.startsWith('- ')) {
+          console.log(chalk.white(line));
+        } else {
+          console.log(chalk.gray(line));
+        }
+      }
+
+      if (change.content.split('\n').length > 10) {
+        console.log(chalk.gray('   ... (see full changelog for more)'));
+      }
+    }
+
+    console.log();
+    console.log(chalk.gray('─'.repeat(60)));
+    console.log(chalk.blue('📖 Full changelog: ') + chalk.underline(`https://github.com/Darkbluelr/dev-playbooks/blob/master/CHANGELOG.md`));
+
+  } catch (error) {
+    // Silent failure, don't affect update process
+    console.log(chalk.gray('Note: Unable to display changelog summary'));
+  }
+}
+
+/**
+ * Parse CHANGELOG content, extract changes for specified version range
+ * @param {string} changelog - CHANGELOG content
+ * @param {string} fromVersion - Starting version
+ * @param {string} toVersion - Target version
+ * @returns {Array} - List of changes
+ */
+function parseChangelog(changelog, fromVersion, toVersion) {
+  const changes = [];
+  const lines = changelog.split('\n');
+
+  let currentVersion = null;
+  let currentDate = null;
+  let currentContent = [];
+  let inVersionBlock = false;
+  let shouldCapture = false;
+
+  // Parse version numbers (remove 'v' prefix)
+  const from = fromVersion.replace(/^v/, '');
+  const to = toVersion.replace(/^v/, '');
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Match version header: ## [2.0.0] - 2026-01-19
+    const versionMatch = line.match(/^##\s+\[?(\d+\.\d+\.\d+)\]?\s*(?:-\s*(\d{4}-\d{2}-\d{2}))?/);
+
+    if (versionMatch) {
+      // Save previous version's content
+      if (inVersionBlock && shouldCapture && currentVersion) {
+        changes.push({
+          version: currentVersion,
+          date: currentDate,
+          content: currentContent.join('\n').trim()
+        });
+      }
+
+      // Start new version
+      currentVersion = versionMatch[1];
+      currentDate = versionMatch[2] || null;
+      currentContent = [];
+      inVersionBlock = true;
+
+      // Determine if this version should be captured
+      // Capture all versions between fromVersion and toVersion
+      const versionNum = currentVersion.split('.').map(Number);
+      const fromNum = from.split('.').map(Number);
+      const toNum = to.split('.').map(Number);
+
+      const isAfterFrom = compareVersions(versionNum, fromNum) > 0;
+      const isBeforeOrEqualTo = compareVersions(versionNum, toNum) <= 0;
+
+      shouldCapture = isAfterFrom && isBeforeOrEqualTo;
+
+      continue;
+    }
+
+    // If we encounter next version header or separator, end current version
+    if (line.startsWith('---') && inVersionBlock) {
+      if (shouldCapture && currentVersion) {
+        changes.push({
+          version: currentVersion,
+          date: currentDate,
+          content: currentContent.join('\n').trim()
+        });
+      }
+      inVersionBlock = false;
+      shouldCapture = false;
+      continue;
+    }
+
+    // Collect content
+    if (inVersionBlock && shouldCapture) {
+      currentContent.push(line);
+    }
+  }
+
+  // Save last version
+  if (inVersionBlock && shouldCapture && currentVersion) {
+    changes.push({
+      version: currentVersion,
+      date: currentDate,
+      content: currentContent.join('\n').trim()
+    });
+  }
+
+  return changes;
+}
+
+/**
+ * Compare two version numbers
+ * @param {number[]} v1 - Version 1 [major, minor, patch]
+ * @param {number[]} v2 - Version 2 [major, minor, patch]
+ * @returns {number} - 1 if v1 > v2, -1 if v1 < v2, 0 if equal
+ */
+function compareVersions(v1, v2) {
+  for (let i = 0; i < 3; i++) {
+    if (v1[i] > v2[i]) return 1;
+    if (v1[i] < v2[i]) return -1;
+  }
+  return 0;
+}
+
 // ============================================================================
 // Auto-update .gitignore and .npmignore
 // ============================================================================
@@ -1369,6 +1558,12 @@ async function updateCommand(projectDir) {
 
   if (hasUpdate) {
     spinner.info(`New version available: ${currentVersion} → ${latestVersion}`);
+
+    // Display version changelog summary
+    console.log();
+    await displayVersionChangelog(currentVersion, latestVersion);
+    console.log();
+
     const shouldUpdate = await confirm({
       message: `Update ${CLI_COMMAND} to ${latestVersion}?`,
       default: true
