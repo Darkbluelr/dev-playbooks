@@ -1,6 +1,6 @@
 # Test Layering Strategy
 
-Inspired by VS Code’s test organization patterns, this document defines best practices for test layering.
+This document defines best practices for test layering.
 
 ---
 
@@ -234,7 +234,7 @@ if (process.env.NODE_ENV === 'development') {
 
 ---
 
-## 6) Anti-fragile testing (inspired by VS Code Audit.md)
+## 6) Anti-fragile testing
 
 ### Avoid brittle selectors
 

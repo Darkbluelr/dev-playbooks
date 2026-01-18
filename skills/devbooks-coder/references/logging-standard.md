@@ -1,6 +1,6 @@
 # Logging Standard
 
-Inspired by VS Code logging practices, this document defines standard conventions for application logs.
+This document defines standard conventions for application logs.
 
 ---
 

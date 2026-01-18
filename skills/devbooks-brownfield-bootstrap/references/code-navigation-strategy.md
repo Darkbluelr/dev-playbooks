@@ -1,6 +1,6 @@
 # Code Navigation Strategy (Four-Step Method)
 
-Inspired by VS Code's `copilot-instructions.md`, this document defines a standard process to quickly locate code in legacy projects.
+This document defines a standard process to quickly locate code in legacy projects.
 
 ---
 

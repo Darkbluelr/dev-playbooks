@@ -1,6 +1,6 @@
 # API Design Guide
 
-Based on VS Code Extension API design principles, this document summarizes practical API design best practices.
+This document summarizes practical API design best practices.
 
 ---
 

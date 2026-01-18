@@ -37,9 +37,9 @@ This document defines the design principles and constraints you must follow when
 **Editor Skills MUST**:
 - [ ] Back up original files before edits (or make it recoverable via git)
 - [ ] Avoid cumulative side effects across reruns
-- [ ] Provide a “dry-run” mode to preview changes
+- [ ] Provide a "dry-run" mode to preview changes
 
-### 1.3 Verification-First Principle (inspired by VS Code)
+### 1.3 Verification-First Principle
 
 **Core requirement**: after a generator/editor Skill writes files, it **must run verification**, and must not proceed to the next step if verification fails.
 
@@ -99,7 +99,7 @@ echo "ok: verification passed"
 - **Write to workspace**: Skills should write to `<change-root>/<change-id>/`.
 - **Archive is merge**: archiving merges workspace outputs back into truth.
 
-### 1.6 Resource Cleanup (inspired by VS Code)
+### 1.6 Resource Cleanup
 
 **Requirement**: clean up temporary resources on both success and failure.
 

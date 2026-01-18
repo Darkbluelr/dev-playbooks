@@ -1,6 +1,6 @@
 # Pull Request Template and Guidelines
 
-Inspired by VS Code’s `.github/pull_request_template.md`, this document defines a standard PR workflow.
+This document defines a standard PR workflow.
 
 ---
 

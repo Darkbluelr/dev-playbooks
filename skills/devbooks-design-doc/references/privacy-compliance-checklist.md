@@ -1,6 +1,6 @@
 # Telemetry Privacy & Compliance Checklist
 
-Inspired by VS Code’s `telemetry.instructions.md`, this document defines privacy/compliance requirements for telemetry data.
+This document defines privacy/compliance requirements for telemetry data.
 
 ---
 

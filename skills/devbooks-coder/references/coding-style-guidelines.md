@@ -1,6 +1,6 @@
 # Coding Style Guidelines
 
-Inspired by VS Code's `guidelines/CODING_GUIDELINES.md`, this document defines concrete code style rules.
+This document defines concrete code style rules.
 
 ---
 

@@ -1,6 +1,6 @@
 # Resource Management Review Checklist
 
-Inspired by VS Code’s `code-no-potentially-unsafe-disposables` and `code-must-use-super-dispose` rules.
+This document defines resource management review guidelines.
 
 ---
 

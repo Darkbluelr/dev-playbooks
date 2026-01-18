@@ -1,6 +1,6 @@
 # Error Code Standard
 
-Inspired by VS Code error handling patterns, this document defines standard conventions for application error codes.
+This document defines standard conventions for application error codes.
 
 ---
 

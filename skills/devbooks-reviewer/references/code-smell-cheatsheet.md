@@ -406,9 +406,7 @@ class PaymentService:
 
 ---
 
-## 10. VS Code-style Code Hygiene Checks
-
-> Inspired by VS Code custom ESLint rules as automated review items.
+## 10. Code Hygiene Checks
 
 ### Do-not-commit patterns (Blocker)
 
