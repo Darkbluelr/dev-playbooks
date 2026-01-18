@@ -10,14 +10,15 @@
 ## Table of contents
 
 1. [Overview](#overview)
-2. [Context7](#context7)
-3. [GitHub MCP Server](#github-mcp-server)
-4. [Playwright MCP](#playwright-mcp)
-5. [Configuration locations](#configuration-locations)
-6. [Common use cases](#common-use-cases)
-7. [Troubleshooting](#troubleshooting)
-8. [Maintenance and updates](#maintenance-and-updates)
-9. [References](#references)
+2. [CKB (Code Knowledge Backend)](#ckb-code-knowledge-backend)
+3. [Context7](#context7)
+4. [GitHub MCP Server](#github-mcp-server)
+5. [Playwright MCP](#playwright-mcp)
+6. [Configuration locations](#configuration-locations)
+7. [Common use cases](#common-use-cases)
+8. [Troubleshooting](#troubleshooting)
+9. [Maintenance and updates](#maintenance-and-updates)
+10. [References](#references)
 
 ---
 
@@ -27,6 +28,7 @@
 
 | Server | Type | Scope | Primary capability |
 |---|---|---|---|
+| **ckb** | Code analysis | User scope | Symbol search, reference finding, impact analysis |
 | **context7** | Docs | User scope | Fetch up-to-date library docs and examples |
 | **github** | GitHub integration | User scope | Repos, issues, PRs, actions automation |
 | **playwright** | Browser automation | User scope | Web automation, scraping, and interaction |
@@ -34,6 +36,158 @@
 **Config file**: `~/.claude.json` (top-level `mcpServers` field)
 
 **Scope**: all projects
+
+---
+
+## CKB (Code Knowledge Backend)
+
+### Basics
+
+- **Version**: 7.5.0
+- **Type**: language-agnostic code understanding layer
+- **Install path**: `/usr/local/bin/ckb`
+- **GitHub**: https://github.com/simplyliz/codemcp
+
+### Capabilities
+
+- Symbol search: quickly find functions, classes, variables
+- Find references: locate all usages of a symbol
+- Impact analysis: assess the scope of code changes
+- Architecture view: project structure and dependencies
+- Git integration: blame info and history tracking
+
+### Backend support
+
+- **LSP** (Language Server Protocol): Python, TypeScript, Go, etc.
+- **SCIP**: pre-computed indexes (for Go/Java/TypeScript)
+- **Git**: repository history and blame info
+
+### Configuration
+
+```json
+{
+  "mcpServers": {
+    "ckb": {
+      "command": "/usr/local/bin/ckb",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+### Installation
+
+#### 1. Install the CKB binary
+
+```bash
+# clone repo
+cd ~/Projects/mcps
+git clone https://github.com/simplyliz/codemcp.git
+cd codemcp
+
+# set Go proxy (for users in China)
+export GOPROXY=https://goproxy.cn,direct
+export GOSUMDB=sum.golang.google.cn
+
+# build
+go build -o ckb ./cmd/ckb
+
+# install to system path
+sudo cp ckb /usr/local/bin/ckb
+sudo chmod +x /usr/local/bin/ckb
+
+# verify
+ckb --version
+```
+
+#### 2. Install Python LSP support
+
+```bash
+pip3 install python-lsp-server
+
+# verify
+python3 -m pylsp --version
+```
+
+#### 3. Initialize CKB for a project
+
+```bash
+cd /path/to/your/project
+ckb init
+```
+
+This creates `.ckb/config.json`.
+
+### Project configuration file
+
+Location: `project/.ckb/config.json`
+
+```json
+{
+  "backends": {
+    "lsp": {
+      "enabled": true,
+      "servers": {
+        "python": {
+          "command": "python3",
+          "args": ["-m", "pylsp"]
+        }
+      }
+    },
+    "git": {
+      "enabled": true
+    }
+  }
+}
+```
+
+### Usage examples
+
+Search for symbols:
+```
+Use CKB to search for FastAPI symbols in the project
+```
+
+Find references:
+```
+Use CKB to find all references to the get_user function
+```
+
+Impact analysis:
+```
+Use CKB to analyze the impact of modifying the User class
+```
+
+### Common commands
+
+```bash
+# check system status
+ckb status
+
+# search symbols
+ckb search <symbol-name>
+
+# find references
+ckb refs <symbol-name>
+
+# get architecture overview
+ckb arch
+
+# run diagnostics
+ckb doctor
+```
+
+### Supported languages
+
+- Python (via LSP)
+- TypeScript/JavaScript (via LSP)
+- Go (via SCIP + LSP)
+- Java (via SCIP)
+- Any project with Git history
+
+### Notes
+
+Each project needs separate initialization: although the CKB MCP server is user-scoped (available globally), each project requires `ckb init` to create project-specific configuration.
 
 ---
 
@@ -963,6 +1117,7 @@ npx playwright install
 ```json
 {
   "mcpServers": {
+    "ckb": { },
     "context7": { },
     "github": { },
     "playwright": { }
@@ -985,6 +1140,13 @@ If you use Codex CLI and want to reuse the same MCP set:
 ---
 
 ## Common use cases
+
+CKB is a good fit for:
+- searching for symbols across the codebase
+- finding all usages (references) of a function, class, or variable
+- analyzing the impact of code changes
+- understanding project architecture and dependencies
+- exploring Git history and blame info
 
 Context7 is a good fit for:
 - querying the latest library docs and APIs
@@ -1013,12 +1175,20 @@ Playwright MCP is a good fit for:
 
 ## Troubleshooting
 
-Context7/GitHub/Playwright:
+CKB/Context7/GitHub/Playwright:
 - see their respective sections for specific troubleshooting steps
 
 ---
 
 ## Maintenance and updates
+
+Update CKB:
+```bash
+cd ~/Projects/mcps/codemcp
+git pull
+go build -o ckb ./cmd/ckb
+sudo cp ckb /usr/local/bin/ckb
+```
 
 Update Context7:
 ```bash
@@ -1039,6 +1209,9 @@ npx playwright install
 ---
 
 ## References
+
+CKB:
+- https://github.com/simplyliz/codemcp
 
 Context7:
 - https://context7.com
