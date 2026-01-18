@@ -186,4 +186,87 @@ When producing documents or proposals:
 
 ---
 
+## 5. AI Tool Usage Protocol
+
+> **Core principle**: Correct, efficient, and reliable tool usage is the foundation of task completion. Tool call failures are not endpoints, but starting points for learning and improvement.
+
+### 5.1 Tool Call Completeness
+
+**Hard rules**:
+1. **Every required parameter must be filled; no empty values**
+   - Bad: calling `Write` tool with empty `file_path` or `content`
+   - Good: ensure all required parameters have valid values
+
+2. **Parameter values must match the tool's required format**
+   - Bad: passing relative path when absolute path is required, passing string when JSON is required
+   - Good: carefully read tool documentation and ensure parameter format is correct
+
+3. **Different tools have different parameter structures; do not confuse them**
+   - Bad: using `Read` tool parameters for `Write` tool
+   - Good: confirm the parameter list for the current tool before each call
+
+### 5.2 Learning from Failures
+
+**Hard rules**:
+1. **After the first failure, immediately adjust strategy instead of repeating the same mistake**
+   - Bad: after tool call fails, retry the same call without analyzing the cause
+   - Good:
+     - Analyze failure cause (parameter error? path doesn't exist? permission issue?)
+     - Adjust strategy (fix parameters, create directory, use alternative tool)
+     - Try again
+
+2. **After 2 consecutive failures, must stop and rethink**
+   - If the same operation fails twice, the current strategy has fundamental issues
+   - Must:
+     - Explain the current problem to the user
+     - List attempted methods and failure reasons
+     - Propose new solutions or request user help
+
+### 5.3 Large File Handling Strategy
+
+**Hard rules**:
+1. **For very long content, segmented writing is more reliable than single write**
+   - Writing files over 1000 lines in one call is prone to failure or truncation
+   - Good approach:
+     - Write the first half of the file
+     - After confirming success, append the second half
+     - Or use `Edit` tool for segmented modifications
+
+2. **Use offset and limit parameters when reading large files**
+   - Bad: directly reading a 5000-line file, may timeout or truncate
+   - Good:
+     - Read first 500 lines to understand structure
+     - Read specific regions as needed
+     - Use `Grep` tool to search instead of full-text reading
+
+### 5.4 Tool Selection Principles
+
+**Priority**:
+1. **Use specialized tools instead of Bash commands**
+   - File reading: use `Read` instead of `cat`
+   - File editing: use `Edit` instead of `sed`
+   - File searching: use `Grep` instead of `grep` command
+   - File finding: use `Glob` instead of `find` command
+
+2. **Consider parallel execution for batch operations**
+   - If multiple operations are independent, call multiple tools in parallel in one message
+   - If operations have dependencies, must execute sequentially
+
+3. **Use Task tool to delegate complex tasks to specialized agents**
+   - Codebase exploration: use `Explore` agent
+   - Implementation planning: use `Plan` agent
+   - Do not perform overly complex operations in the main flow
+
+### 5.5 Self-Checklist (before each tool call)
+
+- [ ] Is the tool I selected the most suitable for this task?
+- [ ] Are all required parameters filled?
+- [ ] Do parameter formats match tool requirements?
+- [ ] If this call fails, what is my backup plan?
+- [ ] Can this operation be executed in parallel with others?
+
+**Violating Tool Usage Protocol = inefficiency; must improve.**
+
+---
+
 From now on, enable these rules by default in all future outputs.
