@@ -109,7 +109,7 @@ Before execution, you **must** search for configuration in the following order (
 
 This Skill automatically detects context before execution and selects the appropriate operating mode.
 
-Detection rules reference: `skills/_shared/context-detection-template.md`
+Detection rules reference: `skills/_shared/context-detection-template-context-detection.md`
 
 ### Detection Process
 
@@ -156,7 +156,7 @@ Implicit changes = changes that are not explicitly declared but alter system beh
 
 ## Next Step Recommendations
 
-**Reference**: `skills/_shared/workflow-next-steps.md`
+**Reference**: `skills/_shared/workflow-next-steps-workflow-next-steps.md`
 
 After completing spec-contract, the **required** next step is:
 
@@ -192,7 +192,7 @@ Run devbooks-implementation-plan skill for change <change-id>
 
 This Skill supports MCP runtime enhancement, automatically detecting and enabling advanced features.
 
-MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template.md`
+MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template-mcp-enhancement.md`
 
 ### Dependent MCP Services
 

@@ -107,7 +107,7 @@ change-scaffold.sh <change-id> --project-root <repo-root> --change-root <change-
 
 This Skill automatically detects context before execution to select the appropriate operating mode.
 
-Detection rules reference: `skills/_shared/context-detection-template.md`
+Detection rules reference: `skills/_shared/context-detection-template-context-detection.md`
 
 ### Detection Flow
 
@@ -137,7 +137,7 @@ Detection Results:
 
 ## Next Step Recommendations
 
-**Reference**: `skills/_shared/workflow-next-steps.md`
+**Reference**: `skills/_shared/workflow-next-steps-workflow-next-steps.md`
 
 After completing proposal-author, the next step depends on the situation:
 
@@ -179,5 +179,5 @@ Run devbooks-<skill-name> skill for change <change-id>
 
 This Skill does not depend on MCP services and requires no runtime detection.
 
-MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template.md`
+MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template-mcp-enhancement.md`
 

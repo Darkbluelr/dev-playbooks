@@ -216,7 +216,7 @@ After completing the review, you **must** provide a clear conclusion:
 
 This Skill automatically detects context before execution to select the appropriate review scope.
 
-Detection rules reference: `skills/_shared/context-detection-template.md`
+Detection rules reference: `skills/_shared/context-detection-template-context-detection.md`
 
 ### Detection Flow
 
@@ -248,7 +248,7 @@ Detection Results:
 
 This Skill does not depend on MCP services and requires no runtime detection.
 
-MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template.md`
+MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template-mcp-enhancement.md`
 
 ---
 

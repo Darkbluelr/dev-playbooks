@@ -290,7 +290,7 @@ archived-by: devbooks-archiver
 
 This Skill automatically detects context before execution and selects the appropriate running mode.
 
-Detection rules reference: `skills/_shared/context-detection-template.md`
+Detection rules reference: `skills/_shared/context-detection-template-context-detection.md`
 
 ### Detection Flow
 
@@ -412,4 +412,4 @@ In maintenance mode (no change-id), execute:
 
 This Skill does not depend on MCP services; no runtime detection required.
 
-MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template.md`
+MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template-mcp-enhancement.md`

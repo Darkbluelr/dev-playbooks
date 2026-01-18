@@ -38,7 +38,7 @@ Before execution, you **must** search for configuration in the following order (
 
 This Skill automatically detects context before execution to ensure role isolation.
 
-Detection rules reference: `skills/_shared/context-detection-template.md`
+Detection rules reference: `skills/_shared/context-detection-template-context-detection.md`
 
 ### Detection Process
 
@@ -74,5 +74,5 @@ Detection Result:
 
 This Skill does not depend on MCP services and requires no runtime detection.
 
-MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template.md`
+MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template-mcp-enhancement.md`
 

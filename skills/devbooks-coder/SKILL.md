@@ -297,7 +297,7 @@ fi
 
 This Skill automatically detects context before execution to ensure prerequisites are met.
 
-Detection rules reference: `skills/_shared/context-detection-template.md`
+Detection rules reference: `skills/_shared/context-detection-template-context-detection.md`
 
 ### Detection Flow
 
@@ -446,7 +446,7 @@ After completing coder, you **must** output in this format:
 
 This Skill supports MCP runtime enhancement, automatically detecting and enabling advanced features.
 
-MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template.md`
+MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template-mcp-enhancement.md`
 
 ### Required MCP Services
 

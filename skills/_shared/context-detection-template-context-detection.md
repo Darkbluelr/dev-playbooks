@@ -2,7 +2,7 @@
 
 > This template provides standardized context detection rules for all SKILL.md files.
 >
-> Artifact location: `skills/_shared/context-detection-template.md`
+> Artifact location: `skills/_shared/context-detection-template-context-detection.md`
 
 ---
 
@@ -277,7 +277,7 @@ In SKILL.md, reference this template:
 
 This Skill detects context before execution and selects an appropriate run mode.
 
-Detection rules reference: `skills/_shared/context-detection-template.md`
+Detection rules reference: `skills/_shared/context-detection-template-context-detection.md`
 
 ### Detection Flow
 

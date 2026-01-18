@@ -311,7 +311,7 @@ Route according to A/B/C/D above, artifact paths follow `<truth-root>/<change-ro
 
 This Skill automatically detects context before execution, selecting appropriate routing strategy.
 
-Detection rules reference: `skills/_shared/context-detection-template.md`
+Detection rules reference: `skills/_shared/context-detection-template-context-detection.md`
 
 ### Detection Flow
 
@@ -344,7 +344,7 @@ Detection results:
 
 This Skill supports MCP runtime enhancement, automatically detecting and enabling advanced features.
 
-MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template.md`
+MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template-mcp-enhancement.md`
 
 ### Required MCP Services
 
