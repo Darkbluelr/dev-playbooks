@@ -31,6 +31,39 @@ AI coding assistants are powerful, but often **unpredictable**:
 
 ---
 
+## ✨ v2.0.0 New Features: Human-Friendly Document Templates
+
+**Core Philosophy**: In the AI era, humans need concise information to make decisions, not reading thousands of lines of AI-generated documents.
+
+### Bottom Line Up Front (30-second understanding)
+
+Every document (proposal, design, tasks, verification) has a brief summary at the top:
+- ✅ **What will result**: List changes in plain language
+- ❌ **What won't result**: Clearly state what won't change
+- 📝 **One-sentence summary**: Understandable even for non-technical people
+
+### Alignment Check (Uncover hidden requirements)
+
+In the proposal phase, guide users through questions:
+- 👤 **Who are you?**: Quick Starter / Platform Builder / Rapid Validator
+- 🎯 **What do you want?**: Explicit requirements + hidden requirements
+- 💡 **Multi-perspective recommendations**: Different recommendations based on different roles
+
+### Default Approval Mechanism (Reduce decision fatigue)
+
+- ⏰ **User silence = agreement**: Auto-approve after timeout
+- 🎛️ **Configurable timeout**: proposal 48h / design 24h / tasks 24h / verification 12h
+- 🔒 **Retain control**: Users can reject or customize at any time
+
+### Project-Level Documents (Knowledge retention)
+
+- 📋 **User Profile** (project-profile.md): Record role, requirements, constraints, preferences
+- 📝 **Decision Log** (decision-log.md): Record all important decisions for retrospection
+
+**See**: `docs/v2.0.0-changelog.md`
+
+---
+
 ## How It Works
 
 **Hard constraint**: Test Owner and Coder **must work in separate conversations**. This is not a suggestion. Coder cannot modify `tests/**`. "Done" is defined by tests/build verification, not AI self-evaluation.
