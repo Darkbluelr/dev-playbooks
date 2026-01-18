@@ -1,6 +1,6 @@
 ---
 name: devbooks-coder
-description: "devbooks-coder: Implements features strictly following tasks.md as the Coder role and runs quality gates. Modifying tests/ is prohibited; tests and static checks serve as the sole completion criteria. Use when the user says 'implement as planned/fix failing tests/make all gates green/implement task items/don't modify tests', or when executing as coder during the DevBooks apply phase."
+description: devbooks-coder: As the Coder role, strictly implements functionality according to tasks.md and runs gate tests, prohibited from modifying tests/, with tests/static checks as the sole completion criteria. Use when users say "implement according to plan/fix test failures/make gates green/implement task items/don't modify tests", or when executing as coder during DevBooks apply phase.
 allowed-tools:
   - Glob
   - Grep
@@ -12,68 +12,125 @@ allowed-tools:
 
 # DevBooks: Implementation Lead (Coder)
 
-## Workflow Position Awareness
+## Quick Start
 
-> **Core Principle**: Coder executes after Test Owner Phase 1, achieving mental clarity through **mode labels** (not session isolation).
+My responsibilities:
+1. **Strictly implement functionality according to tasks.md**
+2. **Run fast-track tests** (@smoke + @critical)
+3. **Trigger @full tests** (CI async)
+4. **Prohibited from modifying tests/**
 
-### My Position in the Overall Workflow
+## Workflow Position
 
 ```
 proposal → design → [TEST-OWNER] → [CODER] → [TEST-OWNER] → code-review → archive
                                       ↓              ↓
-                               Implement+fast track    Evidence audit
-                              (@smoke/@critical)      (no @full rerun)
+                               Implement+fast-track  Evidence audit+check off
+                              (@smoke/@critical)     (no @full rerun)
 ```
 
-### AI Era Solo Development Optimization
-
-> **Important Change**: This protocol is optimized for AI programming + solo development scenarios, **removing the mandatory "separate session" requirement**.
+## AI Era Optimization
 
 | Old Design | New Design | Reason |
 |------------|------------|--------|
 | Test Owner and Coder must use separate sessions | Same session, switch with `[TEST-OWNER]` / `[CODER]` mode labels | Reduce context rebuilding cost |
-| Coder runs full tests and waits | Coder runs fast track (`@smoke`/`@critical`), `@full` triggered async | Fast iteration |
-| Completion goes directly to Test Owner | Completion status is `Implementation Done`, wait for @full | Async doesn't block, archive is sync |
-
-### Coder's Responsibility Boundaries
-
-| Allowed | Prohibited |
-|---------|------------|
-| Modify `src/**` code | ❌ Modify `tests/**` |
-| Check off `tasks.md` items | ❌ Modify `verification.md` |
-| Record deviations to `deviation-log.md` | ❌ Check off AC coverage matrix |
-| Run fast track tests (`@smoke`/`@critical`) | ❌ Set verification.md Status to Verified/Done |
-| Trigger `@full` tests (CI/background) | ❌ Wait for @full completion (can start next change) |
-
-### Flow After Coder Completes
-
-1. **Fast track tests green**: `@smoke` + `@critical` pass
-2. **Trigger @full**: Commit code, CI starts running @full tests async
-3. **Status change**: Set change status to `Implementation Done`
-4. **Can start next change** (not blocked)
-5. **Wait for @full results**:
-   - @full passes → Test Owner enters Phase 2 to audit evidence
-   - @full fails → Coder fixes
-
-**Key Reminders**:
-- After Coder completes, status is `Implementation Done`, **not directly to Code Review**
-- Dev iteration is async (can start next change), but archive is sync (must wait for @full to pass)
+| Coder runs full tests and waits for results | Coder runs fast-track (`@smoke`/`@critical`), `@full` triggered async | Fast iteration |
+| Directly hand to Test Owner after completion | Status becomes `Implementation Done` after completion, wait for @full | Async doesn't block, archive syncs |
 
 ---
 
-## Test Layering and Run Strategy (Critical!)
+## Prerequisites: Configuration Discovery
 
-> **Core Principle**: Coder only runs fast track tests, @full tests are triggered async, not blocking dev iteration.
+Before execution, **must** search for configuration in the following order (stop when found):
+1. `.devbooks/config.yaml` (if exists) → Parse and use its mappings
+2. `dev-playbooks/project.md` (if exists) → Dev-Playbooks protocol
+3. `project.md` (if exists) → Template protocol
+4. If still unable to determine → **Stop and ask user**
 
-### Test Layering Labels
+**Key Constraints**:
+- If `agents_doc` (rules document) is specified in configuration, **must read that document first** before performing any operations
+- Do not guess directory roots
 
-| Label | Purpose | When Coder Runs | Expected Time |
-|-------|---------|-----------------|---------------|
-| `@smoke` | Fast feedback, core paths | After each code change | Seconds |
-| `@critical` | Key functionality verification | Before commit | Minutes |
-| `@full` | Complete acceptance tests | **Don't run**, trigger CI async | Can be slow |
+---
 
-### Coder's Test Run Strategy
+## 📚 Reference Documentation
+
+### Must Read (Read Immediately)
+
+1. **Universal Gating Protocol**: `~/.claude/skills/_shared/references/universal-gating-protocol.md`
+   - Verifiability gating, structural quality gating, completeness gating
+   - Foundation rules for all skills
+
+2. **Code Implementation Prompt**: `references/code-implementation-prompt.md`
+   - Complete code implementation guide
+   - Strictly follow this prompt
+
+### Read as Needed
+
+3. **Test Execution Strategy**: `references/test-execution-strategy.md`
+   - @smoke/@critical/@full label details
+   - Async vs sync boundaries
+   - When to read: When needing to understand test run strategy
+
+4. **Completion Status and Routing**: `references/completion-status-and-routing.md`
+   - Completion status classification (MECE)
+   - Routing output template
+   - When to read: When outputting status upon task completion
+
+5. **Hotspot Awareness and Risk Assessment**: `references/hotspot-awareness-and-risk-assessment.md`
+   - MCP enhancement features
+   - Hotspot file warnings
+   - When to read: When needing risk assessment
+
+6. **Low Risk Modification Techniques**: `references/low-risk-modification-techniques.md`
+   - Safe refactoring techniques
+   - When to read: When needing refactoring
+
+7. **Coding Style Guidelines**: `references/coding-style-guidelines.md`
+   - Code style specifications
+   - When to read: When uncertain about code style
+
+8. **Logging Standard**: `references/logging-standard.md`
+   - Log levels and formats
+   - When to read: When needing to add logs
+
+9. **Error Code Standard**: `references/error-code-standard.md`
+   - Error code design
+   - When to read: When needing to define error codes
+
+---
+
+## Core Workflow
+
+### 1. Resume from Checkpoint
+
+**Must** execute before each start:
+
+1. **Read progress**: Open `<change-root>/<change-id>/tasks.md`, identify checked `- [x]` tasks
+2. **Locate resume point**: Find first `- [ ]` after "last `[x]`"
+3. **Output confirmation**: Clearly inform user of current progress, e.g.:
+   ```
+   Detected T1-T6 completed (6/10), continuing from T7.
+   ```
+
+### 2. Real-time Progress Updates
+
+> **Core Principle**: Complete one task, check off one immediately. Don't wait until all complete to batch check.
+
+**Check-off Timing**:
+
+| Timing | Action |
+|--------|--------|
+| Code writing complete | Don't check yet |
+| Compilation passes | Don't check yet |
+| Related tests pass | **Check immediately** |
+| Multiple tasks complete together | Check one by one, don't batch |
+
+### 3. Implement Code
+
+Strictly follow `references/code-implementation-prompt.md`.
+
+### 4. Run Tests
 
 ```bash
 # During development: frequently run @smoke
@@ -83,171 +140,44 @@ npm test -- --grep "@smoke"
 npm test -- --grep "@smoke|@critical"
 
 # After commit: CI automatically runs @full (Coder doesn't wait)
-git push  # triggers CI
-# → Coder can start next task
+git push  # Trigger CI
 ```
 
-### Async vs Sync Boundary
+### 5. Output Completion Status
 
-| Action | Blocking/Async | Description |
-|--------|----------------|-------------|
-| `@smoke` tests | Sync | Run immediately after each change |
-| `@critical` tests | Sync | Must pass before commit |
-| `@full` tests | **Async** | CI runs in background, doesn't block Coder |
-| Start next change | **Not blocked** | Coder can start immediately |
-| Archive | **Blocked** | Must wait for @full to pass |
-
----
-
-## Prerequisites: Configuration Discovery (Protocol-Agnostic)
-
-- `<truth-root>`: Current truth directory root
-- `<change-root>`: Change package directory root
-
-Before execution, you **must** search for configuration in the following order (stop when found):
-1. `.devbooks/config.yaml` (if exists) -> Parse and use its mappings
-2. `dev-playbooks/project.md` (if exists) -> Dev-Playbooks protocol, use default mappings
-3. `project.md` (if exists) -> template protocol, use default mappings
-5. If still unable to determine -> **Stop and ask the user**
-
-**Key Constraints**:
-- If the configuration specifies `agents_doc` (rules document), **you must read that document first** before performing any operations
-- Do not guess directory roots
-- Do not skip reading the rules document
-
-## Checkpoint Resume Protocol (Plan Persistence)
-
-You **must** perform the following steps at the start of each session:
-
-1. **Read Progress**: Open `<change-root>/<change-id>/tasks.md`, identify tasks marked with `- [x]`
-2. **Locate Resume Point**: Find the first `- [ ]` after the "last `[x]`"
-3. **Output Confirmation**: Clearly inform the user of current progress, for example:
-   ```
-   Detected T1-T6 completed (6/10), resuming from T7.
-   ```
-4. **Check Breakpoint Area**: If tasks.md has a "Breakpoint Area" record, prioritize restoring the breakpoint state
-5. **Exception Handling**: If you find tasks that are "unchecked but code already exists", prompt the user for confirmation
-
-### Breakpoint Area Format (at the end of tasks.md)
-
-```markdown
-### Breakpoint Area (Context Switch Breakpoint Area)
-- Last progress: T6 completed, T7 started but not finished
-- Current blocker: <blocking reason>
-- Next shortest path: <suggested action>
-```
-
----
-
-## Real-time Progress Update Protocol
-
-> **Core principle**: Complete one task, check it off immediately. Never batch-check at the end.
-
-**Must follow**:
-
-### Check Off Immediately After Each Task
-
-After completing each task item in tasks.md, **immediately** change it from `- [ ]` to `- [x]`:
-
-```markdown
-# Before task completion
-- [ ] MP1.1 Implement cache manager base structure
-
-# After task completion, update immediately
-- [x] MP1.1 Implement cache manager base structure
-```
-
-### Why Real-time Checking is Required
-
-1. **Checkpoint Recovery**: Know exactly where to continue after interruption
-2. **Visible Progress**: Both user and AI can clearly see current progress
-3. **Avoid Forgetting**: Batch checking often leads to missing items
-4. **Complete Evidence Chain**: Each checkmark represents a completed milestone
-
-### When to Check Off
-
-| Timing | Action |
-|--------|--------|
-| Code writing complete | Do not check yet |
-| Compilation passes | Do not check yet |
-| Related tests pass | **Check immediately** |
-| Multiple tasks completed together | Check one by one, not in batch |
-
-### Forbidden Behaviors
-
-- ❌ Do not wait until all tasks are done to batch-check
-- ❌ Do not consider "code written = complete" without checking off
-- ❌ Do not uncheck a checked item (unless rolling back code)
-
----
-
-## Output Management Constraints (Observation Masking)
-
-Prevent large outputs from polluting the context:
-
-| Scenario | Handling Method |
-|----------|-----------------|
-| Command output > 50 lines | Keep only first and last 10 lines + middle summary |
-| Test output | Extract key failure information, do not paste full output into conversation |
-| Log output | Write to `<change-root>/<change-id>/evidence/`, only reference the path in conversation |
-| Large file content | Reference path, do not inline |
-
-**Example**:
-```
-BAD: Pasting 2000 lines of test logs
-GOOD: 3 tests failed, see <change-root>/<change-id>/evidence/green-final/test-output.log
-      Key error: FAIL src/order.test.ts:45 - Expected 400, got 500
-```
-
----
-
-## Evidence Path Convention (Mandatory)
-
-**Green evidence must be saved to the change package directory**:
-```
-<change-root>/<change-id>/evidence/green-final/
-```
-
-**Forbidden paths**:
-- ❌ `./evidence/` (project root)
-- ❌ `evidence/` (relative to current working directory)
-
-**Correct path examples**:
-```bash
-# Dev-Playbooks default path
-dev-playbooks/changes/<change-id>/evidence/green-final/test-$(date +%Y%m%d-%H%M%S).log
-
-# Using the script
-devbooks change-evidence <change-id> --label green-final -- npm test
-```
+Reference `references/completion-status-and-routing.md`.
 
 ---
 
 ## Key Constraints
 
-### Role Boundary Constraints
-- **Modifying `tests/**` is prohibited** (changes to tests must be handed back to Test Owner)
-- **Modifying `verification.md` is prohibited** (maintained by Test Owner)
-- **Modifying `verification.md` Status field is prohibited** (only Reviewer can set it to Done)
-- **Modifying `.devbooks/`, `build/`, or engineering configuration files is prohibited** (unless explicitly stated in proposal.md)
+### Role Boundaries
+
+| Allowed | Prohibited |
+|---------|------------|
+| Modify `src/**` code | ❌ Modify `tests/**` |
+| Check off `tasks.md` task items | ❌ Modify `verification.md` |
+| Record deviations to `deviation-log.md` | ❌ Check off AC coverage matrix |
+| Run fast-track tests (`@smoke`/`@critical`) | ❌ Set verification.md Status to Verified/Done |
+| Trigger `@full` tests (CI/background) | ❌ Wait for @full completion (can start next change) |
 
 ### Code Quality Constraints
 
-#### Prohibited Patterns
+#### Prohibited Patterns for Commit
 
 | Pattern | Detection Command | Reason |
 |---------|-------------------|--------|
 | `test.only` | `rg '\.only\s*\(' src/` | Skips other tests |
-| `console.log` | `rg 'console\.log' src/` | Debug code residue |
-| `debugger` | `rg 'debugger' src/` | Debug breakpoint residue |
-| `// TODO` without issue | `rg 'TODO(?!.*#\d+)' src/` | Untrackable todos |
-| `any` type | `rg ': any[^a-z]' src/` | Type safety vulnerability |
+| `console.log` | `rg 'console\.log' src/` | Debug code remnants |
+| `debugger` | `rg 'debugger' src/` | Debug breakpoint remnants |
+| `// TODO` without issue | `rg 'TODO(?!.*#\d+)' src/` | Untraceable todos |
+| `any` type | `rg ': any[^a-z]' src/` | Type safety holes |
 | `@ts-ignore` | `rg '@ts-ignore' src/` | Hides type errors |
 
-#### Pre-Commit Checks (Required)
+#### Pre-commit Checks Required
 
 ```bash
-# 1. Compile check (mandatory)
+# 1. Compilation check (mandatory)
 npm run compile || exit 1
 
 # 2. Lint check (mandatory)
@@ -269,212 +199,69 @@ if rg -l 'console\.(log|debug)|debugger' src/ --type ts; then
 fi
 ```
 
-### Verification Prerequisites Constraints
+---
 
-**Core Requirement**: After each code modification, you must run verification commands and confirm they pass.
+## Output Management
 
-- [ ] Run `npm run compile` immediately after modifying code
-- [ ] Run `npm run lint` after compilation passes
-- [ ] Run `npm test` after lint passes
-- [ ] Declaring "task complete" while verification fails is prohibited
-- [ ] Verification command output must be recorded to evidence files
+Prevent large outputs from polluting context:
 
-### Resource Cleanup Constraints
+| Scenario | Handling |
+|----------|----------|
+| Command output > 50 lines | Keep only first and last 10 lines + middle summary |
+| Test output | Extract key failure info, don't paste full output in dialogue |
+| Log output | Write to disk at `<change-root>/<change-id>/evidence/`, only reference path in dialogue |
+| Large file contents | Reference path, don't inline |
 
-- [ ] Temporary files must be deleted when the task ends
-- [ ] Background processes must be terminated when the task ends
-- [ ] Cleanup must be performed regardless of success or failure
+---
 
-## Execution Method
+## Evidence Path Convention
 
-1) First read and follow: `~/.claude/skills/_shared/references/universal-gating-protocol.md` (verifiability + structural quality gating).
-2) Read low-risk modification techniques: `references/low-risk-modification-techniques.md` (read when needed).
-3) Execute strictly according to the complete prompt: `references/code-implementation-prompt.md`.
+**Green evidence must be saved**:
+```
+<change-root>/<change-id>/evidence/green-final/
+```
+
+**Correct path examples**:
+```bash
+# Dev-Playbooks default path
+dev-playbooks/changes/<change-id>/evidence/green-final/test-$(date +%Y%m%d-%H%M%S).log
+
+# Using script
+devbooks change-evidence <change-id> --label green-final -- npm test
+```
+
+---
+
+## Deviation Detection and Persistence
+
+**Reference**: `~/.claude/skills/_shared/references/deviation-detection-routing-protocol.md`
+
+During implementation, **must immediately** write to `deviation-log.md` in these situations:
+
+| Situation | Type | Example |
+|-----------|------|---------|
+| Added functionality not in tasks.md | NEW_FEATURE | Added warmup() method |
+| Modified constraints in design.md | CONSTRAINT_CHANGE | Timeout changed to 60s |
+| Found boundary case not covered by design | DESIGN_GAP | Concurrent write scenario |
+| Public interface inconsistent with design | API_CHANGE | Parameter added |
 
 ---
 
 ## Context Awareness
 
-This Skill automatically detects context before execution to ensure prerequisites are met.
+Detection rules reference: `~/.claude/skills/_shared/context-detection-template.md`
 
-Detection rules reference: `skills/_shared/context-detection-template-context-detection.md`
-
-### Detection Flow
-
-1. Detect if `tasks.md` exists
-2. Detect if `verification.md` exists (Test Owner has completed)
-3. Detect if the current session has already executed the Test Owner role
-4. Identify progress in tasks.md (completed/pending)
-
-### Supported Modes for This Skill
+### Modes Supported by This Skill
 
 | Mode | Trigger Condition | Behavior |
 |------|-------------------|----------|
-| **First Implementation** | All items in tasks.md are `[ ]` | Start from MP1.1 |
-| **Checkpoint Resume** | tasks.md has some `[x]` | Continue from the first `[ ]` after the last `[x]` |
-| **Gate Fix** | Tests failed and need fixing | Prioritize fixing failed items |
+| **Initial Implementation** | All tasks.md are `[ ]` | Start from MP1.1 |
+| **Resume from Checkpoint** | tasks.md has some `[x]` | Continue from first `[ ]` after last `[x]` |
+| **Gate Fixing** | Test failures need fixing | Prioritize failed items |
 
-### Prerequisites Checklist
+### Prerequisite Checks
 
 - [ ] `tasks.md` exists
 - [ ] `verification.md` exists
-- [ ] Current session has not executed Test Owner
+- [ ] Test Owner not executed in current session
 - [ ] `tests/**` has test files
-
-### Detection Output Example
-
-```
-Detection Results:
-- Artifact existence: tasks.md OK, verification.md OK
-- Role isolation: OK (current session has not executed Test Owner)
-- Progress: 6/10 completed
-- Run mode: Checkpoint resume, continuing from MP1.7
-```
-
----
-
-## Deviation Detection and Persistence Protocol
-
-**Reference**: `skills/_shared/references/deviation-detection-routing-protocol.md`
-
-### Real-time Persistence Requirements
-
-During implementation, you **must immediately** write to `deviation-log.md` in these situations:
-
-| Situation | Type | Example |
-|-----------|------|---------|
-| Added functionality not in tasks.md | NEW_FEATURE | Added warmup() method |
-| Modified constraint from design.md | CONSTRAINT_CHANGE | Timeout changed to 60s |
-| Found edge case not covered by design | DESIGN_GAP | Concurrency scenario |
-| Public interface differs from design | API_CHANGE | Added parameter |
-
-### deviation-log.md Format
-
-```markdown
-# Deviation Log
-
-## Pending Backport Records
-
-| Time | Type | Description | Affected Files | Backported |
-|------|------|-------------|----------------|:----------:|
-| 2024-01-15 10:30 | NEW_FEATURE | Added cache warmup feature | src/cache.ts | ❌ |
-```
-
-### Compact Protection
-
-**Important**: deviation-log.md is a persistent file unaffected by compact. Even if the conversation is compressed, deviation information is preserved.
-
----
-
-## Completion Status and Routing
-
-### Completion Status Classification (MECE)
-
-| Code | Status | Determination Criteria | Next Step |
-|:----:|--------|------------------------|-----------|
-| ✅ | IMPLEMENTATION_DONE | Fast track tests green, @full triggered, no deviations | Switch to `[TEST-OWNER]` wait for @full |
-| ⚠️ | IMPLEMENTATION_DONE_WITH_DEVIATION | Fast track green, deviation-log has pending records | `devbooks-design-backport` |
-| 🔄 | HANDOFF | Found test issues needing modification | Switch to `[TEST-OWNER]` mode to fix tests |
-| ❌ | BLOCKED | Needs external input/decision | Record breakpoint, wait for user |
-| 💥 | FAILED | Fast track tests not passing | Fix and retry |
-
-### Status Determination Flow
-
-```
-1. Check if deviation-log.md has "| ❌" records
-   → Yes: IMPLEMENTATION_DONE_WITH_DEVIATION
-
-2. Check if tests/ modification needed
-   → Yes: HANDOFF to [TEST-OWNER] mode
-
-3. Check if fast track tests (@smoke + @critical) all pass
-   → No: FAILED
-
-4. Check if tasks.md is fully completed
-   → No: BLOCKED or continue implementation
-
-5. All checks passed, trigger @full
-   → IMPLEMENTATION_DONE
-```
-
-### Routing Output Template (Required)
-
-After completing coder, you **must** output in this format:
-
-```markdown
-## Completion Status
-
-**Status**: ✅ IMPLEMENTATION_DONE / ⚠️ ... / 🔄 HANDOFF / ❌ BLOCKED / 💥 FAILED
-
-**Task Progress**: X/Y completed
-
-**Fast Track Tests**: @smoke ✅ / @critical ✅
-
-**@full Tests**: Triggered (CI running async)
-
-**Deviation Records**: Has N pending / None
-
-## Next Step
-
-**Recommended**: Switch to `[TEST-OWNER]` mode wait for @full / `devbooks-xxx skill`
-
-**Reason**: [specific reason]
-
-**Note**: Can start next change, no need to wait for @full completion
-```
-
-### Specific Routing Rules
-
-| My Status | Next Step | Reason |
-|-----------|-----------|--------|
-| IMPLEMENTATION_DONE | Switch to `[TEST-OWNER]` mode (wait for @full) | Fast track green, wait for @full to pass then audit evidence |
-| IMPLEMENTATION_DONE_WITH_DEVIATION | `devbooks-design-backport` | Backport design first |
-| HANDOFF (test issue) | Switch to `[TEST-OWNER]` mode | Coder cannot modify tests |
-| BLOCKED | Wait for user | Record breakpoint area |
-| FAILED | Fix and retry | Analyze failure reason |
-
-**Critical Constraints**:
-- Coder **can never modify** `tests/**`
-- If test issues found, must switch to `[TEST-OWNER]` mode to handle
-- If deviations exist, must design-backport first before continuing
-- **Coder completion status is `Implementation Done`, must wait for @full to pass before entering Test Owner Phase 2**
-- **Mode switching replaces session isolation**: Use `[TEST-OWNER]` / `[CODER]` labels to switch modes
-
----
-
-## MCP Enhancement
-
-This Skill supports MCP runtime enhancement, automatically detecting and enabling advanced features.
-
-MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template-mcp-enhancement.md`
-
-### Required MCP Services
-
-| Service | Purpose | Timeout |
-|---------|---------|---------|
-| `mcp__ckb__getHotspots` | Detect hotspot files, output warnings | 2s |
-| `mcp__ckb__getStatus` | Detect CKB index availability | 2s |
-
-### Detection Flow
-
-1. Call `mcp__ckb__getStatus` (2s timeout)
-2. If CKB available -> Call `mcp__ckb__getHotspots` to get hotspot files
-3. If timeout or failure -> Degrade to basic mode (no hotspot warnings)
-
-### Enhanced Mode vs Basic Mode
-
-| Feature | Enhanced Mode | Basic Mode |
-|---------|---------------|------------|
-| Hotspot file warnings | CKB real-time analysis | Not available |
-| Risk file identification | Automatic highlighting of high-hotspot changes | Manual identification |
-| Code navigation | Symbol-level jumping | File-level search |
-
-### Degradation Notice
-
-When MCP is unavailable, output the following notice:
-
-```
-WARNING: CKB unavailable, skipping hotspot detection.
-To enable hotspot warnings, manually generate SCIP the index.
-```
-
