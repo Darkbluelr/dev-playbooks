@@ -1184,13 +1184,15 @@ function loadConfig(projectDir) {
   const content = fs.readFileSync(configPath, 'utf-8');
 
   // Parse ai_tools
-  const toolsMatch = content.match(/ai_tools:\s*([\s\S]*?)(?=\n\w|\n$|$)/);
+  // Fix: Use more robust regex that matches until next top-level key (non-indented line) or EOF
+  const toolsMatch = content.match(/ai_tools:\s*\n((?:[ \t]+-[ \t]+.+\n?)*)/);
   const tools = toolsMatch
     ? toolsMatch[1]
         .split('\n')
         .map(line => line.trim())
         .filter(line => line.startsWith('-'))
         .map(line => line.replace(/^-\s*/, '').trim())
+        .filter(line => line.length > 0)
     : [];
 
   // Parse install_scope
