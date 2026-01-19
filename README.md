@@ -80,6 +80,7 @@ In the proposal phase, guide users through questions:
 | **Codex CLI** | Full Skills | `AGENTS.md` |
 | **Qoder** | Full Skills | `AGENTS.md` |
 | **OpenCode (oh-my-opencode)** | Full Skills | `AGENTS.md` |
+| **Every Code** | Full Skills | `AGENTS.md` |
 | **Cursor** | Rules | `.cursor/rules/` |
 | **Windsurf** | Rules | `.windsurf/rules/` |
 | **Gemini CLI** | Rules | `GEMINI.md` |
