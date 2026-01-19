@@ -34,6 +34,10 @@ const __dirname = path.dirname(__filename);
 const CLI_COMMAND = 'dev-playbooks';
 const XDG_CONFIG_HOME = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
 
+// Version check cache configuration
+const VERSION_CACHE_FILE = path.join(os.tmpdir(), `${CLI_COMMAND}-version-cache.json`);
+const VERSION_CACHE_TTL = 10 * 60 * 1000; // 10 minute cache
+
 // ============================================================================
 // Skills 支持级别定义
 // ============================================================================
@@ -330,11 +334,32 @@ function getCliVersion() {
 }
 
 /**
- * Check if a new version is available on npm
+ * Check if a new version is available on npm (with caching)
  * @returns {Promise<{hasUpdate: boolean, latestVersion: string|null, currentVersion: string}>}
  */
 async function checkNpmUpdate() {
   const currentVersion = getCliVersion();
+
+  // Check cache
+  try {
+    if (fs.existsSync(VERSION_CACHE_FILE)) {
+      const cache = JSON.parse(fs.readFileSync(VERSION_CACHE_FILE, 'utf-8'));
+      const cacheAge = Date.now() - cache.timestamp;
+
+      // If cache is valid and current version matches cached version, skip network request
+      if (cacheAge < VERSION_CACHE_TTL && cache.currentVersion === currentVersion) {
+        // If cache shows no update available, return cached result
+        if (!cache.hasUpdate) {
+          return { hasUpdate: false, latestVersion: cache.latestVersion, currentVersion };
+        }
+        // If cache shows update available, return cached result
+        return { hasUpdate: cache.hasUpdate, latestVersion: cache.latestVersion, currentVersion };
+      }
+    }
+  } catch {
+    // Cache read failed, continue with network request
+  }
+
   try {
     const { execSync } = await import('child_process');
     const latestVersion = execSync(`npm view ${CLI_COMMAND} version`, {
@@ -343,16 +368,29 @@ async function checkNpmUpdate() {
       stdio: ['pipe', 'pipe', 'pipe']
     }).trim();
 
+    let hasUpdate = false;
     if (latestVersion && latestVersion !== currentVersion) {
       // Simple semver comparison
       const current = currentVersion.split('.').map(Number);
       const latest = latestVersion.split('.').map(Number);
-      const hasUpdate = latest[0] > current[0] ||
+      hasUpdate = latest[0] > current[0] ||
         (latest[0] === current[0] && latest[1] > current[1]) ||
         (latest[0] === current[0] && latest[1] === current[1] && latest[2] > current[2]);
-      return { hasUpdate, latestVersion, currentVersion };
     }
-    return { hasUpdate: false, latestVersion, currentVersion };
+
+    // Save cache
+    try {
+      fs.writeFileSync(VERSION_CACHE_FILE, JSON.stringify({
+        timestamp: Date.now(),
+        currentVersion,
+        latestVersion,
+        hasUpdate
+      }));
+    } catch {
+      // Cache write failed, ignore
+    }
+
+    return { hasUpdate, latestVersion, currentVersion };
   } catch {
     // Network error or timeout, silently ignore
     return { hasUpdate: false, latestVersion: null, currentVersion };

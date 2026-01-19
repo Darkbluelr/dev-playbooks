@@ -1,6 +1,6 @@
 {
   "name": "dev-playbooks",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "AI-powered spec-driven development workflow",
   "keywords": [
     "devbooks",
@@ -25,6 +25,7 @@
     "dev-playbooks": "bin/devbooks.js"
   },
   "files": [
+    "CHANGELOG.md",
     "bin/",
     "templates/",
     "skills/",

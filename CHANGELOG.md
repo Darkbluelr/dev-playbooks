@@ -5,7 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.1.0] - 2026-01-19
+## [2.2.1] - 2025-01-20
+
+### Fixed
+- Fix changelog display in update command
+  - Add complete version change records
+  - Include CHANGELOG.md in npm publish files
+- Optimize update command performance
+  - Add version check caching (10-minute TTL)
+  - Avoid slow repeated network requests
+
+---
+
+## [2.2.0] - 2025-01-20
+
+### Added
+- Every Code (`@just-every/code`) support
+  - Full Skills system support
+  - Skills directory: `~/.code/skills/` or `.code/skills/` (project-level)
+  - Uses `AGENTS.md` instruction file
+- Install script now supports `--code-only` and `--with-code` options
+- Version check caching (10-minute TTL) to speed up repeated `update` commands
+
+### Changed
+- Updated README tools support table
+
+---
+
+## [2.1.0] - 2025-01-19
 
 ### Added
 
