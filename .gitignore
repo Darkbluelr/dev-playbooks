@@ -35,6 +35,8 @@ node_modules/
 # IDEs
 .idea/
 .vscode/
+.factory/
+.cursor/
 
 # Env
 .env

@@ -46,3 +46,8 @@ CLAUDE.md
 AGENTS.md
 templates/CLAUDE.md
 templates/AGENTS.md
+
+# AI Tool Configurations
+.factory/
+.cursor/
+
