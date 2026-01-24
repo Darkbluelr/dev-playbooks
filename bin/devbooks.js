@@ -103,8 +103,9 @@ const AI_TOOLS = [
     id: 'cursor',
     name: 'Cursor',
     description: 'Cursor AI IDE',
-    skillsSupport: SKILLS_SUPPORT.RULES,
+    skillsSupport: SKILLS_SUPPORT.FULL,
     slashDir: '.cursor/commands/devbooks',
+    skillsDir: '.cursor/skills',  // Project-level
     rulesDir: '.cursor/rules',
     instructionFile: null,
     available: true
