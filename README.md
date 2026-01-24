@@ -206,24 +206,6 @@ See [DevBooks setup guide](docs/devbooks-setup-guide.md) for configuration detai
 
 ---
 
-## Contributing
-
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
-
----
-
 ## License
 
 MIT License - see [LICENSE](LICENSE)
-
----
-
-## Contact
-
-- GitHub: https://github.com/Darkbluelr/dev-playbooks
-- npm: https://www.npmjs.com/package/dev-playbooks
-- Issues: https://github.com/Darkbluelr/dev-playbooks/issues
-
----
-
-**Remember**: DevBooks is not a tool, it is a workflow. Follow the constraints and quality rises.
