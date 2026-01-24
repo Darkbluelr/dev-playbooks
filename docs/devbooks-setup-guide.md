@@ -12,31 +12,31 @@ Send the following prompt to your AI assistant, and it will automatically comple
 You are the "DevBooks Context Protocol Adapter Installer." Your goal is to integrate DevBooks' protocol-agnostic conventions (<truth-root>/<change-root> + role isolation + DoD + Skills index) into the target project's context protocol.
 
 Prerequisites (check first; stop and explain if missing):
-- System dependencies installed (jq, ripgrep required; scc, radon recommended)
+- System dependencies installed (required: jq, ripgrep; recommended: scc, radon)
   Check command: command -v jq rg scc radon
   If missing, run: <devbooks-root>/scripts/install-dependencies.sh
-- You can locate the project's "context index file" (defined by the context protocol; common: CLAUDE.md / AGENTS.md / PROJECT.md / <protocol>/project.md).
+- You can locate the project's "signpost file" (defined by the context protocol; common: CLAUDE.md / AGENTS.md / PROJECT.md / <protocol>/project.md).
 
 Hard constraints (must follow):
-1) This install only changes the "context/document index"; do not change business code, tests, or add dependencies.
-2) If the target project already has a context protocol managed block, custom content must be outside the managed block to avoid being overwritten.
-3) The install must explicitly state two root directories:
+1) This install only changes the "context/document signpost" and must not modify business code, tests, or add dependencies.
+2) If the target project already has a context protocol managed block, custom content must live outside the managed block to avoid being overwritten by future updates.
+3) The install must explicitly state two directory roots:
    - <truth-root>: current truth directory root
    - <change-root>: change package directory root
 
 Tasks (execute in order):
 0) Check system dependencies:
    - Run: command -v jq rg scc radon
-   - If required deps are missing (jq, rg), instruct the user to run: ./scripts/install-dependencies.sh
-   - If recommended deps are missing (scc, radon), suggest optional install to enable complexity-weighted hotspots
+   - If required deps are missing (jq, rg), tell the user to run: ./scripts/install-dependencies.sh
+   - If recommended deps are missing (scc, radon), note they are optional and enable capabilities like complexity-weighted hotspots
 1) Identify the context protocol type (at least two branches):
-   - If DevBooks is detected (dev-playbooks/project.md exists): use DevBooks defaults (<truth-root>=dev-playbooks/specs, <change-root>=dev-playbooks/changes).
-   - Otherwise: use the manual configuration section
+   - If DevBooks is detected (dev-playbooks/project.md exists): use DevBooks defaults (<truth-root>=dev-playbooks/specs, <change-root>=dev-playbooks/changes)
+   - Otherwise: use the manual configuration section for integration
 2) Determine directory roots for the project:
-   - If the project already defines "spec/change package" directories: use existing conventions as <truth-root>/<change-root>.
-   - If not defined: recommend specs/ and changes/ at the repo root.
-3) Merge template content into the project's context index file (append is fine):
-   - Write: <truth-root>/<change-root>, change package file structure, role isolation, DoD, devbooks-* Skills index.
+   - If the project already defines specs/changes conventions: reuse them as <truth-root>/<change-root>
+   - If not defined: recommend specs/ and changes/ at the repo root
+3) Merge template content into the signpost file (append is ok):
+   - Write: <truth-root>/<change-root>, change package structure conventions, role isolation, DoD, devbooks-* Skills index
 4) Validate (must output check results):
    - Whether artifact locations are consistent (proposal/design/tasks/verification/specs/evidence)
    - Whether Test Owner/Coder isolation and "Coder must not modify tests" are included
@@ -47,14 +47,14 @@ After completion, output:
 - System dependency check results (what is installed, what is missing)
 - Which files you modified (list)
 - Final <truth-root>/<change-root> values for the project
-- A short "next steps" example for the user (natural language, name 2-3 key skills)
+- Shortest next-step examples (natural language; name 2-3 key skills)
 ```
 
 ---
 
 ## Manual Configuration
 
-If you want to configure manually, add the following content to your project's context index file (`CLAUDE.md`, `AGENTS.md`, or `PROJECT.md`):
+If you want to configure manually, add the following content to your project's signpost file (`CLAUDE.md`, `AGENTS.md`, or `PROJECT.md`):
 
 ### Root Directory Configuration
 
@@ -110,7 +110,7 @@ Each change must declare which gates are covered; missing items require reasons:
 | Behavior | unit/integration/e2e | pytest, jest |
 | Contract | OpenAPI/Proto/Schema | contract tests |
 | Structure | layering/dependency direction/no cycles | fitness tests |
-| Static & Security | lint/typecheck/build | SAST/secret scan |
+| Static/Security | lint/typecheck/build | SAST/secret scan |
 | Evidence | screenshots/videos/reports | UI, performance (as needed) |
 
 ---
@@ -121,7 +121,7 @@ Each change must declare which gates are covered; missing items require reasons:
 
 | Role | Skill | Artifact Location |
 |------|-------|-------------------|
-| Router | `devbooks-router` | Route and next step suggestions |
+| Router | `devbooks-router` | Routing and next step recommendations |
 | Proposal Author | `devbooks-proposal-author` | `proposal.md` |
 | Proposal Challenger | `devbooks-proposal-challenger` | Challenge report |
 | Proposal Judge | `devbooks-proposal-judge` | Verdict writeback |
@@ -139,7 +139,7 @@ Each change must declare which gates are covered; missing items require reasons:
 
 | Workflow | Skill | Description |
 |----------|-------|-------------|
-| Delivery | `devbooks-delivery-workflow` | Change loop |
+| Delivery | `devbooks-delivery-workflow` | Change closed loop |
 | Brownfield Bootstrap | `devbooks-brownfield-bootstrap` | Legacy project init |
 
 ### Metrics
@@ -184,7 +184,7 @@ The AI can automatically select Skills based on user intent:
 
 | User Intent | Auto Route |
 |-------------|------------|
-| "Fix bug", "find issue" | `devbooks-impact-analysis` → `devbooks-coder` |
-| "Refactor", "optimize code" | `devbooks-reviewer` → `devbooks-coder` |
-| "New feature", "implement XX" | `devbooks-router` → full loop |
+| "Fix bug", "find issue" | `devbooks-impact-analysis` -> `devbooks-coder` |
+| "Refactor", "optimize code" | `devbooks-reviewer` -> `devbooks-coder` |
+| "New feature", "implement XX" | `devbooks-router` -> output closed-loop path |
 | "Write tests", "add tests" | `devbooks-test-owner` |

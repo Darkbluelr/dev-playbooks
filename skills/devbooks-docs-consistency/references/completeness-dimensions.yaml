@@ -1,0 +1,31 @@
+- name: Environment dependencies
+  patterns:
+    - "Node.js"
+    - "Python"
+    - "Dependencies"
+    - "Requirements"
+- name: Security and permissions
+  patterns:
+    - "Security"
+    - "Permissions"
+    - "API key"
+    - "Token"
+    - "Secret"
+- name: Troubleshooting
+  patterns:
+    - "Troubleshooting"
+    - "FAQ"
+    - "Common issues"
+    - "Error"
+- name: Configuration
+  patterns:
+    - "Configuration"
+    - "config"
+    - ".env"
+    - "Environment variables"
+- name: API documentation
+  patterns:
+    - "API"
+    - "Endpoint"
+    - "Request"
+    - "Response"

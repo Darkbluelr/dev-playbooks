@@ -12,7 +12,28 @@ allowed-tools:
 
 # DevBooks: Spec & Contract
 
-> This skill combines the functionality of the original `devbooks-spec-delta` and `devbooks-contract-data`, reducing decision fatigue.
+## Progressive Disclosure
+
+### Base (Required)
+Goal: Produce a spec delta and external contract notes for a change, without implementation steps.
+Inputs: `proposal.md`, `design.md`, existing truth specs, and change scope.
+Outputs: spec deltas under `<change-root>/<change-id>/specs/<capability>/spec.md` and contract notes (as required).
+Boundaries: spec stage only; do not write implementation steps; do not modify code or `tests/**`.
+Evidence: reference spec paths, contract IDs, and evidence outputs.
+
+### Advanced (Optional)
+Use when you need: compatibility strategy, migration notes, implicit change detection.
+
+### Extended (Optional)
+Use when you need: faster search/impact via optional MCP capabilities.
+
+## Recommended MCP Capability Types
+- Code search (code-search)
+- Reference tracking (reference-tracking)
+- Impact analysis (impact-analysis)
+- Doc retrieval (doc-retrieval)
+
+> This skill combines the functionality of the original `devbooks-spec-delta` and `devbooks-contract-data`.
 
 ## Prerequisites: Configuration Discovery (Protocol-Agnostic)
 
@@ -178,48 +199,11 @@ After completing spec-contract, output:
 
 **Next: `devbooks-implementation-plan`**
 
-Reason: Spec and contract are now defined. The next step is to create an implementation plan (tasks.md) that breaks down the work into trackable tasks with verification anchors.
+Next: Create an implementation plan (`tasks.md`) with trackable tasks and acceptance anchors.
 
 ### How to invoke
 ```
 Run devbooks-implementation-plan skill for change <change-id>
 ```
-```
 
 ---
-
-## MCP Enhancement
-
-This Skill supports MCP runtime enhancement, automatically detecting and enabling advanced features.
-
-MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template-mcp-enhancement.md`
-
-### Dependent MCP Services
-
-| Service | Purpose | Timeout |
-|---------|---------|---------|
-| `mcp__ckb__findReferences` | Detect contract reference scope | 2s |
-| `mcp__ckb__getStatus` | Detect CKB index availability | 2s |
-
-### Detection Process
-
-1. Call `mcp__ckb__getStatus` (2s timeout)
-2. If CKB available -> Use `findReferences` to detect reference scope of contract symbols
-3. If timeout or failure -> Fallback to Grep text search
-
-### Enhanced Mode vs Basic Mode
-
-| Feature | Enhanced Mode | Basic Mode |
-|---------|---------------|------------|
-| Reference detection | Symbol-level precise matching | Grep text search |
-| Contract impact scope | Call graph analysis | Direct reference counting |
-| Compatibility risk | Automatic assessment | Manual judgment |
-
-### Fallback Notice
-
-When MCP is unavailable, output the following notice:
-
-```
-Warning: CKB unavailable, using Grep text search for contract reference detection.
-Results may be less precise. Consider manually generating SCIP index for more precise results.
-```

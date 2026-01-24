@@ -1,5 +1,5 @@
 #!/bin/bash
-# scripts/config-discovery.sh
+# scripts/config-discovery.sh (devbooks)
 # DevBooks protocol discovery layer - configuration discovery script
 #
 # Purpose: discover and output the current project's DevBooks configuration

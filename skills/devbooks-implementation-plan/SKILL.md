@@ -11,6 +11,26 @@ allowed-tools:
 
 # DevBooks: Implementation Plan
 
+## Progressive Disclosure
+
+### Base (Required)
+Goal: Produce `<change-root>/<change-id>/tasks.md` from `design.md` with traceable acceptance anchors.
+Inputs: `design.md` (AC-xxx), existing specs/contracts, and change scope.
+Outputs: `tasks.md` with a trackable main plan, temporary plan, and breakpoint area.
+Boundaries: do not reference `tests/**`; do not write implementation code.
+Evidence: reference the generated `tasks.md` path and AC coverage.
+
+### Advanced (Optional)
+Use when you need: parallelization strategy, risk hotspots, breakpoint hints.
+
+### Extended (Optional)
+Use when you need: faster search/impact via optional MCP capabilities.
+
+## Recommended MCP Capability Types
+- Code search (code-search)
+- Reference tracking (reference-tracking)
+- Impact analysis (impact-analysis)
+
 ## Workflow Position Awareness
 
 > **Core Principle**: Implementation Plan executes after Design Doc, providing task list for Test Owner and Coder.
@@ -138,7 +158,9 @@ After completing implementation-plan, output:
 
 **Next: `devbooks-test-owner`** (MUST be in a separate conversation)
 
-Reason: Implementation plan is complete. The next step is to have Test Owner create verification tests and produce a Red baseline. Test Owner and Coder must work in separate conversations to ensure role isolation.
+Next steps:
+- Run Test Owner in a new conversation to create tests and produce a Red baseline.
+- After Phase 1 is complete, run Coder in another conversation to implement tasks.
 
 ### How to invoke (in a NEW conversation)
 ```
@@ -149,13 +171,5 @@ Run devbooks-test-owner skill for change <change-id>
 ```
 Run devbooks-coder skill for change <change-id>
 ```
-```
 
 ---
-
-## MCP Enhancement
-
-This Skill does not depend on MCP services, no runtime detection required.
-
-MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template-mcp-enhancement.md`
-

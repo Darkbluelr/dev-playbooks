@@ -1,0 +1,11 @@
+rules:
+  - id: forbid-strongest-mind
+    type: persistent
+    target: content
+    action: check
+    pattern: "strongest mind"
+  - id: remove-augment
+    type: once
+    target: content
+    action: remove
+    pattern: "@augment"

@@ -10,15 +10,16 @@
 ## Table of contents
 
 1. [Overview](#overview)
-2. [CKB (Code Knowledge Backend)](#ckb-code-knowledge-backend)
-3. [Context7](#context7)
-4. [GitHub MCP Server](#github-mcp-server)
-5. [Playwright MCP](#playwright-mcp)
-6. [Configuration locations](#configuration-locations)
-7. [Common use cases](#common-use-cases)
-8. [Troubleshooting](#troubleshooting)
-9. [Maintenance and updates](#maintenance-and-updates)
-10. [References](#references)
+2. [MCP Capability Types and Naming](#mcp-capability-types-and-naming)
+3. [CKB (Code Knowledge Backend)](#ckb-code-knowledge-backend)
+4. [Context7](#context7)
+5. [GitHub MCP Server](#github-mcp-server)
+6. [Playwright MCP](#playwright-mcp)
+7. [Configuration locations](#configuration-locations)
+8. [Common use cases](#common-use-cases)
+9. [Troubleshooting](#troubleshooting)
+10. [Maintenance and updates](#maintenance-and-updates)
+11. [References](#references)
 
 ---
 
@@ -36,6 +37,49 @@
 **Config file**: `~/.claude.json` (top-level `mcpServers` field)
 
 **Scope**: all projects
+
+---
+
+## MCP Capability Types and Naming
+
+### Capability type list
+
+- Code search (code-search)
+- Reference tracking (reference-tracking)
+- Impact analysis (impact-analysis)
+- Doc retrieval (doc-retrieval)
+
+### Naming conventions
+
+- Use short verb-object phrases (2-6 words).
+- Optionally add an English identifier in lowercase kebab-case.
+- Do not bind to a specific MCP server name.
+- Describe the capability only; do not include runtime checks or failure handling details.
+
+### Capability type -> common implementations
+
+| Capability type | Common implementations | Notes |
+|---|---|---|
+| Code search | CKB search, rg | Locate code snippets or symbols |
+| Reference tracking | CKB refs | Trace call relationships |
+| Impact analysis | CKB impact | Assess change impact scope |
+| Doc retrieval | Context7 query-docs | Fetch library docs and examples |
+
+### MCP tool name examples (optional)
+
+The examples below show common tool entry points by capability. Availability depends on local configuration:
+
+| Capability type | MCP tool examples | Notes |
+|---|---|---|
+| Code search | `mcp__ckb__searchSymbols` | Symbol search and location |
+| Reference tracking | `mcp__ckb__findReferences` | Trace symbol references |
+| Impact analysis | `mcp__ckb__analyzeImpact` / `mcp__ckb__getCallGraph` | Change impact and call relationships |
+| Architecture overview | `mcp__ckb__getArchitecture` | Dependency structure and module relationships |
+| Hotspot analysis | `mcp__ckb__getHotspots` | Change hotspots and risk hints |
+| Domain concepts | `mcp__ckb__listKeyConcepts` | Domain concept clustering |
+| Capability health check | `mcp__ckb__getStatus` | Check capability availability |
+
+**Note**: SKILL.md should keep only the \"Recommended MCP Capability Types\" section and must not bind to specific tool names; this section is for implementation reference only.
 
 ---
 

@@ -11,6 +11,26 @@ allowed-tools:
 
 # DevBooks: Design Document (Design Doc)
 
+## Progressive Disclosure
+
+### Base (Required)
+Goal: Produce `<change-root>/<change-id>/design.md` with What/Constraints and AC-xxx only.
+Inputs: approved `proposal.md`, impact notes (if any), and project context.
+Outputs: `design.md` (What/Constraints/AC-xxx + Documentation Impact).
+Boundaries: do not write implementation steps; do not write tests; do not modify code.
+Evidence: reference artifact paths and the AC list.
+
+### Advanced (Optional)
+Use when you need: option sets, boundary cases, dependency/architecture deltas.
+
+### Extended (Optional)
+Use when you need: faster search/impact via optional MCP capabilities.
+
+## Recommended MCP Capability Types
+- Code search (code-search)
+- Reference tracking (reference-tracking)
+- Impact analysis (impact-analysis)
+
 ## Workflow Position Awareness
 
 > **Core Principle**: Design Doc executes after Proposal is approved, serving as the starting point for implementation phase.
@@ -237,19 +257,11 @@ After completing design-doc, output:
 OR
 **Next: `devbooks-implementation-plan`** (if no external contract changes)
 
-Reason: Design is complete. The next step is to [define external contracts / create implementation plan].
+Next: [define external contracts / create implementation plan].
 
 ### How to invoke
 ```
 Run devbooks-<skill-name> skill for change <change-id>
 ```
-```
 
 ---
-
-## MCP Enhancement
-
-This Skill does not depend on MCP services, no runtime detection required.
-
-MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template-mcp-enhancement.md`
-

@@ -392,3 +392,23 @@ This report uses "evidence first, distrust declarations" principle. All conclusi
 - Fake completion → Immediately revert status, re-verify
 - Suspicious items → Supplement evidence or re-run tests
 - Trustworthy items → Continue current process
+
+
+## Progressive Disclosure
+### Base (Required)
+Goal: Clarify this Skill's core outputs and usage scope.
+Inputs: User goals, existing documents, change package context, or project path.
+Outputs: Executable artifacts, next-step guidance, or recorded paths.
+Boundaries: Does not replace other roles; does not touch `tests/`.
+Evidence: Reference output paths or execution records.
+
+### Advanced (Optional)
+Use when you need to refine strategy, boundaries, or risk notes.
+
+### Extended (Optional)
+Use when you need to coordinate with external systems or optional tools.
+
+## Recommended MCP Capability Types
+- Code search (code-search)
+- Reference tracking (reference-tracking)
+- Impact analysis (impact-analysis)

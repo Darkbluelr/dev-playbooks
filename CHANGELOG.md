@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-01-25
+
+### Added
+
+- **MCP Enhancement Features**:
+  - New MCP detection script `scripts/detect-mcp.sh`
+  - Enhanced MCP integration templates for all skills
+  - New MCP-related specification documents and guidance
+
+- **Long-term Guidance and Reference Documentation**:
+  - New `skills/_shared/references/human-advice-calibration-prompt.md`
+  - New `skills/_shared/references/completeness-thinking-framework.md`
+  - New `skills/devbooks-delivery-workflow/references/orchestration-bans-and-stage-table.md`
+  - New `skills/devbooks-docs-consistency/` directory with consistency checking tools
+  - New `skills/devbooks-router/references/` directory
+
+- **Specification Documentation Improvements**:
+  - Enhanced archiver prompt documentation
+  - Improved completion status and routing documentation
+  - Updated all skill SKILL.md files
+
+### Changed
+
+- **Documentation Structure Optimization**:
+  - Updated all skill SKILL.md documents
+  - Optimized README.md and setup guides
+  - Improved MCP recommendation documentation
+
+---
+
 ## [2.2.1] - 2025-01-20
 
 ### Fixed

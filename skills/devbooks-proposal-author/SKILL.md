@@ -11,6 +11,26 @@ allowed-tools:
 
 # DevBooks: Proposal Author
 
+## Progressive Disclosure
+
+### Base (Required)
+Goal: Produce a reviewable `proposal.md` (Why/What/Impact) and keep it ready for challenge/judge.
+Inputs: user goal, existing documents, change package context, or project path.
+Outputs: `<change-root>/<change-id>/proposal.md` (and updated Decision Log when needed).
+Boundaries: proposal stage only; do not write implementation steps; do not touch `tests/`.
+Evidence: reference artifact paths and the decision/judge status.
+
+### Advanced (Optional)
+Use when you need: option sets, risk framing, open questions, debate packet structuring.
+
+### Extended (Optional)
+Use when you need: faster search/impact via optional MCP capabilities.
+
+## Recommended MCP Capability Types
+- Code search (code-search)
+- Reference tracking (reference-tracking)
+- Impact analysis (impact-analysis)
+
 ## Prerequisites: Configuration Discovery (Protocol Agnostic)
 
 - `<truth-root>`: Current truth directory root
@@ -77,12 +97,6 @@ oauth2-20240116               # Wrong order
 | `remove` | Remove feature |
 | `improve` | Improve performance/experience |
 | `migrate` | Migrate data/system |
-
-### Why This Naming Convention?
-
-1. **Timestamp first**: Auto-sorts by time in archive directory
-2. **Verb prefix**: Clearly expresses change intent, aids code review
-3. **Lowercase hyphens**: Avoids cross-platform filename issues
 
 ### Creating Change Package
 
@@ -165,19 +179,11 @@ OR
 OR
 **Next: `devbooks-proposal-challenger`** (if high risk, optional)
 
-Reason: Proposal is complete. The next step is to [clarify impact / create design document].
+Next: [clarify impact / create design document].
 
 ### How to invoke
 ```
 Run devbooks-<skill-name> skill for change <change-id>
 ```
-```
 
 ---
-
-## MCP Enhancement
-
-This Skill does not depend on MCP services and requires no runtime detection.
-
-MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template-mcp-enhancement.md`
-

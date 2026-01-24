@@ -20,7 +20,7 @@ This document defines the design principles and constraints you must follow when
 |---|---|---|
 | **Verification / checks** | Must be idempotent (must not modify files) | `change-check.sh`, `guardrail-check.sh`, `devbooks-reviewer` |
 | **Generators** | Must explicitly define “overwrite vs incremental” behavior | `change-scaffold.sh`, `devbooks-design-doc`, `devbooks-proposal-author` |
-| **Editors** | Must be safe to rerun | `devbooks-spec-gardener`, `devbooks-design-backport` |
+| **Editors** | Must be safe to rerun | `devbooks-archiver`, `devbooks-design-backport` |
 
 **Verification/check Skills MUST**:
 - [ ] Not modify any files (read-only)
@@ -246,4 +246,3 @@ check_change() {
 # Multiple runs: same output, no side effects
 check_change "$1"
 ```
-

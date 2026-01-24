@@ -150,39 +150,22 @@ Detection Results:
 
 ---
 
-## MCP Enhancement
 
-This Skill supports MCP runtime enhancement, automatically detecting and enabling advanced features.
+## Progressive Disclosure
+### Base (Required)
+Goal: Clarify this Skill's core outputs and usage scope.
+Inputs: User goals, existing documents, change package context, or project path.
+Outputs: Executable artifacts, next-step guidance, or recorded paths.
+Boundaries: Does not replace other roles; does not touch `tests/`.
+Evidence: Reference output paths or execution records.
 
-MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template-mcp-enhancement.md`
+### Advanced (Optional)
+Use when you need to refine strategy, boundaries, or risk notes.
 
-### Required MCP Services
+### Extended (Optional)
+Use when you need to coordinate with external systems or optional tools.
 
-| Service | Purpose | Timeout |
-|---------|---------|---------|
-| `mcp__ckb__getHotspots` | Get hotspot file analysis | 2s |
-| `mcp__ckb__getStatus` | Detect CKB index availability | 2s |
-
-### Detection Flow
-
-1. Call `mcp__ckb__getStatus` (2s timeout)
-2. If CKB available → Use `getHotspots` for precise hotspot analysis
-3. If timeout or failure → Fall back to Git history statistics
-
-### Enhanced Mode vs Basic Mode
-
-| Feature | Enhanced Mode | Basic Mode |
-|---------|---------------|------------|
-| Hotspot Analysis | CKB real-time analysis (includes complexity) | Git log change frequency statistics |
-| Coupling Detection | Call graph analysis | File co-change analysis |
-| Trend Prediction | Based on complexity change rate | Based on change frequency |
-
-### Fallback Notice
-
-When MCP is unavailable, output the following notice:
-
-```
-Warning: CKB unavailable, using Git history for entropy measurement.
-Hotspot analysis based on change frequency, does not include code complexity data.
-```
-
+## Recommended MCP Capability Types
+- Code search (code-search)
+- Reference tracking (reference-tracking)
+- Impact analysis (impact-analysis)

@@ -4,9 +4,9 @@
 
 | Code | Status | Determination Criteria | Next Step |
 |:----:|--------|------------------------|-----------|
-| ✅ | IMPLEMENTATION_DONE | Fast-track tests green, @full triggered, no deviations | Switch to `[TEST-OWNER]` wait for @full |
+| ✅ | IMPLEMENTATION_DONE | Fast-track tests green, @full triggered, no deviations | Hand off to Test Owner (separate conversation) for Phase 2 evidence audit |
 | ⚠️ | IMPLEMENTATION_DONE_WITH_DEVIATION | Fast-track green, deviation-log has pending records | `devbooks-design-backport` |
-| 🔄 | HANDOFF | Found test issues needing modification | Switch to `[TEST-OWNER]` mode to fix tests |
+| 🔄 | HANDOFF | Found test issues needing modification | Hand off to Test Owner (separate conversation) to update tests |
 | ❌ | BLOCKED | Needs external input/decision | Record breakpoint, wait for user |
 | 💥 | FAILED | Fast-track tests not passing | Fix and retry |
 
@@ -17,7 +17,7 @@
    → Yes: IMPLEMENTATION_DONE_WITH_DEVIATION
 
 2. Check if need to modify tests/
-   → Yes: HANDOFF to [TEST-OWNER] mode
+   → Yes: HANDOFF to Test Owner (separate conversation)
 
 3. Check if fast-track tests (@smoke + @critical) all pass
    → No: FAILED
@@ -48,7 +48,7 @@ After completing coder, **must** output in this format:
 
 ## Next Step
 
-**Recommended**: Switch to `[TEST-OWNER]` mode wait for @full / `devbooks-xxx skill`
+**Recommended**: Hand off to Test Owner (new conversation/instance) for Phase 2 / wait for @full if needed
 
 **Reason**: [specific reason]
 
@@ -59,16 +59,16 @@ After completing coder, **must** output in this format:
 
 | My Status | Next Step | Reason |
 |-----------|-----------|--------|
-| IMPLEMENTATION_DONE | Switch to `[TEST-OWNER]` mode (wait @full) | Fast-track green, wait for @full to pass then audit evidence |
+| IMPLEMENTATION_DONE | Hand off to Test Owner (separate conversation) | Fast-track green; Test Owner audits evidence after @full passes |
 | IMPLEMENTATION_DONE_WITH_DEVIATION | `devbooks-design-backport` | Backport design first |
-| HANDOFF (test issues) | Switch to `[TEST-OWNER]` mode | Coder cannot modify tests |
+| HANDOFF (test issues) | Hand off to Test Owner (separate conversation) | Coder cannot modify tests |
 | BLOCKED | Wait for user | Record breakpoint area |
 | FAILED | Fix and retry | Analyze failure reason |
 
 ## Key Constraints
 
 - Coder **can never modify** `tests/**`
-- If test issues found, must switch to `[TEST-OWNER]` mode to handle
+- If test issues are found, hand off to Test Owner (separate conversation) to handle
 - If deviations exist, must design-backport first before continuing
 - **After Coder completion status is `Implementation Done`, must wait for @full to pass before entering Test Owner Phase 2**
-- **Mode switching replaces session isolation**: Use `[TEST-OWNER]` / `[CODER]` labels to switch modes
+- **Role isolation is mandatory**: do not switch roles within one conversation

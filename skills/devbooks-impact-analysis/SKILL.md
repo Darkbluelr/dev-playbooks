@@ -10,6 +10,26 @@ allowed-tools:
 
 # DevBooks: Impact Analysis
 
+## Progressive Disclosure
+
+### Base (Required)
+Goal: Write an Impact Analysis section into `<change-root>/<change-id>/proposal.md`.
+Inputs: change intent, target symbols/files, existing proposal/design context.
+Outputs: updated `proposal.md` Impact section (Scope/Impacts/Risks/Minimal Diff/Open Questions).
+Boundaries: write results to the artifact file, not to the conversation; do not modify `tests/**`.
+Evidence: reference the updated file path and summary counts (files/risks).
+
+### Advanced (Optional)
+Use when you need: transitive impact, risk heatmap, open questions.
+
+### Extended (Optional)
+Use when you need: faster search/graph impact via optional MCP capabilities.
+
+## Recommended MCP Capability Types
+- Code search (code-search)
+- Reference tracking (reference-tracking)
+- Impact analysis (impact-analysis)
+
 ## Prerequisites: Configuration Discovery (Protocol Agnostic)
 
 - `<truth-root>`: Current truth directory root
@@ -54,7 +74,7 @@ Before execution, **must** search for configuration in the following order (stop
 ```
 User: Analyze the impact of modifying UserService
 
-AI: [Uses Grep/CKB to analyze references]
+AI: [Uses code search/reference tracking for analysis]
     [Uses Edit tool to write to proposal.md]
 
     Impact analysis written to the Impact section of `changes/refactor-user/proposal.md`.
@@ -107,7 +127,7 @@ Detection rules reference: `skills/_shared/context-detection-template-context-de
 
 1. Detect whether a change package exists
 2. Detect whether the `proposal.md` already has an Impact section
-3. Detect whether CKB index is available (enhances analysis capability)
+3. Detect whether structured reference tracking capability is available (for more precise analysis)
 
 ### Modes Supported by This Skill
 
@@ -115,56 +135,16 @@ Detection rules reference: `skills/_shared/context-detection-template-context-de
 |------|-------------------|----------|
 | **New Analysis** | Impact section does not exist | Perform complete impact analysis |
 | **Incremental Analysis** | Impact exists, new changes present | Update affected files list |
-| **Enhanced Analysis** | CKB index available | Use call graph for precise analysis |
-| **Basic Analysis** | CKB index unavailable | Use Grep text search for analysis |
+| **Structured Analysis** | Structured reference tracking available | Use call relationships for precise analysis |
+| **Text Analysis** | Only text search available | Use Grep text search for analysis |
 
 ### Detection Output Example
 
 ```
 Detection Results:
 - proposal.md: Exists, Impact section missing
-- CKB Index: Available
-- Run Mode: New Analysis + Enhanced Mode
+- Reference tracking capability: Available
+- Run Mode: New Analysis + Structured Analysis
 ```
 
 ---
-
-## MCP Enhancement
-
-This Skill supports MCP runtime enhancement, automatically detecting and enabling advanced features.
-
-MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template-mcp-enhancement.md`
-
-### Required MCP Services
-
-| Service | Purpose | Timeout |
-|---------|---------|---------|
-| `mcp__ckb__analyzeImpact` | Symbol-level impact analysis | 2s |
-| `mcp__ckb__findReferences` | Precise reference lookup | 2s |
-| `mcp__ckb__getCallGraph` | Call graph analysis | 2s |
-| `mcp__ckb__getStatus` | Detect CKB index availability | 2s |
-
-### Detection Flow
-
-1. Call `mcp__ckb__getStatus` (2s timeout)
-2. If CKB available -> Use `analyzeImpact` and `findReferences` for precise analysis
-3. If timeout or failure -> Fallback to basic mode (Grep text search)
-
-### Enhanced Mode vs Basic Mode
-
-| Feature | Enhanced Mode | Basic Mode |
-|---------|---------------|------------|
-| Reference Lookup | Symbol-level precise matching | Text Grep search |
-| Impact Scope | Call graph transitive analysis | Direct reference counting |
-| Risk Assessment | Quantified based on call depth | Estimated based on file count |
-| Cross-module Analysis | Automatic module boundary recognition | Requires manual scope specification |
-
-### Fallback Notice
-
-When MCP is unavailable, output the following notice:
-
-```
-Warning: CKB unavailable, using Grep text search for impact analysis.
-Analysis results may not be precise. Recommend manually generating SCIP index and re-analyzing.
-```
-

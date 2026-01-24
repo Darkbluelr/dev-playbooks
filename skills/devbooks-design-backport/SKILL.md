@@ -99,9 +99,22 @@ Detection Results:
 
 ---
 
-## MCP Enhancement
 
-This Skill does not depend on MCP services; no runtime detection required.
+## Progressive Disclosure
+### Base (Required)
+Goal: Clarify this Skill's core outputs and usage scope.
+Inputs: User goals, existing documents, change package context, or project path.
+Outputs: Executable artifacts, next-step guidance, or recorded paths.
+Boundaries: Does not replace other roles; does not touch `tests/`.
+Evidence: Reference output paths or execution records.
 
-MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template-mcp-enhancement.md`
+### Advanced (Optional)
+Use when you need to refine strategy, boundaries, or risk notes.
 
+### Extended (Optional)
+Use when you need to coordinate with external systems or optional tools.
+
+## Recommended MCP Capability Types
+- Code search (code-search)
+- Reference tracking (reference-tracking)
+- Impact analysis (impact-analysis)

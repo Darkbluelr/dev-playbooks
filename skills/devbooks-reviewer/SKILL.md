@@ -10,6 +10,26 @@ allowed-tools:
 
 # DevBooks: Code Review (Reviewer)
 
+## Progressive Disclosure
+
+### Base (Required)
+Goal: Produce review comments focused on maintainability (readability, consistency, dependencies), without changing code.
+Inputs: change package context, diffs, key touched modules, and Green evidence availability.
+Outputs: review notes and actionable suggestions for follow-up changes.
+Boundaries: do not modify code or `tests/**`; do not discuss business correctness; do not check off AC matrix.
+Evidence: reference reviewed paths and any detected risks.
+
+### Advanced (Optional)
+Use when you need: resource management checks, smell detection, dependency health deep-dive.
+
+### Extended (Optional)
+Use when you need: faster search/refs/impact via optional MCP capabilities.
+
+## Recommended MCP Capability Types
+- Code search (code-search)
+- Reference tracking (reference-tracking)
+- Impact analysis (impact-analysis)
+
 ## Workflow Position Awareness
 
 > **Core Principle**: Code Review executes after Test Owner Phase 2 verification, as the final review step before archiving.
@@ -142,7 +162,7 @@ Detection rules reference: `skills/_shared/context-detection-template-context-de
 
 1. Detect if change package exists
 2. Detect if there are code changes (git diff)
-3. Detect hotspot files (via CKB getHotspots)
+3. Detect hotspot files (based on change history and complexity analysis)
 
 ### Modes Supported by This Skill
 
@@ -196,50 +216,11 @@ After completing code-review, output:
 OR
 **Archive complete** (if no spec deltas)
 
-Reason: Code review is complete. The next step is to [merge spec deltas into truth / complete archiving].
+Next: merge spec deltas into truth / complete archiving.
 
 ### How to invoke (if spec deltas exist)
 ```
-Run devbooks-spec-gardener skill for change <change-id>
-```
+Run devbooks-archiver skill for change <change-id>
 ```
 
 ---
-
-## MCP Enhancement
-
-This Skill supports MCP runtime enhancement, automatically detecting and enabling advanced features.
-
-MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template-mcp-enhancement.md`
-
-### Dependent MCP Services
-
-| Service | Purpose | Timeout |
-|---------|---------|---------|
-| `mcp__ckb__getHotspots` | Detect hotspot files for priority review | 2s |
-| `mcp__ckb__getStatus` | Detect CKB index availability | 2s |
-
-### Detection Flow
-
-1. Call `mcp__ckb__getStatus` (2s timeout)
-2. If CKB available -> Call `mcp__ckb__getHotspots` to get hotspot files
-3. Perform priority review on hotspot files
-4. If timeout or failure -> Fallback to basic mode
-
-### Enhanced Mode vs Basic Mode
-
-| Feature | Enhanced Mode | Basic Mode |
-|---------|---------------|------------|
-| Hotspot priority review | Automatically identify high-risk files | Review in change order |
-| Dependency direction check | Based on module graph analysis | Inferred from file paths |
-| Circular dependency detection | CKB precise detection | Grep heuristic detection |
-
-### Fallback Notice
-
-When MCP is unavailable, output the following notice:
-
-```
-Warning: CKB unavailable, cannot perform hotspot priority review.
-Reviewing in change file order.
-```
-

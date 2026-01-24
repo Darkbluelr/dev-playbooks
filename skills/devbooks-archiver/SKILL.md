@@ -12,6 +12,26 @@ allowed-tools:
 
 # DevBooks: Archiver
 
+## Progressive Disclosure
+
+### Base (Required)
+Goal: Complete the archive loop (writeback, merge, checks, archive move).
+Inputs: `<change-id>`, `<change-root>/<truth-root>`, and required artifacts/evidence for archiving.
+Outputs: Archive report, updated `specs/architecture`, and archived change package path.
+Boundaries: Does not replace other roles; must not modify `tests/`; do not archive unless strict gates pass.
+Evidence: `change-check.sh` strict check output, archive report, and archived directory location.
+
+### Advanced (Optional)
+Use when you need to refine strategy, boundaries, or risk notes.
+
+### Extended (Optional)
+Use when you need to coordinate with external systems or optional tools.
+
+## Recommended MCP Capability Types
+- Code search (code-search)
+- Reference tracking (reference-tracking)
+- Impact analysis (impact-analysis)
+
 ## 🚨 ABSOLUTE RULES
 
 > **These rules have no exceptions. Violation means failure.**
@@ -53,12 +73,6 @@ proposal → design → test-owner(P1) → coder → test-owner(P2) → code-rev
                                                                                   ↓
                                                Auto backport → Spec merge → Doc check → Archive move
 ```
-
-### Why Renamed to Archiver?
-
-| Old Name | New Name | Reason for Change |
-|----------|----------|-------------------|
-| `spec-gardener` | `archiver` | Responsibilities expanded beyond just spec merging to complete archive closed-loop |
 
 ### Archiver's Complete Responsibilities
 
@@ -407,9 +421,3 @@ In maintenance mode (no change-id), execute:
 - Fix consistency issues
 
 ---
-
-## MCP Enhancement
-
-This Skill does not depend on MCP services; no runtime detection required.
-
-MCP enhancement rules reference: `skills/_shared/mcp-enhancement-template-mcp-enhancement.md`
