@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-01-26
+
+### Added
+
+- **AI-native workflow and protocol updates**:
+  - Start/Router entrypoints and phase routing guidance
+  - Change package templates and protocol contracts (RUNBOOK, verification/compliance/rollback, Knife Plan, contract schemas)
+  - Quality gates and evidence structure (G0–G6, risk and audit requirements)
+  - Dependency audit script and release verification entrypoints
+  - Updated architecture/file-system views and workflow diagram template
+
+### Changed
+
+- **CLI entrypoints**:
+  - Add `start` and `router` commands for entry guidance (does not run AI)
+  - Help output links to templates and workflow docs
+
+---
+
 ## [2.3.0] - 2026-01-25
 
 ### Added

@@ -21,6 +21,14 @@ This skill orchestrates the full development loop: Proposal -> Design -> Spec ->
 
 **Best for**: new feature work, major refactors, teams new to DevBooks
 
+If you're not sure which entrypoint to use, start with:
+
+```bash
+/devbooks:start
+```
+
+Start is the default entrypoint. It routes you to the shortest closed-loop next step.
+
 ---
 
 ## Positioning and Writing Conventions
@@ -108,6 +116,7 @@ dev-playbooks update
 ## Docs
 
 - [DevBooks setup guide](docs/devbooks-setup-guide.md) - setup instructions
+- [AI-native workflow](docs/ai-native-workflow.md) - workflow, roles, evidence
 - [Recommended MCP](docs/Recommended-MCP.md) - MCP server recommendations
 
 ---

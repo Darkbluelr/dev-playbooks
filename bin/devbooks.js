@@ -9,6 +9,8 @@
  *   dev-playbooks init [path] [options]
  *   dev-playbooks update [path]           # Update CLI and configured tools
  *   dev-playbooks migrate --from <framework> [options]
+ *   dev-playbooks start [options]         # Entry guidance (does not run AI)
+ *   dev-playbooks router [options]        # Routing guidance (does not run AI)
  *
  * Options:
  *   --tools <tools>    Non-interactive tool selection: all, none, or comma-separated list
@@ -33,6 +35,11 @@ const __dirname = path.dirname(__filename);
 
 const CLI_COMMAND = 'dev-playbooks';
 const XDG_CONFIG_HOME = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
+const ENTRY_DOC = 'docs/ai-native-workflow.md';
+const ENTRY_TEMPLATES = {
+  start: 'templates/claude-commands/devbooks/start.md',
+  router: 'templates/claude-commands/devbooks/router.md'
+};
 
 // Version check cache configuration
 const VERSION_CACHE_FILE = path.join(os.tmpdir(), `${CLI_COMMAND}-version-cache.json`);
@@ -1800,6 +1807,48 @@ async function migrateCommand(projectDir, options) {
 // Help Information
 // ============================================================================
 
+function showStartHelp() {
+  console.log();
+  console.log(chalk.bold('DevBooks Start') + ' - default entry guidance');
+  console.log();
+  console.log(chalk.cyan('Usage:'));
+  console.log(`  ${CLI_COMMAND} start [options]`);
+  console.log();
+  console.log(chalk.cyan('Notes:'));
+  console.log('  This command provides entry guidance only (it does not run AI or call Skills).');
+  console.log('  If you are unsure what to do next, use Start to get routing guidance.');
+  console.log();
+  console.log(chalk.cyan('Entry template:'));
+  console.log(`  ${ENTRY_TEMPLATES.start}`);
+  console.log();
+  console.log(chalk.cyan('Workflow doc:'));
+  console.log(`  ${ENTRY_DOC}`);
+  console.log();
+  console.log(chalk.cyan('Related:'));
+  console.log(`  ${CLI_COMMAND} router --help`);
+}
+
+function showRouterHelp() {
+  console.log();
+  console.log(chalk.bold('DevBooks Router') + ' - routing guidance');
+  console.log();
+  console.log(chalk.cyan('Usage:'));
+  console.log(`  ${CLI_COMMAND} router [options]`);
+  console.log();
+  console.log(chalk.cyan('Notes:'));
+  console.log('  This command provides routing guidance only (it does not run AI or call Skills).');
+  console.log('  Use Router when you need phase detection and shortest-path routing.');
+  console.log();
+  console.log(chalk.cyan('Entry template:'));
+  console.log(`  ${ENTRY_TEMPLATES.router}`);
+  console.log();
+  console.log(chalk.cyan('Workflow doc:'));
+  console.log(`  ${ENTRY_DOC}`);
+  console.log();
+  console.log(chalk.cyan('Related:'));
+  console.log(`  ${CLI_COMMAND} start --help`);
+}
+
 function showHelp() {
   console.log();
   console.log(chalk.bold('DevBooks') + ' - AI-agnostic spec-driven development workflow');
@@ -1808,6 +1857,8 @@ function showHelp() {
   console.log(`  ${CLI_COMMAND} init [path] [options]              Initialize DevBooks`);
   console.log(`  ${CLI_COMMAND} update [path]                      Update CLI and configured tools`);
   console.log(`  ${CLI_COMMAND} migrate --from <framework> [opts]  Migrate from other frameworks`);
+  console.log(`  ${CLI_COMMAND} start [options]                   Entry guidance (does not run AI)`);
+  console.log(`  ${CLI_COMMAND} router [options]                  Routing guidance (does not run AI)`);
   console.log();
   console.log(chalk.cyan('Options:'));
   console.log('  --tools <tools>    Non-interactive AI tool selection');
@@ -1820,6 +1871,11 @@ function showHelp() {
   console.log('  --force            Force re-execute all steps');
   console.log('  -h, --help         Show this help message');
   console.log('  -v, --version      Show version');
+  console.log();
+  console.log(chalk.cyan('Entry templates and docs:'));
+  console.log(`  Start template:  ${ENTRY_TEMPLATES.start}`);
+  console.log(`  Router template: ${ENTRY_TEMPLATES.router}`);
+  console.log(`  Workflow doc:    ${ENTRY_DOC}`);
   console.log();
   console.log(chalk.cyan('Supported AI Tools:'));
 
@@ -1864,11 +1920,21 @@ function showHelp() {
   console.log(`  ${CLI_COMMAND} migrate --from openspec     # Migrate from OpenSpec`);
   console.log(`  ${CLI_COMMAND} migrate --from speckit      # Migrate from spec-kit`);
   console.log(`  ${CLI_COMMAND} migrate --from openspec --dry-run  # Dry run migration`);
+  console.log(`  ${CLI_COMMAND} start                       # Show default entry guidance`);
+  console.log(`  ${CLI_COMMAND} router                      # Show routing guidance`);
 }
 
 // ============================================================================
 // Main Entry
 // ============================================================================
+
+async function startCommand() {
+  showStartHelp();
+}
+
+async function routerCommand() {
+  showRouterHelp();
+}
 
 async function main() {
   const args = process.argv.slice(2);
@@ -1876,14 +1942,13 @@ async function main() {
   // Parse arguments
   let command = null;
   let projectPath = null;
-  const options = {};
+  const options = { help: false };
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
     if (arg === '-h' || arg === '--help') {
-      showHelp();
-      process.exit(0);
+      options.help = true;
     } else if (arg === '-v' || arg === '--version') {
       showVersion();
       process.exit(0);
@@ -1913,12 +1978,28 @@ async function main() {
 
   // 执行命令
   try {
+    if (options.help) {
+      if (command === 'start') {
+        showStartHelp();
+        return;
+      }
+      if (command === 'router') {
+        showRouterHelp();
+        return;
+      }
+      showHelp();
+      return;
+    }
     if (command === 'init' || !command) {
       await initCommand(projectDir, options);
     } else if (command === 'update') {
       await updateCommand(projectDir);
     } else if (command === 'migrate') {
       await migrateCommand(projectDir, options);
+    } else if (command === 'start') {
+      await startCommand();
+    } else if (command === 'router') {
+      await routerCommand();
     } else {
       console.log(chalk.red(`未知命令: ${command}`));
       showHelp();

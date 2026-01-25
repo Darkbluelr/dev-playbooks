@@ -1,6 +1,7 @@
 ---
 name: devbooks-router
 description: devbooks-router: DevBooks workflow entry guidance. Helps users determine which skill to start with, detects project current status, and provides shortest closed-loop path. Use when the user says "what's next/where to start/run DevBooks closed-loop/project status" etc. Note: Routing after skill completion is handled by each skill itself, no need to call router.
+recommended_experts: ["System Architect", "Product Manager"]
 allowed-tools:
   - Glob
   - Grep
@@ -30,6 +31,7 @@ Use when you need: prototype track, pre-archive checks, context-detection detail
 - Run config discovery (prefer `.devbooks/config.yaml`) and read `agents_doc` before routing.
 - Output 2 minimum key questions + 3-6 routing results (paths + rationale).
 - If the user asks to "start producing files", switch to the target Skill's output mode.
+- Start is the default entrypoint; use Router to output phase recommendations and shortest-path routing.
 
 ## References
 

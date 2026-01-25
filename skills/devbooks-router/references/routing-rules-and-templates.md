@@ -35,6 +35,18 @@ Before routing, check whether structured code analysis is available (dependency/
 
 3) If the user asks to “start producing file content”, switch to the target Skill’s output mode.
 
+## Start entry rules (default entrypoint)
+
+Start is the default entrypoint. When Start is triggered, follow these rules:
+
+1) If `<change-id>` is unclear, ask for `<change-id>` and confirm `<truth-root>/<change-root>`.
+2) If the change package state can be inferred (e.g. `pending/in_progress/review/completed`), recommend the next entrypoint:
+   - `pending` → `proposal`
+   - `in_progress` → `design/spec/plan` (recommend based on missing artifacts)
+   - `review` → `review`
+   - `completed` → `archive`
+3) Keep the routing output to 3–6 items, each including Skill + path + rationale.
+
 ## Default routing rules
 
 ### A) Proposal phase
@@ -117,4 +129,3 @@ impact_profile:
 Infer phase from existing artifacts:
 - `proposal.md`, `design.md`, `tasks.md`, `verification.md`
 - `evidence/green-final/`
-
