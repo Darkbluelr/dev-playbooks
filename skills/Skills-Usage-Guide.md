@@ -69,6 +69,30 @@ In SKILL.md prompts, the `~/.claude/skills/_shared/` path should be replaced wit
   Finally, output the shortest next-step routing + upgrade conditions.
   ```
 
+### Parallel Execution Scheduling (Multi-Agent Parallel)
+
+When a Knife Plan contains multiple Slices, you can generate a parallel execution schedule for humans to coordinate multiple independent Agents:
+
+```bash
+# Generate parallel schedule
+knife-parallel-schedule.sh <epic-id> --format md --out parallel-schedule.md
+```
+
+**Output Contents**:
+1. **Maximum Parallelism**: Max number of Agents that can start simultaneously
+2. **Layered Execution Schedule**: Layer 0 (no deps) → Layer 1 (depends on Layer 0) → ...
+3. **Critical Path**: Serial dependency depth
+4. **Launch Command Templates**: Agent launch command for each Slice
+5. **Traceability Info**: Epic ID, Plan ID, Plan Revision
+
+**Use Case**:
+Since current AI programming tools do not support second-level sub-agent invocation, after Epic slicing, humans need to coordinate multiple independent Agents in parallel:
+1. Run `knife-parallel-schedule.sh` to generate the schedule
+2. Launch multiple independent Agents for Layer 0 Slices
+3. Wait for all Layer 0 to complete, then launch Layer 1
+4. Repeat until all Layers complete
+5. Run `requirements-ledger-derive.sh` to update the ledger
+
 ---
 
 ## `devbooks-proposal-author` (Proposal Author)

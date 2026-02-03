@@ -107,6 +107,22 @@ Score = w₁·Files + w₂·Modules + w₃·RiskFlags + w₄·HotspotWeight
 3. **Topologically Sortable**: Dependency graph must be acyclic, execution order must be topological
 4. **Budget Circuit Breaker**: Over budget must recursively re-slice, or flow back for more info
 
+### Parallel Execution Scheduling
+
+When a Knife Plan contains multiple Slices, you can generate a parallel execution schedule:
+
+```bash
+knife-parallel-schedule.sh <epic-id> --format md --out parallel-schedule.md
+```
+
+Output contents:
+- **Maximum Parallelism**: Max number of Agents that can start simultaneously
+- **Layered Execution Schedule**: Layer 0 (no deps) → Layer 1 → Layer N
+- **Critical Path**: Serial dependency depth
+- **Launch Command Templates**: Agent launch command for each Slice
+
+Since current AI programming tools do not support second-level sub-agent invocation, after Epic slicing, humans need to coordinate multiple independent Agents in parallel.
+
 ---
 
 ## 7 Gates: Full-Chain Judgeable Checkpoints

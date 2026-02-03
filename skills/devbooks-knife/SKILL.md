@@ -67,7 +67,41 @@ Model a DAG via `slices[]`. Each slice SHOULD include:
 4. Write the Knife Plan to the required path and bind `epic_id` / `slice_id`.
 5. Output the next shortest-loop routing + upgrade conditions.
 
+## Parallel Execution Scheduling
+
+When a Knife Plan contains multiple Slices, you can generate a parallel execution schedule using `knife-parallel-schedule.sh`:
+
+```bash
+# Generate Markdown format parallel schedule
+knife-parallel-schedule.sh <epic-id> --format md --out parallel-schedule.md
+
+# Generate JSON format (for programmatic consumption)
+knife-parallel-schedule.sh <epic-id> --format json --out parallel-schedule.json
+```
+
+### Output Contents
+
+1. **Maximum Parallelism**: Maximum number of Agents that can start simultaneously
+2. **Layered Execution Schedule**:
+   - Layer 0: No dependencies, can start immediately
+   - Layer 1: Depends on Layer 0 completion
+   - Layer N: Depends on Layer N-1 completion
+3. **Critical Path**: Serial dependency depth
+4. **Launch Command Templates**: Agent launch command for each Slice
+5. **Traceability Info**: Epic ID, Plan ID, Plan Revision
+
+### Use Case
+
+Since current AI programming tools do not support second-level sub-agent invocation, after Epic slicing, humans need to coordinate multiple independent Agents in parallel:
+
+1. Run `knife-parallel-schedule.sh` to generate the schedule
+2. Launch multiple independent Agents for Layer 0 Slices
+3. Wait for all Layer 0 to complete, then launch Layer 1
+4. Repeat until all Layers complete
+5. Run `requirements-ledger-derive.sh` to update the ledger
+
 ## References
 
 - `dev-playbooks/specs/knife/spec.md`
 - `dev-playbooks/specs/_meta/epics/README.md`
+- `skills/devbooks-delivery-workflow/scripts/knife-parallel-schedule.sh` (parallel scheduling script)
