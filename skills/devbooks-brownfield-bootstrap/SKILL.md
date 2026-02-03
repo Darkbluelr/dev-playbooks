@@ -1,6 +1,6 @@
 ---
 name: devbooks-brownfield-bootstrap
-description: "devbooks-brownfield-bootstrap: Brownfield project initialization. When the truth directory is empty, generate project profile, glossary, baseline specs, and minimum verification anchors to avoid 'patching specs while changing behavior'. Use when user says 'brownfield init/baseline specs/project profile/establish glossary/onboard legacy project to context protocol' etc."
+description: "devbooks-brownfield-bootstrap: Brownfield project initialization. When the truth directory is empty, generate project profile, glossary, SSOT, baseline specs, and minimum verification anchors to avoid 'patching specs while changing behavior'. Use when user says 'brownfield init/baseline specs/project profile/establish glossary/initialize SSOT/onboard legacy project to context protocol' etc."
 allowed-tools:
   - Glob
   - Grep
@@ -12,10 +12,33 @@ allowed-tools:
 
 # DevBooks: Brownfield Bootstrap
 
+## Responsibility Boundary with ssot-maintainer
+
+| Skill | Responsibility | Analogy |
+|-------|----------------|---------|
+| **brownfield-bootstrap** | **Create** SSOT/Spec skeleton (from scratch) | `git init` |
+| **ssot-maintainer** | **Maintain** SSOT (add/update/remove existing entries) | `git commit` |
+
+**Key Distinction**:
+- This Skill is responsible for **initialization**: when `ssot/` directory doesn't exist or is empty, generate skeleton
+- `ssot-maintainer` is responsible for **maintenance**: after SSOT exists, handle delta, sync index, refresh ledger
+- After initialization is complete, subsequent SSOT changes should use `ssot-maintainer`
+
+## SSOT vs Spec Differences
+
+| Dimension | SSOT | Spec |
+|-----------|------|------|
+| **Abstraction Level** | Requirements Layer (What) | Design Layer (How) |
+| **Granularity** | Project-level | Module-level |
+| **Location** | `<devbooks-root>/ssot/` | `<truth-root>/` |
+| **Content** | What the system must do | How modules work |
+
+See `docs/SSOT-vs-Spec-Boundary.md` for details.
+
 ## Prerequisites: Configuration Discovery (Protocol Agnostic)
 
-- `<truth-root>`: Current truth directory root
-- `<change-root>`: Change package directory root
+- `<truth-root>`: Current truth directory root (usually `dev-playbooks/specs/`)
+- `<change-root>`: Change package directory root (usually `dev-playbooks/changes/`)
 - `<devbooks-root>`: DevBooks management directory (usually `dev-playbooks/`)
 
 Before execution, **must** search for configuration in the following order (stop when found):
@@ -64,19 +87,39 @@ Generate in `<truth-root>/_meta/`:
 | Documentation maintenance metadata | `_meta/docs-maintenance.md` | Documentation style and maintenance configuration |
 | Domain concepts | `_meta/key-concepts.md` | Concept extraction based on code semantics (optional) |
 
-### 2.5 Project SSOT (must create when upstream SSOT is absent)
+### 3. Project SSOT Initialization (Core Responsibility)
 
-To solve “SSOT is huge + changes often → humans can’t reliably tell what’s done vs not done”, this skill MUST scaffold a **minimal, addressable Project SSOT pack** when the project does not have an upstream SSOT library:
+Generate SSOT skeleton in `<devbooks-root>/ssot/`:
 
-| Artifact | Path (relative to `<truth-root>`) | Description |
-|----------|----------------------------------|-------------|
-| Project SSOT | `ssot/SSOT.md` | Human-readable system truth skeleton (requirements/contracts/ops constraints/open questions) |
-| Requirements Set (machine-readable) | `ssot/requirements.index.yaml` | Stable ID → anchor → statement; used by `upstream_claims` and archive adjudication |
-| Requirements Ledger (derived cache) | `ssot/requirements.ledger.yaml` | Progress view; safe to delete and regenerate (derived from archived change packages) |
+| Artifact | Path | Description |
+|----------|------|-------------|
+| SSOT Document | `ssot/SSOT.md` | Human-readable requirements/constraints document |
+| Requirements Index | `ssot/requirements.index.yaml` | Machine-readable index (stable ID → anchor → statement) |
 
-If the project already has an upstream SSOT (e.g., a separate `SSOT docs/` folder), do **not** copy long documents. Instead, keep pointers/links in `ssot/SSOT.md` and establish stable IDs + anchors in `requirements.index.yaml`.
+**Generation Strategy: Skeleton First + Progressive Completion**
 
-### 3. Architecture Analysis Artifacts
+1. **Core Contract Extraction** (AI-led)
+   - Scan API definitions (OpenAPI/GraphQL/RPC)
+   - Scan data models (Schema/Entity)
+   - Scan configuration constraints (env vars/feature flags)
+   - Scan key business rules (inferred from code comments/test cases)
+
+2. **Confidence Marking**
+   - Each requirement marked with `confidence: low|medium|high`
+   - AI-generated defaults to `medium`
+   - Upgraded to `high` after human confirmation
+
+3. **Minimum Viable SSOT**
+   - Initial target: 5-15 core requirements
+   - Don't pursue completeness, pursue addressability
+   - Progressive completion via `ssot-maintainer` later
+
+**Upstream SSOT Handling**:
+- If project already has upstream SSOT (e.g., separate `SSOT docs/`)
+- This Skill does not copy original text, but writes pointers/links in `ssot/SSOT.md`
+- And establishes stable ID and anchor index in `requirements.index.yaml`
+
+### 4. Architecture Analysis Artifacts
 
 Generate in `<truth-root>/architecture/`:
 
@@ -89,7 +132,7 @@ Generate in `<truth-root>/architecture/`:
 
 > **Design Decision**: C4 architecture map is now generated by brownfield-bootstrap during initialization. Subsequent architecture changes are recorded in design.md's Architecture Impact section and merged by archiver during archiving.
 
-### 4. Baseline Change Package
+### 5. Baseline Change Package (Optional)
 
 Generate in `<change-root>/<baseline-id>/`:
 

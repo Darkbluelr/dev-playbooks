@@ -17,6 +17,7 @@ project: project.md
 
 # Path mappings
 paths:
+  ssot: ssot/
   specs: specs/
   changes: changes/
   scripts: scripts/

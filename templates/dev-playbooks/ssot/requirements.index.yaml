@@ -1,0 +1,22 @@
+schema_version: 1.0.0
+set_id: PROJECT_ID
+source_ref: truth://ssot/SSOT.md
+
+# Requirements Index
+#
+# This file is the machine-readable index of SSOT.md, used for:
+# - upstream_claims validation
+# - Archive adjudication
+# - Progress tracking
+#
+# Maintenance:
+# - After manual editing, run ssot-index-sync.sh --validate
+# - Or update via ssot-maintainer skill's delta mechanism
+
+requirements:
+  # - id: R-001
+  #   severity: must
+  #   anchor: "## R-001"
+  #   statement: "Requirement description (single line)"
+  #   confidence: medium  # low | medium | high
+  #   source: ai-inferred  # manual | ai-inferred | imported
