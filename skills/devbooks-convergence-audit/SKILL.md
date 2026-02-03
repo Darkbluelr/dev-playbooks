@@ -49,7 +49,7 @@ allowed-tools:
 
 ### Check 1: Status Field Truthfulness Verification
 
-**Document Claim**: `verification.md` contains `Status: Done` or `Status: Verified`
+**Document Claim**: `verification.md` contains `Status: Done` or `Status: Archived`
 
 **Verification Steps**:
 ```bash
@@ -359,7 +359,7 @@ This report uses "evidence first, distrust declarations" principle. All conclusi
 | Change Package | Claimed Status | True Status | Gap |
 |----------------|----------------|-------------|-----|
 | change-auth | Done | Tests failing | 🔴 Severe |
-| fix-cache | Verified | Coverage incomplete | 🟠 Medium |
+| fix-cache | Done | Coverage incomplete | 🟠 Medium |
 | refactor-api | Ready | Evidence stale | 🟡 Minor |
 
 ## Recommended Actions
@@ -408,7 +408,3 @@ Use when you need to refine strategy, boundaries, or risk notes.
 ### Extended (Optional)
 Use when you need to coordinate with external systems or optional tools.
 
-## Recommended MCP Capability Types
-- Code search (code-search)
-- Reference tracking (reference-tracking)
-- Impact analysis (impact-analysis)

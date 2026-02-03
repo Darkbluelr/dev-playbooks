@@ -3,11 +3,11 @@
 # macOS
 .DS_Store
 
-# Repo-internal DevBooks playbooks (do not publish)
-dev-playbooks/
+# DevBooks playbooks in this repo (do not publish)
+/dev-playbooks/
 
-# Change packages
-dev-playbooks/changes/
+# Change package directory
+/dev-playbooks/changes/
 
 # Backup directory
 .devbooks/backup/
@@ -19,35 +19,53 @@ tests/
 *.log
 
 # Local config
+.ci-index/
 .claude/
 .git/
 .gitignore
 
-# MCP
+# MCP-related
 mcp/
 
-# Docs
-docs/
+# Docs (published with the npm package)
 
-# Setup files (templates live under templates/)
-setup/
-
-# Tool scripts (not required)
+# Tool scripts (optional)
 tools/
 
-# Local install scripts
+# Local scripts
 scripts/install-skills.sh
 
-# Dev proposal docs
+# Development proposal
 DEVBOOKS-EVOLUTION-PROPOSAL.md
 
-# Repo-only instruction files
+# AI CLI specific files (do not publish repo-local instruction files)
 CLAUDE.md
 AGENTS.md
 templates/CLAUDE.md
 templates/AGENTS.md
 
-# AI Tool Configurations
-.factory/
-.cursor/
+# DevBooks managed - DO NOT EDIT
+# DevBooks developer playbooks (not needed at runtime)
+/dev-playbooks/
+.devbooks/
 
+# AI tool config directories
+.factory/
+.claude/
+.cursor/
+.windsurf/
+.gemini/
+.agent/
+.opencode/
+.continue/
+.qoder/
+.code/
+.codex/
+.github/instructions/
+.github/copilot-instructions.md
+
+# DevBooks instruction files
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+# End DevBooks managed

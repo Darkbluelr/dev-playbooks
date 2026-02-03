@@ -6,7 +6,7 @@
 
 ## Positioning and Text Specifications
 
-DevBooks itself is a non-MCP tool but provides optional MCP integration points to access external capabilities as needed, while retaining a few self-check scripts as guardrails.
+DevBooks is a local workflow tool and retains a small set of self-check scripts as guardrails.
 DevBooks focuses on protocols, workflows, and text specifications, ensuring skill descriptions are traceable and verifiable.
 
 **Constraint**: Skill descriptions need to be stable, scannable, and reusable.
@@ -34,29 +34,122 @@ DevBooks focuses on protocols, workflows, and text specifications, ensuring skil
 
 ## Workflow Entry
 
-### devbooks-router
+### devbooks-delivery-workflow
 
-**Role**: Workflow Guide
+**Role**: Single Entry (Delivery)
 
 **Features**:
-- Detects current project status.
-- Determines which skill to start with.
-- Provides the shortest closed-loop path.
+- Routes by `request_kind` and materializes auditable on-disk artifacts (`RUNBOOK.md` + `inputs/index.md` + proposal metadata).
+- Drives the minimal sufficient closed loop to archive (or explicitly routes into Void/Bootstrap to satisfy prerequisites).
+- Freezes `deliverable_quality` into `completion.contract.yaml#intent.deliverable_quality`.
+- Optional (derived cache): run `skills/devbooks-delivery-workflow/scripts/runbook-derive.sh <change-id> --project-root . --change-root dev-playbooks/changes --truth-root dev-playbooks/specs` to populate derived `Cover View` and derived `Context Capsule` blocks into `RUNBOOK.md` (discardable & rebuildable).
 
 **Usage Scenarios**:
-- Unsure what to do next.
-- Project status is unclear.
-- Need workflow guidance.
+- Always: use this when you are not sure which path to take.
+- Debugging, changes, epics, governance, bootstrap, or high-entropy uncertainty.
 
 **Invocation**:
 ```bash
-/devbooks-router
+/devbooks:delivery
 ```
 
 **Output**:
-- Analysis of current project status.
-- Recommended next skill.
-- Full loop path suggestion.
+- `RUNBOOK.md` and `inputs/index.md`
+- `completion.contract.yaml`
+- Routing decision (`request_kind` / `risk_level` / upgrade conditions)
+
+**Key Constraints**:
+- Requires AI tools supporting sub-agents.
+- Read first: `skills/devbooks-delivery-workflow/references/orchestration-bans-and-stage-table.md` (includes **P3-3 Action Norms**).
+
+---
+
+### devbooks-ssot-maintainer
+
+**Role**: SSOT index/ledger maintainer (governance support)
+
+**Features**:
+- Turns “edit/sync SSOT” into an auditable loop: `ssot.delta.yaml → requirements.index.yaml → (optional) requirements.ledger.yaml`.
+- Supports both:
+  - Upstream SSOT libraries via `.devbooks/config.yaml#truth_mapping.ssot_root` (index/anchor only; do not copy long docs).
+  - Projects without upstream SSOT (use minimal in-truth SSOT pack first).
+- Applies add/update/remove to `requirements.index.yaml` deterministically; fails non-destructively.
+
+**Usage Scenarios**:
+- Your upstream/project SSOT changed and you need to keep `requirements.index.yaml` (and optional ledger) aligned.
+- You want SSOT progress (“done/not done”) to be rebuildable and judgeable.
+
+**Invocation**:
+```bash
+# Write delta in a change package, then apply:
+skills/devbooks-ssot-maintainer/scripts/ssot-index-sync.sh --delta <path> --apply --refresh-ledger
+```
+
+**Output**:
+- `inputs/ssot.delta.yaml` (recommended under a change package)
+- `ssot/requirements.index.yaml` (truth)
+- `ssot/requirements.ledger.yaml` (optional derived cache)
+
+**Key Constraints**:
+- `statement` must be a single-line scalar (no multi-line YAML).
+- Do not treat `requirements.ledger.yaml` as SSOT (it is a derived cache).
+
+---
+
+### devbooks-knife
+
+**Role**: Epic slicing (Knife)
+
+**Features**:
+- Slice an Epic into a topologically-sortable Slice queue (parallelizable and convergent).
+- Write a machine-readable Knife Plan (mandatory gate input for high-risk or epic work).
+
+**Usage Scenarios**:
+- `risk_level=high` changes (MUST)
+- `request_kind=epic` changes (MUST)
+- The request is too large and needs to be split into a queue of change packages (recommended)
+
+**Invocation**:
+```bash
+/devbooks:knife
+```
+
+**Output**:
+- Knife Plan (machine-readable): `dev-playbooks/specs/_meta/epics/<epic_id>/knife-plan.yaml` (or `.json`)
+- Slice queue (recommended to live under `slices[]` and bind `slice_id/change_id/anchors`)
+
+**Key constraints**:
+- Must bind `epic_id` / `slice_id` and align with downstream change package metadata
+- For mandatory scenarios, missing Knife Plan will be blocked by strict gating (G3)
+
+---
+
+### devbooks-void
+
+**Role**: Void protocol executor (high-entropy problems)
+
+**Features**:
+- Converts uncertainty into auditable artifacts (research report + ADR + Freeze/Thaw state).
+- Produces machine-checkable Void artifacts only (no production code changes).
+- Uses Freeze/Thaw to block/unblock downstream execution based on unresolved questions.
+
+**Usage Scenarios**:
+- You are stuck / uncertain / need research before committing.
+- Need to freeze a change while collecting evidence or making a decision.
+
+**Invocation**:
+```bash
+/devbooks:void
+```
+
+**Output**:
+- `void/research_report.md`
+- `void/ADR.md`
+- `void/void.yaml`
+
+**Key constraints**:
+- Must not modify `tests/` or production code (`src/`) during Void.
+- Artifacts must pass `void-protocol-check.sh`.
 
 ---
 
@@ -559,28 +652,27 @@ DevBooks focuses on protocols, workflows, and text specifications, ensuring skil
 
 ### devbooks-delivery-workflow
 
-**Role**: Delivery Workflow
+**Role**: Delivery (Single Entry)
 
 **Features**:
-- Full loop orchestrator.
+- Single entrypoint + router + orchestrator.
 - Invoked in AI coding tools supporting sub-agents.
-- Automatically orchestrates Proposal → Design → Spec → Plan → Test → Implement → Review → Archive full process.
+- Routes by `request_kind` and runs the minimal sufficient closed loop (debug/change/epic/void/bootstrap/governance).
 
 **Usage Scenarios**:
-- Automate complete workflow.
-- Run full loop from start to finish.
+- Always: use when you want an end-to-end, auditable workflow without manually picking the next skill.
 
 **Invocation**:
 ```bash
-/devbooks-delivery-workflow
+/devbooks:delivery
 ```
 
 **Output**:
-- Complete change package.
-- Artifacts from all phases.
+- A routed change package (`RUNBOOK.md`, proposal metadata, and the artifacts required by the chosen loop).
 
 **Key Constraints**:
 - Requires AI tool supporting sub-agents.
+- Read first: `skills/devbooks-delivery-workflow/references/orchestration-bans-and-stage-table.md` (includes **P3-3 Action Norms**: artifact numbering, multi-change isolation, Archiver-required Done).
 
 ---
 
@@ -588,7 +680,7 @@ DevBooks focuses on protocols, workflows, and text specifications, ensuring skil
 
 | Skill | Phase | Role | Independent Chat | Main Output |
 |-------|-------|------|------------------|-------------|
-| devbooks-router | Entry | Guide | No | Path Suggestion |
+| devbooks-delivery-workflow | Entry | Orchestrator | No | Routed Change Package |
 | devbooks-proposal-author | Proposal | Author | No | proposal.md |
 | devbooks-proposal-challenger | Proposal | Challenger | No | Challenge Report |
 | devbooks-proposal-judge | Proposal | Judge | No | Decision Log |
@@ -600,12 +692,11 @@ DevBooks focuses on protocols, workflows, and text specifications, ensuring skil
 | devbooks-coder | Implement | Coder | Yes | Impl Code + Green Evidence |
 | devbooks-reviewer | Review | Reviewer | No | Code Review Report |
 | devbooks-archiver | Archive | Archiver | No | Archived Change Package |
-| devbooks-docs-consistency | Archive | Docs Checker | No | Docs Consistency Report |
+| devbooks-docs-consistency | Quality | Docs Checker | No | Docs Consistency Report |
 | devbooks-impact-analysis | Quality | Analyzer | No | Impact Analysis Report |
 | devbooks-convergence-audit | Quality | Auditor | No | Convergence Report |
 | devbooks-entropy-monitor | Quality | Monitor | No | Entropy Report |
 | devbooks-brownfield-bootstrap | Init | Bootstrap | No | Profile + Baseline |
-| devbooks-delivery-workflow | Full | Orchestrator | No | Complete Change Package |
 
 ---
 
@@ -613,51 +704,35 @@ DevBooks focuses on protocols, workflows, and text specifications, ensuring skil
 
 ### Minimal Workflow
 
-If you just want to get started quickly:
+If you just want to get started quickly, use the single entrypoint:
 
 ```bash
-1. /devbooks-design-doc
-2. /devbooks-test-owner (Independent Chat)
-3. /devbooks-coder (Independent Chat)
-4. /devbooks-archiver
+/devbooks:delivery
 ```
 
 ### Full Workflow
 
-To strictly follow DevBooks specifications:
-
-```bash
-1. /devbooks-proposal-author
-2. /devbooks-proposal-challenger
-3. /devbooks-proposal-judge
-4. /devbooks-design-doc
-5. /devbooks-spec-contract
-6. /devbooks-implementation-plan
-7. /devbooks-test-owner (Independent Chat)
-8. /devbooks-coder (Independent Chat)
-9. /devbooks-reviewer
-10. /devbooks-archiver
-```
+Delivery will run the strict path automatically when gates and risk require it.
 
 ### Brownfield Project Workflow
 
 If adopting an existing project:
 
 ```bash
-1. /devbooks-brownfield-bootstrap
-2. /devbooks-convergence-audit
-3. Start normal workflow
+1. /devbooks:delivery (request_kind=bootstrap)
+2. Follow Delivery’s routed loop
 ```
 
 ---
 
 ## Summary
 
-DevBooks provides 19 Skills covering the complete workflow from proposal to archival:
+DevBooks provides 21 Skills covering the complete workflow from proposal to archival:
 
-- **Entry Guide**: router
+- **Single Entry**: delivery (routes by `request_kind`, runs the minimal sufficient loop)
+- **Core Protocols**: knife (slicing), void (high-entropy clarification), brownfield-bootstrap (baseline for existing projects)
 - **Proposal Phase**: proposal-author, proposal-challenger, proposal-judge
-- **Design Phase**: design-doc, design-backport
+- **Design Phase**: design-doc (Archiver writes back during archive; use devbooks-design-doc when you need it before archive)
 - **Spec Phase**: spec-contract
 - **Plan Phase**: implementation-plan
 - **Test Phase**: test-owner, test-reviewer

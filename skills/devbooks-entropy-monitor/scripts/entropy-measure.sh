@@ -10,7 +10,7 @@ set -euo pipefail
 # - Test entropy (flaky tests, coverage, test/code ratio)
 # - Dependency entropy (outdated deps, vulnerabilities)
 #
-# Reference: The Mythical Man-Month, Ch. 16 “No Silver Bullet” — controlling complexity is key
+# Reference: "The Mythical Man-Month" Chapter 16 "No Silver Bullet" - Controlling complexity is key to software development
 # ============================================================================
 
 usage() {

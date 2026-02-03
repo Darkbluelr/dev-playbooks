@@ -1,10 +1,10 @@
 ---
-skill: devbooks-spec-gardener
+skill: devbooks-docs-consistency
 ---
 
-# DevBooks: Spec Gardener
+# DevBooks: Docs Consistency (Gardener)
 
-Use devbooks-spec-gardener to maintain the truth specs and keep them consistent.
+Use devbooks-docs-consistency to check and maintain consistency between docs and code.
 
 ## Usage
 
@@ -14,3 +14,9 @@ Use devbooks-spec-gardener to maintain the truth specs and keep them consistent.
 
 $ARGUMENTS
 
+## Description
+
+Use cases:
+- After changes, verify README/docs match the code
+- Incremental scan (change-scoped) vs global scan (full docs check)
+- Produce a structured diff report and actionable fixes

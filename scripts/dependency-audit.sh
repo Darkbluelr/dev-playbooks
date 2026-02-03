@@ -41,7 +41,7 @@ while [[ $# -gt 0 ]]; do
       exit 2
       ;;
   esac
-done
+ done
 
 if [[ -z "$project_root" || -z "$output_file" ]]; then
   echo "ERROR: project root and output file are required" >&2
@@ -94,4 +94,3 @@ else
 fi
 
 exit "$status"
-

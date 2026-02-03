@@ -102,7 +102,8 @@ def test_login_returns_jwt():
 | Checkbox Location | Who Can Check | When to Check |
 |-------------------|---------------|---------------|
 | `[ ]` in AC Coverage Matrix | **Test Owner** | Phase 2 after evidence audit confirmed |
-| Status field `Verified` | **Test Owner** | After Phase 2 completion |
+| Status field `Ready` | **Test Owner** | After test plan is ready (Phase 1) |
 | Status field `Done` | Reviewer | After Code Review passes |
+| Status field `Archived` | Archiver | After archive completes |
 
 **Prohibited**: Coder cannot check AC Coverage Matrix, cannot modify verification.md.

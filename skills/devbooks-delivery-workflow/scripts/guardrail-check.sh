@@ -103,8 +103,12 @@ if [[ -z "$project_root" || -z "$change_root" ]]; then
 fi
 
 if ! command -v rg >/dev/null 2>&1; then
-  echo "error: missing dependency: rg (ripgrep)" >&2
-  exit 2
+  # ripgrep is preferred but not always installed in minimal environments.
+  # We keep guardrail-check usable by falling back to grep/egrep.
+  if ! command -v grep >/dev/null 2>&1; then
+    echo "error: missing dependency: rg (ripgrep) or grep" >&2
+    exit 2
+  fi
 fi
 
 if [[ "$change_root" = /* ]]; then
@@ -120,18 +124,28 @@ if [[ ! -f "$file" ]]; then
 fi
 
 # Check if guardrail section exists - if not, skip (guardrail review not applicable)
-if ! rg -n "^F\\) Structural guardrail record|^## F\\) Structural guardrail" "$file" >/dev/null 2>&1; then
+if command -v rg >/dev/null 2>&1; then
+  has_guardrail_section=$(rg -n "^F\\) Structural Quality Gate Record|^## F\\) Structural Quality Gate" "$file" >/dev/null 2>&1 && echo yes || echo no)
+else
+  has_guardrail_section=$(grep -nE "^F\) Structural Quality Gate Record|^## F\) Structural Quality Gate" "$file" >/dev/null 2>&1 && echo yes || echo no)
+fi
+
+if [[ "$has_guardrail_section" != "yes" ]]; then
   echo "ok: guardrail section not present (not applicable for ${change_id})"
   exit 0
 fi
 
-decision_line=$(rg -n "^- Decision and approval:" "$file" -m 1 || true)
+if command -v rg >/dev/null 2>&1; then
+  decision_line=$(rg -n "^- Decision and Authorization:" "$file" || true)
+else
+  decision_line=$(grep -nE "^- Decision and Authorization:" "$file" || true)
+fi
 if [[ -z "$decision_line" ]]; then
-  echo "error: guardrail section exists but missing '- Decision and approval:' line in ${file}" >&2
+  echo "error: guardrail section exists but missing '- Decision and Authorization:' line in ${file}" >&2
   exit 1
 fi
 
-value="$(echo "$decision_line" | sed -E 's/^[0-9]+:- Decision and approval: *//')"
+value="$(echo "$decision_line" | sed -E 's/^[0-9]+:- Decision and Authorization: *//')"
 
 if [[ -z "$value" || "$value" == "<"* || "$value" == "TBD"* ]]; then
   echo "error: unresolved guardrail decision in ${file}" >&2
@@ -141,16 +155,30 @@ fi
 echo "ok: guardrail decision present for ${change_id}"
 
 # =============================================================================
-# Role Permission Checks (inspired by VS Code-style role separation)
+# Role Permission Checks (inspired by VS Code role permission separation)
 # =============================================================================
 
-# Forbidden file patterns per role
-declare -A ROLE_FORBIDDEN_PATTERNS
-ROLE_FORBIDDEN_PATTERNS[coder]="tests/|test/|\.test\.|\.spec\.|__tests__|verification\.md"
-ROLE_FORBIDDEN_PATTERNS[test-owner]=""  # test-owner may modify tests
-ROLE_FORBIDDEN_PATTERNS[reviewer]=".*"  # reviewer should not modify files
+# Define file patterns forbidden for each role.
+# Use a plain function instead of associative arrays for bash 3.2 compatibility (macOS default).
+role_forbidden_patterns() {
+  local role_name="$1"
+  case "$role_name" in
+    coder)
+      echo "tests/|test/|\\.test\\.|\\.spec\\.|__tests__|verification\\.md"
+      ;;
+    test-owner)
+      echo ""  # test-owner can modify test files
+      ;;
+    reviewer)
+      echo ".*"  # reviewer should not modify any files
+      ;;
+    *)
+      echo ""
+      ;;
+  esac
+}
 
-# Sensitive files forbidden for all roles (unless explicitly declared)
+# Define sensitive files forbidden for all roles (similar to VS Code engineering system protection)
 SENSITIVE_PATTERNS="\.devbooks/|\.github/workflows/|build/|package-lock\.json|yarn\.lock|pnpm-lock\.yaml|Cargo\.lock"
 
 check_role_permissions() {
@@ -163,13 +191,13 @@ check_role_permissions() {
 
   echo "info: checking role permissions for '${role}'..."
 
-  # Determine changed files (git diff or change package hints)
+  # Get list of changed files (from git diff or change package record)
   local changed_files=""
   if [[ -d "${project_root}/.git" ]]; then
     changed_files=$(cd "$project_root" && git diff --name-only HEAD~1 2>/dev/null || true)
   fi
 
-  # If git is unavailable, attempt to parse proposal.md Impact section
+  # If no git, try reading from proposal.md Impact section
   if [[ -z "$changed_files" && -f "${change_path}/proposal.md" ]]; then
     changed_files=$(grep -A 100 "^## Impact" "${change_path}/proposal.md" | grep -E "^\s*-\s+\`" | sed 's/.*`\([^`]*\)`.*/\1/' || true)
   fi
@@ -179,20 +207,21 @@ check_role_permissions() {
     return 0
   fi
 
-  local forbidden="${ROLE_FORBIDDEN_PATTERNS[$role]:-}"
+  local forbidden
+  forbidden="$(role_forbidden_patterns "$role")"
   local violations=""
 
   while IFS= read -r file; do
     [[ -z "$file" ]] && continue
 
-    # Role-specific forbidden patterns
+    # Check role-specific forbidden patterns
     if [[ -n "$forbidden" ]] && echo "$file" | grep -qE "$forbidden"; then
       violations="${violations}\n  - ${file} (forbidden for role '${role}')"
     fi
 
-    # Sensitive files (require explicit declaration)
+    # Check sensitive files (forbidden for all roles unless explicitly declared)
     if echo "$file" | grep -qE "$SENSITIVE_PATTERNS"; then
-      # Require engineering-system-change tag in proposal.md
+      # Check if proposal.md has engineering-system-change tag
       if ! grep -q "engineering-system-change" "${change_path}/proposal.md" 2>/dev/null; then
         violations="${violations}\n  - ${file} (sensitive file requires 'engineering-system-change' tag in proposal.md)"
       fi
@@ -229,8 +258,8 @@ check_lockfile_changes() {
   fi
 
   if [[ -n "$changed_lockfiles" ]]; then
-    # proposal.md must explicitly declare dependency changes
-    if ! grep -qiE "(dependency|dependencies|deps|upgrade|update)" "${change_path}/proposal.md" 2>/dev/null; then
+    # Check if proposal.md explicitly declares dependency changes
+    if ! grep -qE "(dependency|deps|upgrade|update.*package)" "${change_path}/proposal.md" 2>/dev/null; then
       echo "error: lockfile changes detected (${changed_lockfiles}) but proposal.md does not declare dependency changes" >&2
       echo "hint: add dependency change description to proposal.md or use '--check-lockfile=false'" >&2
       return 1
@@ -258,7 +287,7 @@ check_engineering_changes() {
   fi
 
   if [[ -n "$eng_changes" ]]; then
-    # Require engineering-system-change tag in proposal.md
+    # Check if proposal.md has engineering-system-change tag
     if ! grep -q "engineering-system-change" "${change_path}/proposal.md" 2>/dev/null; then
       echo "error: engineering system changes detected but proposal.md missing 'engineering-system-change' tag:" >&2
       echo "$eng_changes" | sed 's/^/  - /' >&2
@@ -271,8 +300,8 @@ check_engineering_changes() {
 }
 
 # =============================================================================
-# Layering Constraints Check (dependency guard)
-# Prevent dependency direction violations (upper layers must not depend on lower-level implementation details)
+# Layering Constraints Check (Dependency Guard)
+# Prevent dependency direction violations (upper layer cannot directly depend on lower layer implementation details)
 # =============================================================================
 
 check_layering_constraints() {
@@ -281,7 +310,7 @@ check_layering_constraints() {
 
   echo "info: checking layering constraints (dependency guard)..."
 
-  # If truth_root is missing or constraints file does not exist, skip
+  # Skip if no truth_root or constraints file doesn't exist
   if [[ -z "$truth_root" ]]; then
     echo "warn: --truth-root not specified, skipping layering check"
     return 0
@@ -290,6 +319,11 @@ check_layering_constraints() {
   if [[ ! -f "$constraints_file" ]]; then
     echo "warn: no layering constraints file found at ${constraints_file}, skipping"
     return 0
+  fi
+
+  if ! command -v rg >/dev/null 2>&1; then
+    echo "error: missing dependency: rg (ripgrep) required for layering checks" >&2
+    return 2
   fi
 
   # Get changed files
@@ -305,7 +339,10 @@ check_layering_constraints() {
 
   local violations=""
 
-  # Note: this is a heuristic check; see constraints file for authoritative rules.
+  # Parse layering rules from constraints file
+  # Format: | base | src/base/ | ... | (none) | platform, domain, ... |
+
+  # Common layering violation checks
   while IFS= read -r file; do
     [[ -z "$file" ]] && continue
     [[ ! "$file" =~ \.(ts|tsx|js|jsx|py|go|java|rs)$ ]] && continue
@@ -313,25 +350,25 @@ check_layering_constraints() {
     local file_path="${project_root}/${file}"
     [[ ! -f "$file_path" ]] && continue
 
-    # base must not import platform/domain/application/ui
+    # Check if base layer imports platform/domain/application/ui
     if [[ "$file" =~ ^src/base/ ]] || [[ "$file" =~ /base/ ]]; then
       if rg -q "from ['\"].*(platform|domain|application|app|ui)/" "$file_path" 2>/dev/null; then
         violations="${violations}\n  - ${file}: base layer imports upper layer"
       fi
     fi
 
-    # common must not import browser/node specific code
+    # Check if common layer imports browser/node specific code
     if [[ "$file" =~ /common/ ]]; then
       if rg -q "from ['\"].*(browser|node)/" "$file_path" 2>/dev/null; then
         violations="${violations}\n  - ${file}: common layer imports platform-specific code"
       fi
-      # common must not use DOM APIs
+      # Check if using DOM API
       if rg -q "(document\.|window\.|navigator\.)" "$file_path" 2>/dev/null; then
         violations="${violations}\n  - ${file}: common layer uses DOM API"
       fi
     fi
 
-    # core should not import contrib
+    # Check if core imports contrib
     if [[ "$file" =~ /core/ ]] || [[ "$file" =~ /services/ ]]; then
       if rg -q "from ['\"].*contrib/" "$file_path" 2>/dev/null; then
         violations="${violations}\n  - ${file}: core imports contrib (violates extension point design)"
@@ -357,7 +394,7 @@ check_layering_constraints() {
 check_circular_dependencies() {
   echo "info: checking for circular dependencies..."
 
-  # If madge is available, use it
+  # Check if madge tool is available
   if command -v madge >/dev/null 2>&1; then
     local circular=""
     circular=$(cd "$project_root" && madge --circular --warning src/ 2>/dev/null | grep -E "^\s+[a-zA-Z]" || true)
@@ -368,10 +405,15 @@ check_circular_dependencies() {
       return 1
     fi
   else
-    # Fallback: use a heuristic grep-based check
+    # Fallback: use simple grep to detect common circular patterns
     echo "info: madge not available, using basic circular detection"
 
-    # Heuristic: look for mutual imports within the change set
+    if ! command -v rg >/dev/null 2>&1; then
+      echo "error: missing dependency: rg (ripgrep) required for fallback circular checks" >&2
+      return 2
+    fi
+
+    # Check if files both import each other (simple heuristic)
     if [[ -d "${project_root}/.git" ]]; then
       local changed_files
       changed_files=$(cd "$project_root" && git diff --name-only HEAD~1 2>/dev/null | grep -E '\.(ts|js|tsx|jsx)$' || true)
@@ -381,11 +423,11 @@ check_circular_dependencies() {
         local file_path="${project_root}/${file}"
         [[ ! -f "$file_path" ]] && continue
 
-        # Get imports for the file
+        # Get file's imports
         local imports
         imports=$(rg "^import .* from ['\"]\./" "$file_path" 2>/dev/null | sed "s/.*from ['\"]\\([^'\"]*\\)['\"].*/\\1/" || true)
 
-        # Check if imported files import back into the current file
+        # Check if imported files import current file back
         local file_base
         file_base=$(basename "$file" | sed 's/\.[^.]*$//')
 
@@ -408,7 +450,7 @@ check_circular_dependencies() {
 
 # =============================================================================
 # Hotspot Warning Check
-# Hotspot = high churn × high complexity
+# Hotspot = High change frequency x High complexity
 # =============================================================================
 
 check_hotspot_changes() {
@@ -417,13 +459,13 @@ check_hotspot_changes() {
 
   echo "info: checking if changes touch hotspots..."
 
-  # If hotspots.md exists, parse hotspot list
+  # If hotspots file exists, read hotspot list from it
   local hotspot_files=""
   if [[ -n "$truth_root" && -f "$hotspots_file" ]]; then
-    hotspot_files=$(grep -E "^\| " "$hotspots_file" | grep -v "File\\|---" | awk -F'|' '{print $2}' | tr -d ' ' || true)
+    hotspot_files=$(grep -E "^\| " "$hotspots_file" | grep -v "File\|---" | awk -F'|' '{print $2}' | tr -d ' ' || true)
   fi
 
-  # If no hotspot file, compute from git history
+  # If no hotspots file, try computing from git history
   if [[ -z "$hotspot_files" && -d "${project_root}/.git" ]]; then
     echo "info: no hotspots.md found, computing from git history (top 10 churn files)..."
     hotspot_files=$(cd "$project_root" && git log --oneline --name-only --since="30 days ago" 2>/dev/null | \
@@ -452,9 +494,9 @@ check_hotspot_changes() {
   done <<< "$changed_files"
 
   if [[ -n "$hotspot_hits" ]]; then
-    echo -e "warn: changes touch high-risk hotspots (high churn × complexity):${hotspot_hits}" >&2
+    echo -e "warn: changes touch high-risk hotspots (high churn x complexity):${hotspot_hits}" >&2
     echo "hint: consider extra review and testing for these files" >&2
-    # Warning only: does not block merge
+    # This is a warning, not an error, does not block merge
   fi
 
   echo "ok: hotspot check completed"
@@ -467,50 +509,81 @@ check_hotspot_changes() {
 
 exit_code=0
 
-# Role permission checks
+update_exit_code() {
+  local rc="$1"
+
+  if [[ $rc -eq 0 ]]; then
+    return 0
+  fi
+
+  # Preserve usage/tooling errors for callers that rely on exit code semantics.
+  if [[ $rc -eq 2 ]]; then
+    exit_code=2
+    return 0
+  fi
+
+  # If we have already hit a tooling error, keep 2 as the final status.
+  if [[ $exit_code -ne 2 ]]; then
+    exit_code=1
+  fi
+
+  return 0
+}
+
+# Role permission check
 if [[ -n "$role" ]]; then
   change_path=$(dirname "$file")
-  if ! check_role_permissions "$role" "$change_path"; then
-    exit_code=1
+  if check_role_permissions "$role" "$change_path"; then
+    :
+  else
+    update_exit_code $?
   fi
 fi
 
-# Lockfile checks
+# Lockfile check
 if [[ "$check_lockfile" == "true" ]]; then
   change_path=$(dirname "$file")
-  if ! check_lockfile_changes "$change_path"; then
-    exit_code=1
+  if check_lockfile_changes "$change_path"; then
+    :
+  else
+    update_exit_code $?
   fi
 fi
 
-# Engineering system change checks
+# Engineering system change check
 if [[ "$check_engineering" == "true" ]]; then
   change_path=$(dirname "$file")
-  if ! check_engineering_changes "$change_path"; then
-    exit_code=1
+  if check_engineering_changes "$change_path"; then
+    :
+  else
+    update_exit_code $?
   fi
 fi
 
-# Layering constraints checks
+# Layering constraint check (Dependency Guard)
 if [[ "$check_layers" == "true" ]]; then
   change_path=$(dirname "$file")
-  if ! check_layering_constraints "$change_path"; then
-    exit_code=1
+  if check_layering_constraints "$change_path"; then
+    :
+  else
+    update_exit_code $?
   fi
 fi
 
-# Circular dependency checks
+# Circular dependency check
 if [[ "$check_cycles" == "true" ]]; then
-  if ! check_circular_dependencies; then
-    exit_code=1
+  if check_circular_dependencies; then
+    :
+  else
+    update_exit_code $?
   fi
 fi
 
-# Hotspot warnings (do not block, but record)
+# Hotspot warning check (warning only, does not affect exit code)
 if [[ "$check_hotspots" == "true" ]]; then
   change_path=$(dirname "$file")
   check_hotspot_changes "$change_path"
-  # Hotspots are warnings only; do not affect exit_code
+  # Hotspots are just warnings, do not affect exit_code
 fi
 
 exit $exit_code

@@ -24,12 +24,7 @@ Evidence: reference artifact paths and the decision/judge status.
 Use when you need: option sets, risk framing, open questions, debate packet structuring.
 
 ### Extended (Optional)
-Use when you need: faster search/impact via optional MCP capabilities.
-
-## Recommended MCP Capability Types
-- Code search (code-search)
-- Reference tracking (reference-tracking)
-- Impact analysis (impact-analysis)
+Use when you need: faster search/impact via code intelligence or reference tools.
 
 ## Prerequisites: Configuration Discovery (Protocol Agnostic)
 

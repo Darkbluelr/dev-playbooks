@@ -6,7 +6,7 @@ set -euo pipefail
 # ============================================================================
 # Generates a human-readable markdown report from entropy metrics.
 #
-# Reference: The Mythical Man-Month, Ch. 16 “No Silver Bullet” — controlling complexity is key
+# Reference: "The Mythical Man-Month" Chapter 16 "No Silver Bullet" - Controlling complexity is key to software development
 # ============================================================================
 
 usage() {
@@ -177,20 +177,20 @@ health_status() {
 cat > "$output_file" << EOF
 # System Entropy Report
 
-> Generated at: ${timestamp}
-> Project: ${project}
-> Analysis window: ${days} days
+> Generated: ${timestamp}
+> Project path: ${project}
+> Analysis period: ${days} days
 
 ---
 
 ## Overview
 
-| Dimension | Health | Key metric |
-|------|---------|---------|
-| Structural entropy | $(health_status "$file_p95" "$t_file_p95" "lt") | File LOC P95: ${file_p95} |
-| Change entropy | $(health_status "$hotspot_ratio" "$t_hotspot" "lt") | Hotspot ratio: ${hotspot_ratio} |
-| Test entropy | $(health_status "$test_code_ratio" "$t_test_ratio" "gt") | Test/code ratio: ${test_code_ratio} |
-| Dependency entropy | $(health_status "$outdated_ratio" "$t_outdated" "lt") | Outdated ratio: ${outdated_ratio} |
+| Dimension | Health Status | Key Metric |
+|-----------|---------------|------------|
+| Structural Entropy | $(health_status "$file_p95" "$t_file_p95" "lt") | File lines P95: ${file_p95} |
+| Change Entropy | $(health_status "$hotspot_ratio" "$t_hotspot" "lt") | Hotspot file ratio: ${hotspot_ratio} |
+| Test Entropy | $(health_status "$test_code_ratio" "$t_test_ratio" "gt") | Test/code ratio: ${test_code_ratio} |
+| Dependency Entropy | $(health_status "$outdated_ratio" "$t_outdated" "lt") | Outdated dependency ratio: ${outdated_ratio} |
 
 **Healthy dimensions**: ${healthy_count}/4 | **Alerts**: ${alert_count}
 
@@ -198,65 +198,65 @@ cat > "$output_file" << EOF
 
 ## A) Structural Entropy
 
-> Source: static code analysis
+> Source: Static code analysis
 
-| Metric | Value | Threshold | Status |
-|------|-------|------|------|
-| File LOC P95 | ${file_p95} | < ${t_file_p95} | $(health_status "$file_p95" "$t_file_p95" "lt") |
-| File LOC mean | ${file_mean} | - | ⚪ |
+| Metric | Current Value | Threshold | Status |
+|--------|---------------|-----------|--------|
+| File lines P95 | ${file_p95} | < ${t_file_p95} | $(health_status "$file_p95" "$t_file_p95" "lt") |
+| File lines mean | ${file_mean} | - | ⚪ |
 | Cyclomatic complexity mean | ${complexity_mean} | < 10 | ⚪ |
 | Cyclomatic complexity P95 | ${complexity_p95} | < 20 | ⚪ |
 
-**Recommendation**: investigate large P95 files and consider splitting them.
+**Recommendation**: Focus on files above P95, consider splitting.
 
 ---
 
 ## B) Change Entropy
 
-> Source: git history analysis (last ${days} days)
+> Source: Git history analysis (past ${days} days)
 
-| Metric | Value | Threshold | Status |
-|------|-------|------|------|
-| Hotspot files | ${hotspot_count} / ${total_files} | - | ⚪ |
-| Hotspot ratio | ${hotspot_ratio} | < ${t_hotspot} | $(health_status "$hotspot_ratio" "$t_hotspot" "lt") |
+| Metric | Current Value | Threshold | Status |
+|--------|---------------|-----------|--------|
+| Hotspot file count | ${hotspot_count} / ${total_files} | - | ⚪ |
+| Hotspot file ratio | ${hotspot_ratio} | < ${t_hotspot} | $(health_status "$hotspot_ratio" "$t_hotspot" "lt") |
 
-**Hotspot definition**: files modified more than 5 times within the analysis window
+**Hotspot definition**: Files modified more than 5 times during the analysis period
 
-**Recommendation**: frequently changed files often need refactoring or decomposition.
+**Recommendation**: Frequently modified files may need refactoring or splitting.
 
 ---
 
 ## C) Test Entropy
 
-> Source: test file statistics
+> Source: Test file statistics
 
-| Metric | Value | Threshold | Status |
-|------|-------|------|------|
-| Test LOC | ${test_lines} | - | ⚪ |
-| Production LOC | ${code_lines} | - | ⚪ |
+| Metric | Current Value | Threshold | Status |
+|--------|---------------|-----------|--------|
+| Test code lines | ${test_lines} | - | ⚪ |
+| Production code lines | ${code_lines} | - | ⚪ |
 | Test/code ratio | ${test_code_ratio} | > ${t_test_ratio} | $(health_status "$test_code_ratio" "$t_test_ratio" "gt") |
-| Flaky ratio | ${flaky_ratio} | < 0.01 | ⚪ |
-| Coverage | ${coverage} | > 0.7 | ⚪ |
+| Flaky test ratio | ${flaky_ratio} | < 0.01 | ⚪ |
+| Code coverage | ${coverage} | > 0.7 | ⚪ |
 
-**Recommendation**: if test/code ratio is below 0.5, prioritize adding tests.
+**Recommendation**: When test/code ratio is below 0.5, prioritize adding tests.
 
 ---
 
 ## D) Dependency Entropy
 
-> Source: dependency analysis
+> Source: Dependency analysis
 
-| Metric | Value | Threshold | Status |
-|------|-------|------|------|
-| Outdated deps | ${outdated} / ${total_deps} | - | ⚪ |
-| Outdated ratio | ${outdated_ratio} | < ${t_outdated} | $(health_status "$outdated_ratio" "$t_outdated" "lt") |
-| Vulnerabilities | ${vulnerabilities} | = 0 | $(health_status "$vulnerabilities" "0" "lt") |
+| Metric | Current Value | Threshold | Status |
+|--------|---------------|-----------|--------|
+| Outdated dependency count | ${outdated} / ${total_deps} | - | ⚪ |
+| Outdated dependency ratio | ${outdated_ratio} | < ${t_outdated} | $(health_status "$outdated_ratio" "$t_outdated" "lt") |
+| Security vulnerability count | ${vulnerabilities} | = 0 | $(health_status "$vulnerabilities" "0" "lt") |
 
-**Recommendation**: update dependencies regularly and prioritize security fixes.
+**Recommendation**: Regularly update dependencies, prioritize fixing security vulnerabilities.
 
 ---
 
-## Alerts
+## Alert Details
 
 EOF
 
@@ -264,7 +264,7 @@ EOF
 if [[ "$alert_count" -gt 0 ]]; then
   jq -r '.alerts[] | "- **[\(.level | ascii_upcase)]** \(.dimension): \(.message)"' "$input_file" >> "$output_file"
 else
-  echo "No alerts ✅" >> "$output_file"
+  echo "No alerts" >> "$output_file"
 fi
 
 cat >> "$output_file" << EOF
@@ -273,7 +273,7 @@ cat >> "$output_file" << EOF
 
 ## Trend Analysis
 
-> Trend charts require multiple data points over time
+> Trend charts can be generated after multiple data collections
 
 View historical data: \`${entropy_dir}/history.json\`
 
@@ -285,19 +285,19 @@ EOF
 
 # Generate recommendations based on alerts
 if [[ "$alert_count" -gt 0 ]]; then
-  echo "1. Address high-priority items in the alerts above" >> "$output_file"
-  echo "2. Run \`change-check.sh\` to verify change package integrity" >> "$output_file"
-  echo "3. Consider using \`devbooks-proposal-author\` to start a refactoring proposal" >> "$output_file"
+  echo "1. Address high-priority issues from the alerts above" >> "$output_file"
+  echo "2. Run \`change-check.sh\` to ensure change package completeness" >> "$output_file"
+  echo "3. Consider using \`devbooks-proposal-author\` to initiate refactoring proposal" >> "$output_file"
 else
-  echo "No urgent action required; monitor entropy trends regularly." >> "$output_file"
+  echo "No urgent action needed currently, recommend regular monitoring of entropy metrics." >> "$output_file"
 fi
 
 cat >> "$output_file" << EOF
 
 ---
 
-*Report generated by entropy-report.sh*
-*Reference: The Mythical Man-Month, Ch. 16 “No Silver Bullet”*
+*Report automatically generated by entropy-report.sh*
+*Reference: "The Mythical Man-Month" Chapter 16 "No Silver Bullet"*
 EOF
 
 echo "ok: report generated: ${output_file}"

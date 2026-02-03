@@ -23,12 +23,7 @@ Evidence: reference the updated file path and summary counts (files/risks).
 Use when you need: transitive impact, risk heatmap, open questions.
 
 ### Extended (Optional)
-Use when you need: faster search/graph impact via optional MCP capabilities.
-
-## Recommended MCP Capability Types
-- Code search (code-search)
-- Reference tracking (reference-tracking)
-- Impact analysis (impact-analysis)
+Use when you need: faster search/graph impact via code intelligence or reference tools.
 
 ## Prerequisites: Configuration Discovery (Protocol Agnostic)
 

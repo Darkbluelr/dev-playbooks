@@ -1,220 +1,172 @@
 # DevBooks
 
-**Quality gates for AI coding: turn assistants from "unpredictable" into "verifiable"**
-
 [![npm](https://img.shields.io/npm/v/dev-playbooks)](https://www.npmjs.com/package/dev-playbooks)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-![DevBooks Workflow](docs/workflow-diagram.svg)
+## What's New in v4.0
+
+- **Completion Contract**: Compiles user intent into machine-readable contracts, locking "obligation → check → evidence" chains to prevent AI from silently lowering delivery standards
+- **7 Gates (G0-G6)**: Full-chain judgeable checkpoints from input readiness to archive decision — any failure blocks
+- **Upstream SSOT Support**: Auto-indexes existing project requirement docs, extracts judgeable constraints; creates minimal SSOT package when no docs exist
+- **Knife Slicing Protocol**: Large requirements must be sliced, each slice has complexity budget — over budget means slice again
+- **Void Research Protocol**: High-entropy problems get researched before decisions, producing traceable Architecture Decision Records (ADR)
+- **Evidence Freshness Check**: Evidence files must be newer than covered deliverables — no cheating with stale evidence
+- **Weak-Link Obligations**: Docs, configs, release notes and other "non-code contracts" are also compiled into judgeable obligations
 
 ---
 
-## Best Practice: Run the Full Loop in One Command
+## Do you run into these problems when using AI to write code?
 
-Not sure how to start? Just run:
+**"Says it's fixed, but it's not"**
+AI says "Fixed." You ask if it's sure. It says "Yes." You deploy. It breaks. Turns out the test it wrote happens to pass its own bug.
+
+**"Forgets what you said earlier"**
+At the start you said "Don't touch module X." Thirty messages later, it touched module X. You remind it. It apologizes. Next turn, it does it again.
+
+**"Falls apart on bigger tasks"**
+Small features are fine. Anything complex and it starts hallucinating. Fixes A, breaks B. Fixes B, breaks C.
+
+**"You can't tell if it's actually done"**
+It says "Done." You don't trust it. You ask it to double-check. It says "Checked, all good." You still don't trust it.
+
+**"Have to re-teach it every time"**
+Conventions from the last conversation? Gone. Project terminology, boundaries, constraints? Explain them again.
+
+**"Don't know what it actually changed"**
+It modified a bunch of files. You ask what changed. It gives you a summary. Is the summary accurate? You have no idea.
+
+---
+
+## These aren't AI being dumb. They're structural problems.
+
+Better prompts won't fix this. It's how LLMs work:
+
+| Problem | Root Cause |
+|---------|------------|
+| Says fixed but isn't | Writes tests that validate its own code — of course they pass |
+| Forgets earlier context | Context window is limited; early info gets pushed out |
+| Falls apart on big tasks | Complexity exceeds what a single conversation can handle |
+| Can't tell if it's done | No objective evidence, just verbal claims |
+| Re-teach every time | Conversations are temporary; knowledge isn't persisted |
+| Don't know what changed | No auditable change record |
+
+---
+
+## DevBooks: Engineering constraints that solve these problems
 
 ```bash
-/devbooks-delivery-workflow
-```
-
-This skill orchestrates the full development loop: Proposal -> Design -> Spec -> Plan -> Test -> Implement -> Review -> Archive
-
-**Best for**: new feature work, major refactors, teams new to DevBooks
-
-If you're not sure which entrypoint to use, start with:
-
-```bash
-/devbooks:start
-```
-
-Start is the default entrypoint. It routes you to the shortest closed-loop next step.
-
----
-
-## Positioning and Writing Conventions
-
-DevBooks is not an MCP tool. It provides optional MCP integration points plus a small set of self-check scripts.
-DevBooks is a collaboration system built around protocols, workflows, and writing conventions, emphasizing traceability and verifiability.
-
-Constraints: the core flow must remain traceable and auditable.
-Trade-offs: prioritize consistency checks, accept some automation overhead.
-Impact: better document scanability and lower collaboration cost.
-
----
-
-## Core Problems We Solve
-
-### Problem 1: Logic hallucinations and fabricated facts
-
-**Pain**: When unsure, AI tends to invent APIs or code instead of admitting uncertainty.
-
-**DevBooks approach**:
-- Spec-driven development: all code must trace to AC-xxx (acceptance criteria)
-- Contract tests: validate external contracts and prevent API hallucinations
-
-### Problem 2: Non-convergent debugging
-
-**Pain**: Fixing one bug introduces two more, creating a whack-a-mole loop.
-
-**DevBooks approach**:
-- Role isolation: Test Owner produces a Red baseline first; Coder cannot modify tests
-- Convergence audit: `devbooks-convergence-audit` evaluates whether a change package is truly progressing
-
-### Problem 3: Local optima and short-sighted solutions
-
-**Pain**: AI tends to generate local, runnable code blocks without considering overall architecture.
-
-**DevBooks approach**:
-- Design first: design docs define What/Constraints, not How
-- Architecture constraints: fitness rules validate architecture rules
-- Impact analysis: assess cross-module impact before changes
-
-### Problem 4: Verification fatigue
-
-**Pain**: AI generates fast, human review attention decays over time.
-
-**DevBooks approach**:
-- Automated quality gates: green evidence checks, task completion, role boundary checks
-- Enforced review: Reviewer focuses on maintainability; business correctness is proven by tests
-
----
-
-## Quick Start
-
-### Install
-
-```bash
-# install globally
 npm install -g dev-playbooks
-
-# initialize in a project
 dev-playbooks init
+dev-playbooks delivery
 ```
 
-### Update
+| Problem | How DevBooks Solves It |
+|---------|------------------------|
+| Self-validation | **Role isolation**: Test-writing agent and code-writing agent must be separate — can't see each other's reasoning |
+| Context amnesia | **Truth to disk**: Terms, boundaries, constraints written in files, not dependent on conversation memory |
+| Too complex | **Slicing budget**: Large requirements must be sliced into small pieces, each with complexity cap — over budget means slice again |
+| Verbal completion | **Evidence defines done**: Test logs, build outputs must actually exist on disk |
+| Re-teach every time | **SSOT (Single Source of Truth)**: Project knowledge persisted in specs/, stable across conversations and changes |
+| Don't know what changed | **Change packages**: Every change has complete record — proposal, design, tasks, evidence |
+
+---
+
+## How it works
+
+You only need to remember one command:
 
 ```bash
-dev-playbooks update
+dev-playbooks delivery
 ```
 
-### Supported AI tools
-
-| Tool | Support level |
-|------|---------------|
-| Claude Code | Full Skills (`.claude/skills/`) |
-| Codex CLI | Full Skills (`.codex/skills/`) |
-| Qoder | Full Skills |
-| OpenCode | Full Skills |
-| Every Code | Full Skills |
-| Factory | Native Skills (`.factory/skills/`) |
-| Cursor | Native Skills (`.cursor/skills/`) |
-| Windsurf | Rules system |
-| Gemini CLI | Rules system |
-
----
-
-## Docs
-
-- [DevBooks setup guide](docs/devbooks-setup-guide.md) - setup instructions
-- [AI-native workflow](docs/ai-native-workflow.md) - workflow, roles, evidence
-- [Recommended MCP](docs/Recommended-MCP.md) - MCP server recommendations
-
----
-
-## Core Principles
-
-### 1. Role Isolation
-
-Test Owner and Coder **must work in separate conversations**. This is not optional.
-
-**Isolation baseline**:
-- Do not write tests and implementation in the same chat
-- Tests are used to verify specs
-
-### 2. Spec-Driven
-
-All code must trace to AC-xxx (acceptance criteria).
+The system asks a few questions, then generates a `RUNBOOK.md` — your operation manual for this task. Just follow it.
 
 ```
-Requirement -> Proposal -> Design (AC-001, AC-002) -> Spec -> Tasks -> Tests -> Code
-```
-
-### 3. Evidence-First
-
-Completion is defined by evidence, not AI declarations.
-
-Required evidence:
-- Tests pass (green evidence)
-- Build succeeds
-- Static checks pass
-- Task completion rate 100%
-
----
-
-## Workflow
-
-```
-1. Proposal - analyze requirements, assess impact
-2. Design - define What/Constraints + AC-xxx
-3. Spec - define external behavior contracts
-4. Plan - create implementation plan and task breakdown
-5. Test - write acceptance tests (separate conversation)
-6. Implement - implement features (separate conversation)
-7. Review - code review
-8. Archive - archive the change package
+Your request
+    ↓
+Delivery (determine type, generate RUNBOOK)
+    ↓
+┌─────────────────────────────────┐
+│ Small change → Execute directly │
+│ Large request → Slice first     │
+│ Uncertain → Research first      │
+└─────────────────────────────────┘
+    ↓
+Gate checks (7 checkpoints, any failure blocks)
+    ↓
+Evidence archive (test logs, build outputs, approvals)
 ```
 
 ---
 
-## 18 Skills
+## Core Mechanisms
 
-| Skill | Phase | Purpose |
-|-------|------|---------|
-| devbooks-router | Entry | Workflow guidance |
-| devbooks-proposal-author | Proposal | Write proposals |
-| devbooks-proposal-challenger | Proposal | Challenge proposals |
-| devbooks-proposal-judge | Proposal | Judge proposals |
-| devbooks-design-doc | Design | Write design docs |
-| devbooks-spec-contract | Spec | Define specs and contracts |
-| devbooks-implementation-plan | Plan | Create implementation plans |
-| devbooks-test-owner | Test | Write acceptance tests |
-| devbooks-test-reviewer | Review | Test review |
-| devbooks-coder | Implement | Implement tasks |
-| devbooks-reviewer | Review | Code review |
-| devbooks-archiver | Archive | Archive change packages |
-| devbooks-docs-consistency | Quality | Docs consistency checks |
-| devbooks-impact-analysis | Quality | Impact analysis |
-| devbooks-convergence-audit | Quality | Convergence audit |
-| devbooks-entropy-monitor | Quality | Entropy monitoring |
-| devbooks-brownfield-bootstrap | Init | Brownfield bootstrap |
-| devbooks-delivery-workflow | Full | Full loop orchestration |
+**Single Source of Truth (SSOT)**
 
-See [DevBooks setup guide](docs/devbooks-setup-guide.md) for configuration details.
+```
+Your requirement docs (if any)
+    ↓ Extract constraints
+specs/ (terms, boundaries, decisions) ← "Project memory" stable across changes
+    ↓
+changes/<id>/ (this change's proposal, design, tasks, evidence)
+    ↓ Archive
+specs/ (update truth)
+```
+
+If you don't have requirement docs, DevBooks will help you create a minimal one. This is actually good — it forces you to clarify vague ideas.
+
+**Completion Contract**
+
+Compiles "what I want" into a machine-checkable list:
+- 5 obligations
+- Each has a corresponding check
+- Each has a corresponding evidence file
+
+Not "roughly done," but "all 5 have evidence."
+
+**7 Gates (G0-G6)**
+
+| Gate | What It Checks |
+|------|----------------|
+| G0 | Is input ready? Are requirements clear? |
+| G1 | Are all required files present? |
+| G2 | Are all tasks complete? |
+| G3 | Is slicing correct? (large requests) |
+| G4 | Are docs in sync? |
+| G5 | Is risk covered? (high-risk changes) |
+| G6 | Is evidence complete? Ready to archive? |
+
+Any failure blocks the flow. Not a warning. A block.
 
 ---
 
-## Traditional AI Coding Comparison
+## Directory Structure
 
-### Comparison with traditional AI coding
+```
+project/
+├── .devbooks/config.yaml     # Config
+└── dev-playbooks/
+    ├── constitution.md       # Hard constraints (non-bypassable rules)
+    ├── specs/                # Truth source (stable across changes)
+    └── changes/              # Change packages (one directory per change)
+        └── <change-id>/
+            ├── proposal.md   # Why and what
+            ├── design.md     # How, acceptance criteria
+            ├── tasks.md      # Executable steps
+            ├── verification.md # How to prove it's correct
+            └── evidence/     # Test logs, build outputs
+```
 
-| Traditional AI coding | DevBooks |
-|----------------------|----------|
-| AI self-declares "done" | Tests pass + build succeeds |
-| Tests and code in same chat | Role isolation, separate conversations |
-| No verification gates | Multiple quality gates |
-| Fix one bug, create two | Stable convergence |
-| Only supports greenfield | Supports brownfield |
+---
 
-### Use cases
+## Next Steps
 
-- New feature development
-- Major refactors
-- Bug fixes
-- Brownfield onboarding
-- Projects that demand high quality
+- [Quick Start](docs/Usage-Guide.md)
+- [AI-Native Workflow](docs/ai-native-workflow.md)
+- [Skill Reference](docs/Skill-Details.md)
 
 ---
 
 ## License
 
-MIT License - see [LICENSE](LICENSE)
+MIT

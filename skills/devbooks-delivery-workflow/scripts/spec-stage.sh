@@ -1,17 +1,17 @@
 #!/bin/bash
 # skills/devbooks-delivery-workflow/scripts/spec-stage.sh
-# Spec staging script
+# Spec Staging Script
 #
-# Syncs a change package's spec deltas into the staging layer.
+# Syncs the spec delta from a change package to the staging layer.
 #
 # Usage:
 #   ./spec-stage.sh <change-id> [options]
 #   ./spec-stage.sh --help
 #
 # Exit codes:
-#   0 - success
-#   1 - failure (conflicts)
-#   2 - usage error
+#   0 - Staging successful
+#   1 - Staging failed (conflicts)
+#   2 - Usage error
 
 set -euo pipefail
 
@@ -31,23 +31,23 @@ NC='\033[0m'
 
 show_help() {
     cat << 'EOF'
-Spec staging script (spec-stage.sh)
+Spec Staging Script (spec-stage.sh)
 
-usage:
+Usage:
   ./spec-stage.sh <change-id> [options]
 
-options:
-  --project-root DIR  Project root
-  --change-root DIR   Change root
-  --truth-root DIR    Truth root
-  --dry-run           Dry run (no filesystem changes)
-  --force             Force stage (ignore conflicts)
+Options:
+  --project-root DIR  Project root directory
+  --change-root DIR   Change package directory
+  --truth-root DIR    Truth source directory
+  --dry-run           Simulate run, do not actually modify files
+  --force             Force staging, ignore conflicts
   --help, -h          Show help
 
-exit codes:
-  0 - success
-  1 - failure
-  2 - usage error
+Exit codes:
+  0 - Staging successful
+  1 - Staging failed
+  2 - Usage error
 
 EOF
 }
@@ -83,32 +83,32 @@ main() {
     local staged_dir="${project_root}/${truth_root}/_staged/${change_id}"
     local specs_delta_dir="${change_dir}/specs"
 
-    log_info "staging change: ${change_id}"
+    log_info "Staging change package: ${change_id}"
 
     if [[ ! -d "$specs_delta_dir" ]]; then
-        log_info "no spec deltas; skipping"
+        log_info "No spec delta, skipping staging"
         exit 0
     fi
 
-    # Use spec-preview to check for conflicts
+    # Call spec-preview to check for conflicts
     local script_dir
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
     if [[ "$force" != true && -x "${script_dir}/spec-preview.sh" ]]; then
         if ! "${script_dir}/spec-preview.sh" "$change_id" --project-root "$project_root" --change-root "$change_root" --truth-root "$truth_root"; then
-            log_error "conflicts detected; use --force to stage anyway"
+            log_error "Conflicts exist, use --force to force staging"
             exit 1
         fi
     fi
 
     # Execute staging
     if [[ "$dry_run" == true ]]; then
-        log_info "[DRY-RUN] would create: ${staged_dir}"
-        log_info "[DRY-RUN] would copy: ${specs_delta_dir}/* -> ${staged_dir}/"
+        log_info "[DRY-RUN] Would create: ${staged_dir}"
+        log_info "[DRY-RUN] Would copy: ${specs_delta_dir}/* -> ${staged_dir}/"
     else
         mkdir -p "$staged_dir"
         cp -r "$specs_delta_dir"/* "$staged_dir"/
-        log_pass "staged to: ${staged_dir}"
+        log_pass "Staged to: ${staged_dir}"
     fi
 
     exit 0

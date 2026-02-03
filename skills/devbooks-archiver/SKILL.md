@@ -27,11 +27,6 @@ Use when you need to refine strategy, boundaries, or risk notes.
 ### Extended (Optional)
 Use when you need to coordinate with external systems or optional tools.
 
-## Recommended MCP Capability Types
-- Code search (code-search)
-- Reference tracking (reference-tracking)
-- Impact analysis (impact-analysis)
-
 ## 🚨 ABSOLUTE RULES
 
 > **These rules have no exceptions. Violation means failure.**
@@ -159,7 +154,7 @@ If check fails → Stop and output missing items, suggest user complete prerequi
 
 ### Step 2: Auto Backport Detection and Handling
 
-> **Design Decision**: Archive phase automatically handles all pending backports, users don't need to manually call design-backport.
+> **Design Decision**: Archive phase automatically handles all pending design writebacks; users don't need to manually trigger a separate writeback step.
 
 **Detection Flow**:
 
@@ -173,9 +168,9 @@ If check fails → Stop and output missing items, suggest user complete prerequi
    - DESIGN_GAP, CONSTRAINT_CHANGE, API_CHANGE → Need backport
    - Pure implementation details (filename/classname/temp steps) → Don't backport, mark as IMPL_ONLY
 
-4. Execute design backport:
+4. Execute design writeback:
    - Read design.md
-   - Update according to design-backport protocol's "backportable content scope"
+   - Update according to the "writeback content scope" (see below)
    - Add change record at the end of design.md
 
 5. Update deviation-log.md:
@@ -183,7 +178,7 @@ If check fails → Stop and output missing items, suggest user complete prerequi
    - Record backport time and archive batch
 ```
 
-**Auto Backport Content Scope** (inherited from design-backport):
+**Auto Writeback Content Scope**:
 
 | Backportable | Not Backportable |
 |--------------|------------------|

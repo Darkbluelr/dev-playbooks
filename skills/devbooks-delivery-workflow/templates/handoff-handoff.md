@@ -25,11 +25,27 @@
 - **Current status**: <brief progress summary>
 - **Key decisions**: <important decisions to know>
 - **Known issues**: <risks or issues likely to be encountered>
-- **References**: <other documents to read>
+- **References**: `RUNBOOK.md#Context Capsule` (required when risk_level=medium|high OR request_kind=epic|governance OR intervention_level=team|org); <other documents to read>
+
+### Must-run Anchors
+
+> List copy-pastable verification anchors. Keep aligned with `RUNBOOK.md#Context Capsule`.
+> If there are no additional anchors, write `N/A` (do not leave it blank).
+
+- <C-xxx> <invocation_ref / command>
+
+### Weak-Link Obligations
+
+> List code-external sync points / weak-link obligations (docs/config/release/ops/migration).
+> Prefer `completion.contract.yaml::obligations[]` `O-###` + its evidence output under `evidence/**`.
+> If there are no weak-link obligations, write `N/A` (do not leave it blank).
+
+- <O-xxx> <what to sync> -> evidence: <evidence/path>
 
 ### Remaining Work
 
 > List work the receiving role needs to complete.
+> If there is nothing left, write `N/A` (do not keep `<...>` placeholders).
 
 1. <remaining item 1>
 2. <remaining item 2>

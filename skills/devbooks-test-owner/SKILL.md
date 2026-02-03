@@ -25,13 +25,7 @@ Evidence: reference test logs and evidence paths.
 Use when you need: test layering, edge cases, isolation techniques, deviation routing.
 
 ### Extended (Optional)
-Use when you need: faster search/impact via optional MCP capabilities.
-
-## Recommended MCP Capability Types
-
-- Code search (code-search)
-- Reference tracking (reference-tracking)
-- Impact analysis (impact-analysis)
+Use when you need: faster search/impact via code intelligence or reference tools.
 
 ## Role Isolation (Mandatory)
 
@@ -74,7 +68,7 @@ If the configuration specifies `agents_doc` (rules document), you **must read th
 1. Confirm Green evidence exists under `evidence/green-final/`.
 2. Audit logs and consistency of commit hashes (if applicable).
 3. Optionally rerun a small sampling set when evidence is insufficient.
-4. Check off the AC matrix and set status to `Verified`.
+4. Check off the AC matrix and keep status as `Ready` (Reviewer sets `Done`; Archiver sets `Archived`).
 
 ## References
 

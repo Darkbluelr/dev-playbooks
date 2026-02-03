@@ -1,9 +1,9 @@
 rules:
-  - id: forbid-strongest-mind
+  - id: forbid-smart
     type: persistent
     target: content
     action: check
-    pattern: "strongest mind"
+    pattern: "智能"
   - id: remove-augment
     type: once
     target: content

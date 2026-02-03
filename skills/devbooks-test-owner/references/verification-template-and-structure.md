@@ -8,15 +8,13 @@ Test Owner must produce a structured `verification.md` that serves as both test 
 |--------|---------|-------------|
 | `Draft` | Initial state | Auto-generated |
 | `Ready` | Test plan ready | **Test Owner** |
-| `Implementation Done` | Implementation complete, waiting for @full tests | **Coder** |
-| `Verified` | @full passed + evidence audit complete | **Test Owner** |
-| `Done` | Review passed | Reviewer (Test Owner/Coder prohibited) |
+| `Done` | All tests passed + Review approved | Reviewer (Test Owner/Coder prohibited) |
 | `Archived` | Archived | Archiver |
 
 **Key Constraints**:
-- `Verified` status requires @full tests to have passed
-- Only changes with `Verified` or `Done` status can be archived
-- Test Owner sets `Ready` after completing test plan, sets `Verified` after evidence audit
+- Archive/strict gates require Status to be `Done` or `Archived`
+- Test Owner sets `Ready` after completing the test plan, then checks off the AC matrix after evidence audit
+- Test Owner must not set `Done`/`Archived` (Reviewer sets `Done`; Archiver sets `Archived`)
 
 ## Complete Template
 

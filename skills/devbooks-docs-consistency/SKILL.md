@@ -26,12 +26,7 @@ Evidence: reference generated report paths.
 Use when you need: rules customization, doc classification tuning, completeness dimensions.
 
 ### Extended (Optional)
-Use when you need: faster search/impact via optional MCP capabilities.
-
-## Recommended MCP Capability Types
-- Code search (code-search)
-- Reference tracking (reference-tracking)
-- Impact analysis (impact-analysis)
+Use when you need: faster search/impact via code intelligence or reference tools.
 
 ## Prerequisites: Configuration Discovery (Protocol-Agnostic)
 
@@ -117,6 +112,10 @@ bash scripts/doc-classifier.sh README.md
 
 # Completeness check
 bash scripts/completeness-checker.sh --input README.md --config references/completeness-dimensions.yaml --output evidence/completeness-report.md
+
+# Machine-readable report for G6 Scope Evidence (fixed output path)
+skills/devbooks-delivery-workflow/scripts/docs-consistency-check.sh <change-id> \
+  --project-root . --change-root dev-playbooks/changes --truth-root dev-playbooks/specs
 ```
 
 ---
@@ -143,6 +142,7 @@ Style preference reading priority: command-line arguments > config file > defaul
 
 Default output reports (change package context):
 
+- `evidence/gates/docs-consistency.report.json` (machine-readable; consumed by G6 / archive-decider)
 - `evidence/completeness-report.md`
 - `evidence/token-usage.log`
 - `evidence/scan-performance.log`
@@ -152,6 +152,10 @@ Default output reports (change package context):
 ## Workflow Integration
 
 Triggered by `devbooks-archiver` during archiving phase, generates documentation maintenance metadata during brownfield initialization by `devbooks-brownfield-bootstrap`.
+
+When G6 triggers the Scope Evidence Bundle and determines docs consistency is required (e.g. deliverables include `README.md/docs/**/templates/**`, or there is a `severity=must` obligation whose `tags` include both `weak_link` and `docs`):
+- `evidence/gates/docs-consistency.report.json` must exist and have `status=pass`
+- Missing or non-pass will be judged as fail by `archive-decider.sh`, blocking archiving
 
 ---
 

@@ -86,16 +86,15 @@ In verification.md AC coverage matrix, change `[ ]` to `[x]`:
 | AC-003 | Token expires after 24h | integration | T-003 | P1 | [x] |
 ```
 
-### 7. Set Status to Verified
+### 7. Keep Status at Ready
 
-Update status at top of verification.md:
+Update the `- Status:` line at the top of `verification.md`:
 
 ```markdown
-**Status**: Verified
-**Verified By**: Test Owner
-**Verified At**: 2024-01-15 14:30
-**Commit Hash**: abc123def456
+- Status: Ready
 ```
+
+Do not set `Done`/`Archived` here (Reviewer sets `Done`; Archiver sets `Archived`).
 
 ## Completion Status Classification
 

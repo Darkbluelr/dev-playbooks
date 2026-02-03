@@ -39,7 +39,7 @@
 
 ### Check 1: Status Field Truth Verification
 
-Doc Declaration: `Status: Done` or `Status: Verified` in `verification.md`
+Doc Declaration: `Status: Done` or `Status: Archived` in `verification.md`
 
 Verification Steps:
 ```bash
@@ -349,7 +349,7 @@ Report adopts "Evidence First, Distrust Declarations" principle. All conclusions
 | Change Pkg | Declared Status | Real Status | Gap |
 |------------|-----------------|-------------|-----|
 | change-auth | Done | Test Failed | 🔴 Critical |
-| fix-cache | Verified | Incomplete Coverage | 🟠 Medium |
+| fix-cache | Done | Incomplete Coverage | 🟠 Medium |
 | refactor-api | Ready | Stale Evidence | 🟡 Minor |
 
 ## Recommended Actions

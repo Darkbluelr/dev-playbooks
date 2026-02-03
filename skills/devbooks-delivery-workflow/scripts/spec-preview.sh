@@ -1,17 +1,17 @@
 #!/bin/bash
 # skills/devbooks-delivery-workflow/scripts/spec-preview.sh
-# Spec conflict pre-check script
+# Spec Conflict Pre-check Script
 #
-# Reads spec deltas from a change package and checks for staging conflicts.
+# Reads the spec delta from a change package and checks for conflicts in the staging layer.
 #
 # Usage:
 #   ./spec-preview.sh <change-id> [options]
 #   ./spec-preview.sh --help
 #
 # Exit codes:
-#   0 - no conflicts
-#   1 - conflicts found
-#   2 - usage error
+#   0 - No conflicts
+#   1 - Conflicts detected
+#   2 - Usage error
 
 set -euo pipefail
 
@@ -29,31 +29,31 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Help
+# Show help
 show_help() {
     cat << 'EOF'
-Spec conflict pre-check script (spec-preview.sh)
+Spec Conflict Pre-check Script (spec-preview.sh)
 
-usage:
+Usage:
   ./spec-preview.sh <change-id> [options]
 
-options:
-  --project-root DIR  Project root (default: current directory)
-  --change-root DIR   Change root (default: changes)
-  --truth-root DIR    Truth root (default: specs)
-  --help, -h          Show help
-  --version, -v       Show version
+Options:
+  --project-root DIR  Project root directory, default is current directory
+  --change-root DIR   Change package directory, default is changes
+  --truth-root DIR    Truth source directory, default is specs
+  --help, -h          Show this help message
+  --version, -v       Show version information
 
-conflict detection:
-  1. File-level conflict: the same target file is modified by multiple changes
-  2. Content-level conflict: the same REQ-xxx is modified
+Conflict detection:
+  1. File-level conflicts: Same target file modified by multiple change packages
+  2. Content-level conflicts: Same REQ-xxx being modified
 
-exit codes:
-  0 - no conflicts
-  1 - conflicts found
-  2 - usage error
+Exit codes:
+  0 - No conflicts
+  1 - Conflicts detected
+  2 - Usage error
 
-examples:
+Examples:
   ./spec-preview.sh my-feature
   ./spec-preview.sh my-feature --change-root dev-playbooks/changes
 
@@ -80,11 +80,11 @@ log_pass() {
     echo -e "${GREEN}[PASS]${NC} $*"
 }
 
-# Main
+# Main function
 main() {
     local change_id=""
 
-    # Parse args
+    # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --help|-h)
@@ -128,19 +128,19 @@ main() {
     local staged_dir="${project_root}/${truth_root}/_staged"
     local specs_delta_dir="${change_dir}/specs"
 
-    log_info "pre-checking change: ${change_id}"
-    log_info "  change dir: ${change_dir}"
-    log_info "  staged dir: ${staged_dir}"
+    log_info "Pre-checking change package: ${change_id}"
+    log_info "  Change directory: ${change_dir}"
+    log_info "  Staging directory: ${staged_dir}"
 
-    # Ensure change exists
+    # Check change package exists
     if [[ ! -d "$change_dir" ]]; then
-        log_error "change directory not found: ${change_dir}"
+        log_error "Change package does not exist: ${change_dir}"
         exit 2
     fi
 
-    # Check whether spec deltas exist
+    # Check if there is spec delta
     if [[ ! -d "$specs_delta_dir" ]]; then
-        log_info "no spec deltas; skipping"
+        log_info "No spec delta, skipping pre-check"
         exit 0
     fi
 
@@ -149,7 +149,7 @@ main() {
     local req_conflicts=""
 
     # File-level conflict detection
-    log_info "checking file-level conflicts..."
+    log_info "Checking file-level conflicts..."
     while IFS= read -r delta_file; do
         [[ -z "$delta_file" ]] && continue
 
@@ -163,7 +163,7 @@ main() {
     done < <(find "$specs_delta_dir" -type f -name "*.md" 2>/dev/null)
 
     # Content-level conflict detection (REQ-xxx)
-    log_info "checking content-level conflicts..."
+    log_info "Checking content-level conflicts..."
     local current_reqs
     current_reqs=$(grep -rhoE "REQ-[A-Z0-9]+-[0-9]+" "$specs_delta_dir" 2>/dev/null | sort -u || true)
 
@@ -178,10 +178,10 @@ main() {
         done <<< "$current_reqs"
     fi
 
-    # Output
+    # Output results
     echo ""
     if [[ $conflicts -gt 0 ]]; then
-        log_error "found ${conflicts} conflict(s)"
+        log_error "Detected ${conflicts} conflict(s)"
 
         if [[ -n "$file_conflicts" ]]; then
             echo -e "\nFile-level conflicts:"
@@ -196,7 +196,7 @@ main() {
         exit 1
     fi
 
-    log_pass "no conflicts; safe to stage"
+    log_pass "No conflicts, ready to stage"
     exit 0
 }
 

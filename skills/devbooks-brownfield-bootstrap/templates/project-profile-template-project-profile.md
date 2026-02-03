@@ -1,55 +1,55 @@
-# 项目画像模板（Project Profile Template）
+# Project Profile Template
 
 ---
 
-## A) 语法层（Syntax Layer）
+## A) Syntax Layer
 
-**目标**：建立代码的结构认知——技术栈、目录布局、构建命令。
+**Goal**: establish structural understanding of the codebase — tech stack, directory layout, and build commands.
 
-### A.1 技术栈概览
+### A.1 Stack Overview
 
-| 维度 | 值 |
+| Dimension | Value |
 |------|-----|
-| 主语言 | `<language>` |
-| 框架 | `<framework>` |
-| 运行时 | `<runtime>` |
-| 包管理器 | `<package-manager>` |
-| 构建工具 | `<build-tool>` |
+| Primary language | `<language>` |
+| Framework | `<framework>` |
+| Runtime | `<runtime>` |
+| Package manager | `<package-manager>` |
+| Build tool | `<build-tool>` |
 
-### A.2 目录结构
+### A.2 Directory Structure
 
 ```
 <project-root>/
-├── src/                    # 源代码
-│   ├── base/               # 基础层（平台无关）
-│   ├── platform/           # 平台层（平台服务）
-│   ├── domain/             # 领域层（业务逻辑）
-│   ├── application/        # 应用层（用例编排）
-│   └── ui/                 # UI 层（用户交互）
-├── tests/                  # 测试代码
-├── docs/                   # 文档
-└── scripts/                # 脚本
+├── src/                    # Source code
+│   ├── base/               # Base layer (platform-agnostic)
+│   ├── platform/           # Platform layer (platform services)
+│   ├── domain/             # Domain layer (business logic)
+│   ├── application/        # Application layer (use-case orchestration)
+│   └── ui/                 # UI layer (user interaction)
+├── tests/                  # Tests
+├── docs/                   # Docs
+└── scripts/                # Scripts
 ```
 
-### A.3 关键命令
+### A.3 Key Commands
 
-| 命令 | 用途 |
+| Command | Purpose |
 |------|------|
-| `<install-cmd>` | 安装依赖 |
-| `<build-cmd>` | 编译构建 |
-| `<test-cmd>` | 运行测试 |
-| `<lint-cmd>` | 代码检查 |
-| `<start-cmd>` | 启动服务 |
+| `<install-cmd>` | Install dependencies |
+| `<build-cmd>` | Build |
+| `<test-cmd>` | Run tests |
+| `<lint-cmd>` | Lint / static checks |
+| `<start-cmd>` | Start service |
 
 ---
 
-## B) 语义层（Semantics Layer）
+## B) Semantics Layer
 
-**目标**：理解代码的逻辑关系——模块依赖、API 边界、数据流向。
+**Goal**: understand logical relationships — module dependencies, API boundaries, and data flow.
 
-### B.1 模块依赖图
+### B.1 Module Dependency Graph
 
-> 由 `mcp__ckb__getArchitecture` 生成，或手动维护
+> Can be generated from structure analysis or maintained manually.
 
 ```
 [base] ← [platform] ← [domain] ← [application] ← [ui]
@@ -57,116 +57,116 @@
        [external-libs]
 ```
 
-**分层约束**（Layering Constraints）：
+**Layering constraints**:
 
-| 层级 | 可依赖 | 禁止依赖 |
+| Layer | Allowed dependencies | Forbidden dependencies |
 |------|--------|----------|
-| base | （无） | 所有上层 |
+| base | (none) | all upper layers |
 | platform | base | domain, application, ui |
 | domain | base, platform | application, ui |
 | application | base, platform, domain | ui |
-| ui | 所有层 | （无） |
+| ui | all layers | (none) |
 
-### B.2 核心能力（Capabilities）
+### B.2 Capabilities
 
-| 能力 | 入口 | 负责模块 | 依赖 |
+| Capability | Entry point | Owning module | Dependencies |
 |------|------|----------|------|
 | `<capability-1>` | `<entry-point>` | `<module>` | `<deps>` |
 | `<capability-2>` | `<entry-point>` | `<module>` | `<deps>` |
 
-### B.3 对外契约
+### B.3 External Contracts
 
-| 类型 | 位置 | 格式 |
+| Type | Location | Format |
 |------|------|------|
 | REST API | `src/api/` | OpenAPI 3.0 |
-| 事件 | `src/events/` | CloudEvents |
-| 数据 Schema | `src/schemas/` | JSON Schema |
-| 配置 | `config/` | YAML |
+| Events | `src/events/` | CloudEvents |
+| Data schemas | `src/schemas/` | JSON Schema |
+| Configuration | `config/` | YAML |
 
-### B.4 边界识别
+### B.4 Boundary Identification
 
-| 区域 | 路径模式 | 属性 |
+| Area | Path patterns | Properties |
 |------|----------|------|
-| **用户代码** | `src/**`, `lib/**` | 可修改 |
-| **库代码** | `node_modules/**`, `vendor/**` | 不可变接口 |
-| **生成代码** | `dist/**`, `*.generated.*` | 禁止手动修改 |
-| **配置文件** | `*.config.*`, `.*rc` | 需要声明变更 |
+| **User code** | `src/**`, `lib/**` | Modifiable |
+| **Library code** | `node_modules/**`, `vendor/**` | Immutable interfaces |
+| **Generated code** | `dist/**`, `*.generated.*` | Do not edit manually |
+| **Config files** | `*.config.*`, `.*rc` | Changes must be declared |
 
 ---
 
-## C) 上下文层（Context Layer）
+## C) Context Layer
 
-**目标**：捕获项目的隐性知识——历史决策、团队约定、技术债务。
+**Goal**: capture tacit knowledge — historical decisions, team conventions, and technical debt.
 
-### C.1 技术债热点
+### C.1 Technical Debt Hotspots
 
-> 由 `mcp__ckb__getHotspots` 生成，或从 Git 历史计算
+> Can be generated from change history and complexity metrics, or maintained manually.
 
-| 文件 | 变更频率 | 复杂度 | 热点分数 | 风险等级 |
+| File | Change frequency | Complexity | Hotspot score | Risk level |
 |------|----------|--------|----------|----------|
-| `<file-1>` | 高 | 高 | `<score>` | 🔴 Critical |
-| `<file-2>` | 中 | 高 | `<score>` | 🟡 High |
-| `<file-3>` | 高 | 低 | `<score>` | 🟢 Normal |
+| `<file-1>` | high | high | `<score>` | 🔴 Critical |
+| `<file-2>` | medium | high | `<score>` | 🟡 High |
+| `<file-3>` | high | low | `<score>` | 🟢 Normal |
 
-### C.2 领域概念（Glossary）
+### C.2 Glossary
 
-> 由 `mcp__ckb__listKeyConcepts` 生成，或手动维护
+> Can be extracted from code and docs, or maintained manually.
 
-| 术语 | 定义 | 代码位置 |
+| Term | Definition | Code location |
 |------|------|----------|
 | `<term-1>` | `<definition>` | `<location>` |
 | `<term-2>` | `<definition>` | `<location>` |
 
-### C.3 架构决策记录（ADRs）
+### C.3 Architecture Decision Records (ADRs)
 
-| 编号 | 标题 | 状态 | 日期 |
+| ID | Title | Status | Date |
 |------|------|------|------|
 | ADR-001 | `<title>` | Accepted | `<date>` |
 | ADR-002 | `<title>` | Superseded | `<date>` |
 
-### C.4 已知约束与限制
+### C.4 Known Constraints and Limitations
 
-| 约束 | 原因 | 影响范围 |
+| Constraint | Reason | Impact scope |
 |------|------|----------|
 | `<constraint-1>` | `<reason>` | `<scope>` |
 | `<constraint-2>` | `<reason>` | `<scope>` |
 
-### C.5 团队约定
+### C.5 Team Conventions
 
-| 类别 | 约定 | 强制程度 |
+| Category | Convention | Enforcement |
 |------|------|----------|
-| 命名规范 | `<convention>` | 必须 |
-| 提交规范 | `<convention>` | 必须 |
-| 分支策略 | `<convention>` | 必须 |
-| 代码风格 | `<convention>` | Lint 强制 |
+| Naming | `<convention>` | MUST |
+| Commits | `<convention>` | MUST |
+| Branch strategy | `<convention>` | MUST |
+| Code style | `<convention>` | Enforced by lint |
 
 ---
 
-## D) 质量闸门（Quality Gates）
+## D) Quality Gates
 
-### D.1 合并前检查
+### D.1 Pre-merge Checks
 
-- [ ] 编译通过：`<build-cmd>`
-- [ ] Lint 通过：`<lint-cmd>`
-- [ ] 测试通过：`<test-cmd>`
-- [ ] 分层约束通过：`guardrail-check.sh --check-layers`
-- [ ] 无循环依赖：`guardrail-check.sh --check-cycles`
+- [ ] Build passes: `<build-cmd>`
+- [ ] Lint passes: `<lint-cmd>`
+- [ ] Tests pass: `<test-cmd>`
+- [ ] Layering constraints pass: `guardrail-check.sh --check-layers`
+- [ ] No cyclic dependencies: `guardrail-check.sh --check-cycles`
 
-### D.2 热点变更额外检查
+### D.2 Additional Checks for Hotspot Changes
 
-当变更触及热点文件时：
+When changes touch hotspot files:
 
-- [ ] 测试覆盖率 ≥ 80%
-- [ ] 代码评审重点关注
-- [ ] 圈复杂度未增加
+- [ ] Test coverage ≥ 80%
+- [ ] Stricter code review focus
+- [ ] Cyclomatic complexity does not increase
 
 ---
 
-## E) 元数据
+## E) Metadata
 
-| 字段 | 值 |
+| Field | Value |
 |------|-----|
-| 创建日期 | `<date>` |
-| 最后更新 | `<date>` |
-| 维护者 | `<maintainer>` |
-| 版本 | `<version>` |
+| Created at | `<date>` |
+| Last updated | `<date>` |
+| Maintainer | `<maintainer>` |
+| Version | `<version>` |

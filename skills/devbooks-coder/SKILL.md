@@ -27,11 +27,6 @@ Use when: You need to refine strategies, boundaries, or highlight risks.
 ### Extended Layer (Optional)
 Use when: You need to collaborate with external systems or optional tools.
 
-## Recommended MCP Capability Types
-- Code search (code-search)
-- Reference tracking (reference-tracking)
-- Impact analysis (impact-analysis)
-
 ## Quick Start
 
 My Responsibilities:
@@ -165,7 +160,7 @@ Refer to `references/completion-status-and-routing.md`.
 | Modify `src/**` code | ❌ Modify `tests/**` |
 | Check `tasks.md` items | ❌ Modify `verification.md` |
 | Record deviations to `deviation-log.md` | ❌ Check AC coverage matrix |
-| Run fast-track tests (`@smoke`/`@critical`) | ❌ Set verification.md Status to Verified/Done |
+| Run fast-track tests (`@smoke`/`@critical`) | ❌ Set verification.md Status to Done/Archived |
 | Trigger `@full` tests (CI/Background) | ❌ Wait for @full completion (can start next change) |
 
 ### Code Quality Constraints

@@ -120,7 +120,7 @@ if [[ "${#dimensions[@]}" -eq 0 ]]; then
 fi
 
 output=""
-output+="# Completeness Check Report\n\n"
+output+="# 完备性检查报告\n\n"
 
 for dim in "${dimensions[@]}"; do
   ok=0
@@ -130,17 +130,17 @@ for dim in "${dimensions[@]}"; do
     patterns+=("$line")
   done < <(read_dimension_patterns "$dim")
   if [[ "${#patterns[@]}" -eq 0 ]]; then
-    msg="no matching rules"
+    msg="无匹配规则"
   else
     for pattern in "${patterns[@]}"; do
       if grep -q "$pattern" "$INPUT_PATH"; then
         ok=1
-        msg="hit: $pattern"
+        msg="命中: $pattern"
         break
       fi
     done
     if [[ "$ok" -eq 0 ]]; then
-      msg="missing: ${patterns[*]}"
+      msg="缺少: ${patterns[*]}"
     fi
   fi
   output+="$(report_line "$dim" "$ok" "$msg")"$'\n'

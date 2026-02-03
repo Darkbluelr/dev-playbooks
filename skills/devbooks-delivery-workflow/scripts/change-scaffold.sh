@@ -82,13 +82,13 @@ if [[ -z "$change_id" || "$change_id" == "-"* || "$change_id" =~ [[:space:]] ]];
 fi
 
 # Validate change-id format: YYYYMMDD-HHMM-<verb-prefixed-description>
-# Format: datetime-verb-prefixed-semantic-description
-# Example: 20240116-1030-add-oauth2-support
+# 格式：日期时间-动词开头的语义描述
+# 示例：20240116-1030-add-oauth2-support
 validate_change_id_format() {
   local id="$1"
 
   # Pattern: 8 digits (date) + hyphen + 4 digits (time) + hyphen + verb-prefixed-description
-  # Date: YYYYMMDD, Time: HHMM
+  # 日期：YYYYMMDD，时间：HHMM
   if [[ ! "$id" =~ ^[0-9]{8}-[0-9]{4}-.+ ]]; then
     return 1
   fi
@@ -133,7 +133,8 @@ validate_change_id_format() {
   fi
 
   # Validate description starts with a verb (common verbs)
-  local verb_pattern="^(add|fix|update|refactor|remove|improve|migrate|implement|enable|disable|change|create|delete|modify|optimize|resolve|setup|init|configure|introduce|extract|merge|split|move|rename|deprecate|upgrade|downgrade|revert|sync|integrate|unify|standardize|simplify|extend|reduce|enhance|support|handle|validate|test|document|cleanup|prepare|finalize|complete|release|publish|deploy|hotfix|patch|bump)-"
+  # 常用动词：add, fix, update, refactor, remove, improve, migrate, implement, ...
+  local verb_pattern="^(feat|add|fix|update|refactor|remove|improve|migrate|implement|enable|disable|change|create|delete|modify|optimize|resolve|setup|init|configure|introduce|extract|merge|split|move|rename|deprecate|upgrade|downgrade|revert|sync|integrate|unify|standardize|simplify|extend|reduce|enhance|support|handle|validate|test|document|cleanup|prepare|finalize|complete|release|publish|deploy|hotfix|patch|bump)-"
 
   if [[ ! "$desc_part" =~ $verb_pattern ]]; then
     return 1
@@ -143,17 +144,17 @@ validate_change_id_format() {
 }
 
 if ! validate_change_id_format "$change_id"; then
-  echo "error: invalid change-id format: '$change_id'" >&2
+  echo "error: change-id 格式无效: '$change_id'" >&2
   echo "" >&2
-  echo "Expected format: YYYYMMDD-HHMM-<verb-prefixed-description>" >&2
-  echo "Example: 20240116-1030-add-oauth2-support" >&2
+  echo "期望格式: YYYYMMDD-HHMM-<动词开头的语义描述>" >&2
+  echo "示例: 20240116-1030-add-oauth2-support" >&2
   echo "" >&2
-  echo "Rules:" >&2
-  echo "  - Date: YYYYMMDD (e.g., 20240116)" >&2
-  echo "  - Time: HHMM (e.g., 1030 for 10:30)" >&2
-  echo "  - Description: must start with a verb (add/fix/update/refactor/...)" >&2
+  echo "规则:" >&2
+  echo "  - 日期: YYYYMMDD (如 20240116)" >&2
+  echo "  - 时间: HHMM (如 1030 表示 10:30)" >&2
+  echo "  - 描述: 必须以动词开头 (add/fix/update/refactor/...)" >&2
   echo "" >&2
-  echo "Common verbs: add, fix, update, refactor, remove, improve, migrate, implement" >&2
+  echo "常用动词: add, fix, update, refactor, remove, improve, migrate, implement" >&2
   exit 2
 fi
 
@@ -166,13 +167,25 @@ change_root="${change_root%/}"
 truth_root="${truth_root%/}"
 project_root="${project_root%/}"
 
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# change-scaffold.sh 可以在任意 --project-root 下创建变更包，因此模板应相对脚本所在仓库定位。
+repo_root="$(cd "${script_dir}/../../.." && pwd)"
+templates_dir="${repo_root}/templates/dev-playbooks/changes"
+
 if [[ "$change_root" = /* ]]; then
   change_dir="${change_root}/${change_id}"
 else
   change_dir="${project_root}/${change_root}/${change_id}"
 fi
 
-mkdir -p "${change_dir}/specs" "${change_dir}/evidence"
+mkdir -p "${change_dir}/specs" "${change_dir}/evidence" "${change_dir}/inputs"
+
+# P1: evidence 目录结构（必需）
+mkdir -p \
+  "${change_dir}/evidence/red-baseline" \
+  "${change_dir}/evidence/green-final" \
+  "${change_dir}/evidence/gates" \
+  "${change_dir}/evidence/risks"
 
 write_file() {
   local path="$1"
@@ -204,12 +217,170 @@ render_template() {
     -e "s|__TRUTH_ROOT__|${esc_truth_root}|g"
 }
 
-cat <<'EOF' | render_template | write_file "${change_dir}/proposal.md"
-# Proposal: __CHANGE_ID__
+render_productized_template() {
+  # 支持 templates/dev-playbooks/changes 的两种占位符：
+  # - <change-id> (Markdown)
+  # - CHANGE_ID (YAML)
+  sed \
+    -e "s|<change-id>|${esc_change_id}|g" \
+    -e "s|CHANGE_ID|${esc_change_id}|g"
+}
 
-> Output path: `__CHANGE_ROOT__/__CHANGE_ID__/proposal.md`
+write_from_repo_template() {
+  local rel="$1"
+  local out="$2"
+
+  if [[ -f "$out" && "$force" != true ]]; then
+    echo "skip: $out"
+    return 0
+  fi
+
+  local src="${templates_dir}/${rel}"
+  if [[ ! -f "$src" ]]; then
+    return 1
+  fi
+
+  mkdir -p "$(dirname "$out")"
+  render_productized_template <"$src" >"$out"
+  echo "wrote: $out"
+  return 0
+}
+
+# P1: Delivery 入口产物化（RUNBOOK/inputs/index/completion.contract）
+# 说明：优先使用仓库模板；若缺失则继续使用旧模板生成最小可用文件。
+write_from_repo_template "RUNBOOK.md" "${change_dir}/RUNBOOK.md" || true
+if [[ ! -f "${change_dir}/RUNBOOK.md" ]]; then
+  cat <<'EOF' | render_productized_template | write_file "${change_dir}/RUNBOOK.md"
+# RUNBOOK：<change-id>
+
+## 0) Quick Start
+1. Fill `proposal.md` metadata (at least risk_level / request_kind / intervention_level).
+2. Run strict check: `skills/devbooks-delivery-workflow/scripts/change-check.sh <change-id> --mode strict`
+
+## Cover View (derived cache; safe to delete)
+
+> NOTE: For `risk_level=medium|high` OR `request_kind=epic|governance` OR `intervention_level=team|org`, G6 (`archive|strict`) will block archive if this RUNBOOK no longer contains the `## Cover View` and `## Context Capsule` headings. Do not delete the headings.
+
+<!-- DEVBOOKS_DERIVED_COVER_VIEW:START -->
+> Generate via `skills/devbooks-delivery-workflow/scripts/runbook-derive.sh <change-id> ...` (derived cache; safe to delete and rebuild)
+<!-- DEVBOOKS_DERIVED_COVER_VIEW:END -->
+
+## Context Capsule (<=2 pages; index only)
+
+<!-- DEVBOOKS_DERIVED_CONTEXT_CAPSULE:START -->
+> Generate via `skills/devbooks-delivery-workflow/scripts/runbook-derive.sh <change-id> ...` (derived cache; safe to delete and rebuild)
+<!-- DEVBOOKS_DERIVED_CONTEXT_CAPSULE:END -->
+
+### 1) One-line goal (align with `completion.contract.yaml: intent.summary`)
+- summary: <one line; same meaning as intent.summary>
+
+### 2) Must-run verification anchors (invocation_ref only)
+- <C-xxx> <invocation_ref>
+
+## Input Index
+
+- `inputs/index.md`
+EOF
+fi
+
+write_from_repo_template "inputs/index.md" "${change_dir}/inputs/index.md" || true
+if [[ ! -f "${change_dir}/inputs/index.md" ]]; then
+  cat <<'EOF' | render_productized_template | write_file "${change_dir}/inputs/index.md"
+# Input Index: <change-id>
+
+> Goal: record references + metadata only; do not copy long documents; used for audit and traceability.
+
+## Provided Inputs (Index)
+
+- Request text:
+- Docs/links:
+- File paths:
+EOF
+fi
+
+write_from_repo_template "completion.contract.yaml" "${change_dir}/completion.contract.yaml" || true
+if [[ ! -f "${change_dir}/completion.contract.yaml" ]]; then
+  cat <<'EOF' | render_productized_template | write_file "${change_dir}/completion.contract.yaml"
+schema_version: 1.0.0
+change_id: CHANGE_ID
+intent:
+  summary: "用一句话描述本变更的目标"
+  deliverable_quality: outline
+deliverables:
+  - id: D-001
+    kind: other
+    path: path/to/deliverable
+    quality: inherit
+obligations:
+  - id: O-001
+    describes: "可验证的义务描述（可判定 Pass/Fail）"
+    applies_to:
+      - D-001
+    severity: must
+checks:
+  - id: C-001
+    type: custom
+    invocation_ref: "描述如何执行该检查（例如脚本路径/命令/配置键/运行手册）"
+    covers:
+      - O-001
+    artifacts:
+      - evidence/gates/C-001.log
+decision_locks:
+  forbid_weakening_without_decision: true
+EOF
+fi
+
+write_from_repo_template "state.audit.yaml" "${change_dir}/state.audit.yaml" || true
+if [[ ! -f "${change_dir}/state.audit.yaml" ]]; then
+  cat <<'EOF' | render_productized_template | write_file "${change_dir}/state.audit.yaml"
+schema_version: 1.0.0
+change_id: CHANGE_ID
+state_transitions:
+  - from_state: null
+    to_state: pending
+    reason: "scaffolded"
+    evidence_refs: []
+EOF
+fi
+
+write_from_repo_template "proposal.md" "${change_dir}/proposal.md" || true
+if [[ ! -f "${change_dir}/proposal.md" ]]; then
+  cat <<'EOF' | render_productized_template | write_file "${change_dir}/proposal.md"
+---
+schema_version: 1.0.0
+change_id: <change-id>
+request_kind: change
+change_type: docs
+risk_level: low
+intervention_level: local
+state: pending
+state_reason: ""
+next_action: DevBooks
+epic_id: ""
+slice_id: ""
+ac_ids: []
+truth_refs: {}
+risk_flags: {}
+required_gates:
+  - G0
+  - G1
+  - G2
+  - G4
+  - G6
+completion_contract: completion.contract.yaml
+deliverable_quality: outline
+approvals:
+  security: ""
+  compliance: ""
+  devops: ""
+escape_hatch: null
+---
+
+# Proposal: <change-id>
+
+> Output location: `dev-playbooks/changes/<change-id>/proposal.md`
 >
-> Note: during the proposal phase, do not write implementation details; define only Why/What/Impact/Risks/Validation + debate topics.
+> Note: Proposal phase prohibits implementation code; only define Why/What/Impact/Risks/Validation + debate points.
 
 ## Why
 
@@ -220,18 +391,18 @@ cat <<'EOF' | render_template | write_file "${change_dir}/proposal.md"
 
 - In scope:
 - Out of scope (Non-goals):
-- Scope (modules/capabilities/external contracts/data invariants):
+- Impact scope (modules/capabilities/external contracts/data invariants):
 
 ## Impact
 
 - External contracts (API/Schema/Event):
-- Data & migrations:
-- Affected modules & dependencies:
-- Tests & quality gates:
-- Value signal target: none (or specify metrics/dashboards/logs/business events)
-- Value-stream bottleneck hypothesis: none (or describe likely queue points + mitigations)
+- Data and migration:
+- Affected modules and dependencies:
+- Testing and quality gates:
+- Value Signal and Observation: none
+- Value Stream Bottleneck Hypothesis: none
 
-## Risks & Rollback
+## Risks
 
 - Risks:
 - Degradation strategy:
@@ -240,30 +411,37 @@ cat <<'EOF' | render_template | write_file "${change_dir}/proposal.md"
 ## Validation
 
 - Candidate acceptance anchors (tests/static checks/build/manual evidence):
-- Evidence path: `__CHANGE_ROOT__/__CHANGE_ID__/evidence/` (recommended: `change-evidence.sh <change-id> -- <command>`)
+- Evidence location: `dev-playbooks/changes/<change-id>/evidence/` (recommend using `change-evidence.sh <change-id> -- <command>` to collect)
 
 ## Debate Packet
 
-- Contested points / questions that require judgment (<= 7):
+- Debate points/questions requiring decision (<=7 items):
 
 ## Decision Log
 
-- Decision: Pending
-- Summary:
-- Questions for judgment:
+- Decision Status: Pending
+- Decision summary:
+- Questions requiring decision:
 EOF
+fi
 
-cat <<'EOF' | render_template | write_file "${change_dir}/design.md"
+ cat <<'EOF' | render_template | write_file "${change_dir}/design.md"
 # Design: __CHANGE_ID__
 
-> Output path: `__CHANGE_ROOT__/__CHANGE_ID__/design.md`
+> Output location: `__CHANGE_ROOT__/__CHANGE_ID__/design.md`
 >
-> Write only What/Constraints + AC-xxx; do not write implementation steps or function body code.
+> Only write What/Constraints + AC-xxx; prohibit implementation steps and function body code.
+
+## Background and Current State
+
+- Current behavior (observable facts):
+- Main constraints (performance/security/compatibility/dependency direction):
 
 ## Problem Context
 
-- Current behavior (observable facts):
-- Key constraints (performance/security/compatibility/dependency direction):
+- What is broken today (observable symptoms)?
+- Why this matters (impact on workflow/quality/velocity)?
+- Constraints that cannot be violated:
 
 ## Goals / Non-goals
 
@@ -273,7 +451,7 @@ cat <<'EOF' | render_template | write_file "${change_dir}/design.md"
 ## Design Principles and Red Lines
 
 - Principles:
-- Red lines (non-negotiable):
+- Red Lines (unbreakable):
 
 ## Target Architecture (optional)
 
@@ -282,37 +460,32 @@ cat <<'EOF' | render_template | write_file "${change_dir}/design.md"
 
 ## Data and Contracts (as needed)
 
-- Artifacts / Events / Schema：
+- Artifacts / Events / Schema:
 - Compatibility strategy (versioning/migration/replay):
+
+## Design Rationale
+
+- Why this design (compared to alternatives)?
+- Key decisions and justifications:
+
+## Trade-offs
+
+- Trade-offs accepted:
+- Trade-offs rejected:
+
+## Variation Points (Future Change Hotspots)
+
+- Where do we expect change?
+- What is intentionally left as an extension point?
+
+## Documentation Impact
+
+- Docs that must be updated:
+- Docs explicitly confirmed as not needing updates:
 
 ## Observability and Acceptance (as needed)
 
 - Metrics/KPI/SLO:
-
-## Documentation Impact
-
-- [ ] No documentation update required
-- [ ] New scripts
-- [ ] New configuration
-- [ ] New workflows
-- [ ] API docs
-
-| Doc | Required | Updated |
-|-----|----------|---------|
-| README.md | TBD | TBD |
-| CHANGELOG.md | TBD | TBD |
-| docs/<doc>.md | TBD | TBD |
-
-## Design Rationale
-
-- Why this approach:
-- Alternatives considered:
-- Why alternatives were rejected:
-
-## Trade-offs
-
-- What we give up:
-- Known imperfections accepted:
 
 ## Acceptance Criteria
 
@@ -322,26 +495,26 @@ EOF
 cat <<'EOF' | render_template | write_file "${change_dir}/tasks.md"
 # Tasks: __CHANGE_ID__
 
-> Output path: `__CHANGE_ROOT__/__CHANGE_ID__/tasks.md`
+> Output location: `__CHANGE_ROOT__/__CHANGE_ID__/tasks.md`
 >
-> Derive tasks only from `__CHANGE_ROOT__/__CHANGE_ID__/design.md`; do not derive the plan from `tests/`.
+> Only derive tasks from `__CHANGE_ROOT__/__CHANGE_ID__/design.md`; do not reverse-engineer plan from tests/.
 
 ========================
 Main Plan Area
 ========================
 
-- [ ] MP1.1 <one-sentence goal>
+- [ ] MP1.1 <one-line goal>
   - Why:
-  - Acceptance Criteria (AC-xxx):
+  - Acceptance Criteria (reference AC-xxx):
   - Candidate Anchors (tests/commands/evidence):
-  - Dependencies：
-  - Risks：
+  - Dependencies:
+  - Risks:
 
 ========================
 Temporary Plan Area
 ========================
 
-- (empty / as needed)
+- (leave empty/as needed)
 
 ========================
 Context Switch Breakpoint Area
@@ -349,7 +522,7 @@ Context Switch Breakpoint Area
 
 - Last progress:
 - Current blocker:
-- Shortest next path:
+- Next shortest path:
 EOF
 
 cat <<'EOF' | render_template | write_file "${change_dir}/verification.md"
@@ -357,7 +530,7 @@ cat <<'EOF' | render_template | write_file "${change_dir}/verification.md"
 
 > Recommended path: `__CHANGE_ROOT__/__CHANGE_ID__/verification.md`
 >
-> Goal: make “Definition of Done” concrete with deterministic anchors and evidence, and provide traceability `AC-xxx -> Requirement/Scenario -> Test IDs -> Evidence`.
+> Goal: Anchor "Definition of Done" to executable anchors and evidence, and provide `AC-xxx -> Requirement/Scenario -> Test IDs -> Evidence` traceability.
 
 ---
 
@@ -371,41 +544,41 @@ cat <<'EOF' | render_template | write_file "${change_dir}/verification.md"
   > - Done: All tests passed + Review approved (set by **Reviewer only**)
   > - Archived: Archived (set by Spec Gardener)
   > **Constraint: Coder is prohibited from modifying Status field**
-- Links:
+- References:
   - Proposal: `__CHANGE_ROOT__/__CHANGE_ID__/proposal.md`
   - Design: `__CHANGE_ROOT__/__CHANGE_ID__/design.md`
   - Tasks: `__CHANGE_ROOT__/__CHANGE_ID__/tasks.md`
   - Spec deltas: `__CHANGE_ROOT__/__CHANGE_ID__/specs/**`
-- Owner: <you>
-- Last updated: YYYY-MM-DD
-- Test Owner (separate conversation): <session/agent>
-- Coder (separate conversation): <session/agent>
+- Maintainer: <you>
+- Last Updated: YYYY-MM-DD
+- Test Owner (independent session): <session/agent>
+- Coder (independent session): <session/agent>
 - Red baseline evidence: `__CHANGE_ROOT__/__CHANGE_ID__/evidence/`
 
 ---
 
 ========================
-A) Test Plan Instructions
+A) Test Plan Directive Table
 ========================
 
 ### Main Plan Area
 
-- [ ] TP1.1 <one-sentence goal>
+- [ ] TP1.1 <one-line goal>
   - Why:
-  - Acceptance criteria (AC-xxx / Requirement):
-  - Test type: unit | contract | integration | e2e | fitness | static
+  - Acceptance Criteria (reference AC-xxx / Requirement):
+  - Test Type: unit | contract | integration | e2e | fitness | static
   - Non-goals:
-  - Candidate anchors (Test IDs / commands / evidence):
+  - Candidate Anchors (Test IDs / commands / evidence):
 
 ### Temporary Plan Area
 
-- (empty / as needed)
+- (leave empty/as needed)
 
 ### Context Switch Breakpoint Area
 
 - Last progress:
 - Current blocker:
-- Shortest next path:
+- Next shortest path:
 
 ---
 
@@ -420,7 +593,7 @@ B) Traceability Matrix
 ---
 
 ========================
-C) Deterministic Anchors
+C) Execution Anchors (Deterministic Anchors)
 ========================
 
 ### 1) Behavior
@@ -431,34 +604,34 @@ C) Deterministic Anchors
 
 ### 2) Contract
 
-- OpenAPI/Proto/Schema：
-- contract tests：
+- OpenAPI/Proto/Schema:
+- contract tests:
 
-### 3) Structure (fitness functions)
+### 3) Structure (Fitness Functions)
 
-- layering / dependency direction / no cycles:
+- Layering/dependency direction/no cycles:
 
-### 4) Static & security
+### 4) Static and Security
 
-- lint/typecheck/build：
-- SAST/secret scan：
-- report formats: json|xml (prefer machine-readable)
+- lint/typecheck/build:
+- SAST/secret scan:
+- Report format: json|xml (prefer machine-readable)
 
 ---
 
 ========================
-D) MANUAL-* Checklist (manual or hybrid acceptance)
+D) MANUAL-* Checklist (Manual/Hybrid Acceptance)
 ========================
 
 - [ ] MANUAL-001 <acceptance item>
   - Pass/Fail criteria:
-  - Evidence (screenshots/video/links/logs):
-  - Owner/sign-off:
+  - Evidence (screenshot/video/link/log):
+  - Responsible/Sign-off:
 
 ---
 
 ========================
-E) Risks and degradation (optional)
+E) Risks and Degradation (optional)
 ========================
 
 - Risks:
@@ -466,27 +639,27 @@ E) Risks and degradation (optional)
 - Rollback strategy:
 
 ========================
-F) Structural guardrail record
+F) Structural Quality Gate Record
 ========================
 
-- Conflict: none
-- Impact assessment (cohesion/coupling/testability): none
-- Alternative gates (complexity/coupling/dependency direction/test quality): none
-- Decision and approval: none
+- Conflict points:
+- Impact assessment (cohesion/coupling/testability):
+- Alternative gates (complexity/coupling/dependency direction/test quality):
+- Decision and Authorization: <fill "none" or specify authorizer/conclusion>
 
 ========================
-G) Value stream and metrics (optional, but must explicitly write "none")
+G) Value Stream and Metrics (optional, but must explicitly fill "none")
 ========================
 
-- Value signal target: none
-- Delivery & stability metrics (optional DORA): none
-- Observation window and triggers: none
-- Evidence: none
+- Target Value Signal: <fill "none" or specify metrics/dashboard/logs/business events>
+- Delivery and stability metrics (optional DORA): <fill "none" or specify Lead Time / Deploy Frequency / Change Failure Rate / MTTR observation approach>
+- Observation window and trigger points: <fill "none" or specify post-launch duration, what alerts/reports to observe>
+- Evidence: <fill "none" or specify link/screenshot/report path (recommend storing in evidence/)>
 EOF
 
 specs_readme_path="${change_dir}/specs/README.md"
 if [[ ! -f "$specs_readme_path" || "$force" == true ]]; then
-  printf '%s\n' "# specs/" "" "Create one subdirectory per capability and write \`spec.md\` within it:" "" "- \`${change_root}/${change_id}/specs/<capability>/spec.md\`" "" | write_file "$specs_readme_path"
+  printf '%s\n' "# specs/" "" "Create a subdirectory for each capability in this directory, and write \`spec.md\` inside:" "" "- \`${change_root}/${change_id}/specs/<capability>/spec.md\`" "" | write_file "$specs_readme_path"
 fi
 
 # Prototype mode: create prototype track skeleton
@@ -496,54 +669,66 @@ if [[ "$prototype" == true ]]; then
   cat <<'EOF' | render_template | write_file "${change_dir}/prototype/PROTOTYPE.md"
 # Prototype Declaration: __CHANGE_ID__
 
-> This directory contains prototype code and must not be merged directly into production code.
+> This directory contains prototype code, **DO NOT merge directly into production codebase**.
 >
-> Source: The Mythical Man-Month, Ch. 11 “Plan to Throw One Away”
+> Source: "The Mythical Man-Month" Chapter 11 "Plan to Throw One Away" - "The first system built is not usable...plan to throw it away"
 
-## Directory structure
+## Directory Structure
 
 ```
 prototype/
-├── PROTOTYPE.md          # this file: declaration and status
-├── src/                  # prototype implementation code (tech debt allowed)
-└── characterization/     # characterization tests (record behavior, not acceptance)
+├── PROTOTYPE.md          # This file: prototype declaration and status
+├── src/                  # Prototype implementation code (technical debt allowed)
+└── characterization/     # Characterization tests (record actual behavior, not acceptance tests)
 ```
 
 ## Status
 
 - [ ] Prototype complete
-- [ ] Characterization tests ready (behavior snapshots recorded)
-- [ ] Decision made: promote / drop / iterate
+- [ ] Characterization tests ready (behavior snapshot recorded)
+- [ ] Decided: promote / discard / iterate
 
 ## Constraints (must follow)
 
-1. **Physical isolation**: prototype code stays under `prototype/src/`; do not copy directly into repo production code
-2. **Role isolation unchanged**: Test Owner and Coder must use separate conversations/instances
-3. **Characterization tests first**: Test Owner produces characterization tests (record behavior), not acceptance tests
-4. **Promotion must be explicit**: run `prototype-promote.sh __CHANGE_ID__` and complete the checklist
+1. **Physical isolation**: Prototype code can only be in `prototype/src/`, cannot directly land in repo `src/`
+2. **Role isolation unchanged**: Test Owner and Coder must still use independent sessions/instances
+3. **Characterization tests first**: Test Owner produces "characterization tests" (record actual behavior), not acceptance tests
+4. **Promotion requires explicit trigger**: Run `prototype-promote.sh __CHANGE_ID__` and complete checklist
 
-## Prototype promotion checklist (must complete before promotion)
+## Promotion Checklist (must complete before promotion)
 
-- [ ] Create production-grade `design.md` (distill What/Constraints/AC-xxx from prototype learnings)
-- [ ] Test Owner produces acceptance verification in `verification.md` (replacing characterization tests)
+- [ ] Create production-level `design.md` (extract What/Constraints/AC-xxx from prototype learnings)
+- [ ] Test Owner produces acceptance tests `verification.md` (replace characterization tests)
 - [ ] Run `prototype-promote.sh __CHANGE_ID__` and pass all gates
-- [ ] Archive characterization tests to `tests/archived-characterization/__CHANGE_ID__/`
+- [ ] Archive prototype code to `tests/archived-characterization/__CHANGE_ID__/`
 
-## Prototype drop checklist (when dropping)
+## Discard Checklist (when discarding)
 
-- [ ] Record key learnings into the Decision Log in `proposal.md`
-- [ ] Delete the `prototype/` directory
+- [ ] Record key insights learned to `proposal.md` Decision Log
+- [ ] Delete `prototype/` directory
 
-## Learning log
+## Learning Record
 
-> What did we learn during prototyping? These insights should inform the production implementation.
+> What was learned during prototyping? These insights will help production-level implementation.
 
-- Technical findings:
-- Risks clarified:
-- Design constraints updated:
+- Technical discoveries:
+- Risk clarifications:
+- Design constraint updates:
 EOF
 
   echo "ok: created prototype track at ${change_dir}/prototype/"
+fi
+
+# Delivery hook: Platform Sync (optional)
+# If the project provides scripts/platform-sync.sh and platform_targets[] is configured,
+# run it to keep platform artifacts in sync and write an auditable summary into RUNBOOK.md.
+platform_sync_script="${project_root}/scripts/platform-sync.sh"
+if [[ -x "$platform_sync_script" ]]; then
+  echo "info: platform sync (if enabled)..."
+  "$platform_sync_script" "$change_id" --project-root "$project_root" --change-root "$change_root" >/dev/null 2>&1 || {
+    echo "error: platform-sync failed (see ${change_dir}/evidence/gates/platform-sync.json)" >&2
+    exit 1
+  }
 fi
 
 echo "ok: scaffolded ${change_dir}"

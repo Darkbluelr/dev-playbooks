@@ -25,15 +25,7 @@ Evidence: reference spec paths, contract IDs, and evidence outputs.
 Use when you need: compatibility strategy, migration notes, implicit change detection.
 
 ### Extended (Optional)
-Use when you need: faster search/impact via optional MCP capabilities.
-
-## Recommended MCP Capability Types
-- Code search (code-search)
-- Reference tracking (reference-tracking)
-- Impact analysis (impact-analysis)
-- Doc retrieval (doc-retrieval)
-
-> This skill combines the functionality of the original `devbooks-spec-delta` and `devbooks-contract-data`.
+Use when you need: faster search/impact via code intelligence or reference tools.
 
 ## Prerequisites: Configuration Discovery (Protocol-Agnostic)
 

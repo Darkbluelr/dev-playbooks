@@ -23,12 +23,7 @@ Evidence: reference reviewed paths and any detected risks.
 Use when you need: resource management checks, smell detection, dependency health deep-dive.
 
 ### Extended (Optional)
-Use when you need: faster search/refs/impact via optional MCP capabilities.
-
-## Recommended MCP Capability Types
-- Code search (code-search)
-- Reference tracking (reference-tracking)
-- Impact analysis (impact-analysis)
+Use when you need: faster search/refs/impact via code intelligence or reference tools.
 
 ## Workflow Position Awareness
 

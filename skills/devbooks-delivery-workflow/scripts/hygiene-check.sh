@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hygiene-check.sh - Code hygiene checks (inspired by VS Code gulpfile.hygiene.ts)
+# hygiene-check.sh - Code hygiene check script (inspired by VS Code gulpfile.hygiene.ts)
 set -euo pipefail
 
 usage() {
@@ -79,7 +79,7 @@ done
 
 cd "$project_root"
 
-# By default, check all source files
+# Default: check all source files
 if [[ ${#paths[@]} -eq 0 ]]; then
   paths=("src" "tests" "lib")
 fi
@@ -209,7 +209,7 @@ check_test_only() {
 check_todo_issues() {
   echo "info: checking TODOs for issue references..."
 
-  # Find TODOs without issue references
+  # Find TODOs without issue reference
   local matches
   matches=$(rg -l 'TODO(?!\s*[:#]\s*\d+|.*#\d+|.*issue|.*ISSUE)' "${paths[@]}" --type ts --type js 2>/dev/null || true)
 
@@ -252,16 +252,16 @@ check_trailing_whitespace() {
 check_copyright() {
   echo "info: checking copyright headers..."
 
-  # Check whether copyright config exists
+  # Check if copyright configuration exists
   local copyright_pattern=""
   if [[ -f ".copyrightrc" ]]; then
     copyright_pattern=$(cat .copyrightrc)
   elif [[ -f "LICENSE" ]]; then
-    # Try to extract copyright holder from LICENSE
+    # Try to extract copyright holder from LICENSE file
     local holder
     holder=$(grep -i "copyright" LICENSE 2>/dev/null | head -1 || true)
     if [[ -n "$holder" ]]; then
-      # Simplified check: only check whether a copyright line exists
+      # Simplified check: only check if copyright declaration exists
       copyright_pattern="Copyright"
     fi
   fi

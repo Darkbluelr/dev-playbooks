@@ -1,0 +1,2031 @@
+#!/usr/bin/env node
+
+/**
+ * DevBooks CLI
+ *
+ * AI-agnostic spec-driven development workflow
+ *
+ * Usage:
+ *   dev-playbooks init [path] [options]
+ *   dev-playbooks update [path]           # Update CLI and configured tools
+ *   dev-playbooks migrate --from <legacy-id> [options]
+ *   dev-playbooks delivery [options]      # Single entry guidance (does not run AI)
+ *
+ * Options:
+ *   --tools <tools>    Non-interactive tool selection: all, none, or comma-separated list
+ *   --scope <scope>    Skills installation scope: project (default) or global
+ *   --from <legacy-id> Migration source id (maps to scripts/legacy/migrate-from-<legacy-id>.sh)
+ *   --dry-run          Dry run (no file changes)
+ *   --keep-old         Keep the old directory after migration
+ *   --force            Force overwrite (use with care)
+ *   --help             Show help
+ *   --version          Show version
+ */
+
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+import { fileURLToPath } from 'url';
+import { spawn } from 'child_process';
+import { checkbox, confirm, select } from '@inquirer/prompts';
+import chalk from 'chalk';
+import ora from 'ora';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const CLI_COMMAND = 'dev-playbooks';
+const XDG_CONFIG_HOME = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), '.config');
+const ENTRY_DOC = 'docs/ai-native-workflow.md';
+const ENTRY_TEMPLATES = {
+  delivery: 'templates/claude-commands/devbooks/delivery.md',
+  index: 'templates/claude-commands/devbooks/index.md'
+};
+
+// Version check cache configuration
+const VERSION_CACHE_FILE = path.join(os.tmpdir(), `${CLI_COMMAND}-version-cache.json`);
+const VERSION_CACHE_TTL = 10 * 60 * 1000; // 10 minute cache
+
+// ============================================================================
+// Skills support levels
+// ============================================================================
+
+const SKILLS_SUPPORT = {
+  FULL: 'full',      // Full Skills system (standalone, isolated context)
+  RULES: 'rules',    // Rules-like system (auto-applied rules)
+  AGENTS: 'agents',  // Project-level custom instructions
+  BASIC: 'basic'     // Basic instructions only (no Skills concept)
+};
+
+// ============================================================================
+// Skills Install Scope
+// ============================================================================
+
+const INSTALL_SCOPE = {
+  GLOBAL: 'global',   // Global installation (~/.claude/skills etc.)
+  PROJECT: 'project'  // Project-level installation (.claude/skills etc.)
+};
+
+// ============================================================================
+// AI tool configuration
+// ============================================================================
+
+const AI_TOOLS = [
+  // === Full Skills support ===
+  {
+    id: 'claude',
+    name: 'Claude Code',
+    description: 'Anthropic Claude Code CLI',
+    skillsSupport: SKILLS_SUPPORT.FULL,
+    slashDir: '.claude/commands/devbooks',
+    skillsDir: path.join(os.homedir(), '.claude', 'skills'),
+    instructionFile: 'CLAUDE.md',
+    available: true
+  },
+  {
+    id: 'qoder',
+    name: 'Qoder CLI',
+    description: 'Qoder AI Coding Assistant',
+    skillsSupport: SKILLS_SUPPORT.FULL,
+    slashDir: '.qoder/commands/devbooks',
+    agentsDir: 'agents',
+    globalDir: path.join(os.homedir(), '.qoder'),
+    instructionFile: 'AGENTS.md',
+    available: true
+  },
+  {
+    id: 'opencode',
+    name: 'OpenCode',
+    description: 'OpenCode AI CLI (compatible with oh-my-opencode)',
+    skillsSupport: SKILLS_SUPPORT.FULL,
+    slashDir: '.opencode/command',
+    agentsDir: '.opencode/agent',
+    skillsDir: path.join(XDG_CONFIG_HOME, 'opencode', 'skill'),
+    globalDir: path.join(XDG_CONFIG_HOME, 'opencode'),
+    instructionFile: 'AGENTS.md',
+    available: true
+  },
+
+  // === Factory (Native Skills Support) ===
+  {
+    id: 'factory',
+    name: 'Factory',
+    description: 'Factory Droid',
+    skillsSupport: SKILLS_SUPPORT.FULL,
+    slashDir: null,
+    skillsDir: '.factory/skills',  // Project-level
+    instructionFile: null,
+    available: true
+  },
+
+  // === Rules-like systems ===
+  {
+    id: 'cursor',
+    name: 'Cursor',
+    description: 'Cursor AI IDE',
+    skillsSupport: SKILLS_SUPPORT.FULL,
+    slashDir: '.cursor/commands/devbooks',
+    skillsDir: '.cursor/skills',  // Project-level
+    rulesDir: '.cursor/rules',
+    instructionFile: null,
+    available: true
+  },
+  {
+    id: 'windsurf',
+    name: 'Windsurf',
+    description: 'Codeium Windsurf IDE',
+    skillsSupport: SKILLS_SUPPORT.RULES,
+    slashDir: '.windsurf/commands/devbooks',
+    rulesDir: '.windsurf/rules',
+    instructionFile: null,
+    available: true
+  },
+  {
+    id: 'gemini',
+    name: 'Gemini CLI',
+    description: 'Google Gemini CLI',
+    skillsSupport: SKILLS_SUPPORT.RULES,
+    slashDir: '.gemini/commands/devbooks',
+    rulesDir: '.gemini',
+    globalDir: path.join(os.homedir(), '.gemini'),
+    instructionFile: 'GEMINI.md',
+    available: true
+  },
+  {
+    id: 'antigravity',
+    name: 'Antigravity',
+    description: 'Google Antigravity (VS Code)',
+    skillsSupport: SKILLS_SUPPORT.RULES,
+    slashDir: '.agent/workflows/devbooks',
+    rulesDir: '.agent/rules',
+    globalDir: path.join(os.homedir(), '.gemini', 'antigravity'),
+    instructionFile: 'GEMINI.md',
+    available: true
+  },
+
+  // === Custom instructions ===
+  {
+    id: 'github-copilot',
+    name: 'GitHub Copilot',
+    description: 'GitHub Copilot (VS Code / JetBrains)',
+    skillsSupport: SKILLS_SUPPORT.AGENTS,
+    instructionsDir: '.github/instructions',
+    instructionFile: '.github/copilot-instructions.md',
+    available: true
+  },
+
+  // === Continue (Rules/Prompts system) ===
+  {
+    id: 'continue',
+    name: 'Continue',
+    description: 'Continue (VS Code / JetBrains)',
+    skillsSupport: SKILLS_SUPPORT.RULES,
+    slashDir: '.continue/prompts/devbooks',
+    rulesDir: '.continue/rules',
+    instructionFile: null,
+    available: true
+  },
+
+  // === Codex CLI (Full Skills support) ===
+  {
+    id: 'codex',
+    name: 'Codex CLI',
+    description: 'OpenAI Codex CLI',
+    skillsSupport: SKILLS_SUPPORT.FULL,
+    slashDir: null,
+    skillsDir: path.join(os.homedir(), '.codex', 'skills'),
+    globalSlashDir: path.join(os.homedir(), '.codex', 'prompts'),
+    instructionFile: 'AGENTS.md',
+    available: true
+  },
+
+  // === Every Code / just-every/code (Full Skills Support) ===
+  {
+    id: 'code',
+    name: 'Every Code',
+    description: 'Every Code CLI (@just-every/code)',
+    skillsSupport: SKILLS_SUPPORT.FULL,
+    slashDir: null,
+    skillsDir: path.join(os.homedir(), '.code', 'skills'),
+    globalSlashDir: null,
+    instructionFile: 'AGENTS.md',
+    available: true
+  }
+];
+
+const DEVBOOKS_MARKERS = {
+  start: '<!-- DEVBOOKS:START -->',
+  end: '<!-- DEVBOOKS:END -->'
+};
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+function expandPath(p) {
+  if (p.startsWith('~')) {
+    return path.join(os.homedir(), p.slice(1));
+  }
+  return p;
+}
+
+/**
+ * Update content between DEVBOOKS:START/END markers in a file
+ * Preserves user customizations outside the markers
+ */
+function updateManagedContent(filePath, newManagedContent) {
+  if (!fs.existsSync(filePath)) {
+    return false;
+  }
+
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const startMarker = DEVBOOKS_MARKERS.start;
+  const endMarker = DEVBOOKS_MARKERS.end;
+
+  const startIdx = content.indexOf(startMarker);
+  const endIdx = content.indexOf(endMarker);
+
+  if (startIdx === -1 || endIdx === -1 || startIdx >= endIdx) {
+    // No valid markers found, cannot update
+    return false;
+  }
+
+  // Extract the managed block from new content
+  const newStartIdx = newManagedContent.indexOf(startMarker);
+  const newEndIdx = newManagedContent.indexOf(endMarker);
+
+  if (newStartIdx === -1 || newEndIdx === -1) {
+    return false;
+  }
+
+  const newManagedBlock = newManagedContent.slice(newStartIdx, newEndIdx + endMarker.length);
+
+  // Replace the old managed block
+  const before = content.slice(0, startIdx);
+  const after = content.slice(endIdx + endMarker.length);
+  const updatedContent = before + newManagedBlock + after;
+
+  if (updatedContent !== content) {
+    fs.writeFileSync(filePath, updatedContent);
+    return true;
+  }
+
+  return false;
+}
+
+function copyDirSync(src, dest) {
+  if (!fs.existsSync(src)) return 0;
+  fs.mkdirSync(dest, { recursive: true });
+  let count = 0;
+
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+
+    if (entry.isDirectory()) {
+      count += copyDirSync(srcPath, destPath);
+    } else if (entry.isSymbolicLink()) {
+      // Skip symlinks to avoid broken links
+      continue;
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+      count++;
+    }
+  }
+  return count;
+}
+
+function pruneRemovedSkills(skillsDestDir, allowedSkillNames) {
+  if (!fs.existsSync(skillsDestDir)) return 0;
+  let removedCount = 0;
+  const entries = fs.readdirSync(skillsDestDir, { withFileTypes: true });
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    if (!entry.name.startsWith('devbooks-')) continue;
+    if (allowedSkillNames.has(entry.name)) continue;
+
+    fs.rmSync(path.join(skillsDestDir, entry.name), { recursive: true, force: true });
+    removedCount++;
+  }
+
+  return removedCount;
+}
+
+function getSkillsSupportLabel(level) {
+  switch (level) {
+    case SKILLS_SUPPORT.FULL:
+      return chalk.green('★ Full Skills');
+    case SKILLS_SUPPORT.RULES:
+      return chalk.blue('◆ Rules system');
+    case SKILLS_SUPPORT.AGENTS:
+      return chalk.yellow('● Custom instructions');
+    case SKILLS_SUPPORT.BASIC:
+      return chalk.gray('○ Basic');
+    default:
+      return chalk.gray('○ Unknown');
+  }
+}
+
+function getSkillsSupportDescription(level) {
+  switch (level) {
+    case SKILLS_SUPPORT.FULL:
+      return 'Standalone Skills/Agents; callable on demand';
+    case SKILLS_SUPPORT.RULES:
+      return 'Rules system; auto-applied';
+    case SKILLS_SUPPORT.AGENTS:
+      return 'Project-level custom instructions';
+    case SKILLS_SUPPORT.BASIC:
+      return 'Global prompts only';
+    default:
+      return '';
+  }
+}
+
+function getCliVersion() {
+  const packagePath = path.join(__dirname, '..', 'package.json');
+  try {
+    const raw = fs.readFileSync(packagePath, 'utf-8');
+    const pkg = JSON.parse(raw);
+    return pkg.version || 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
+/**
+ * Check if a new version is available on npm (with caching)
+ * @returns {Promise<{hasUpdate: boolean, latestVersion: string|null, currentVersion: string}>}
+ */
+async function checkNpmUpdate() {
+  const currentVersion = getCliVersion();
+
+  // Check cache
+  try {
+    if (fs.existsSync(VERSION_CACHE_FILE)) {
+      const cache = JSON.parse(fs.readFileSync(VERSION_CACHE_FILE, 'utf-8'));
+      const cacheAge = Date.now() - cache.timestamp;
+
+      // If cache is valid and current version matches cached version, skip network request
+      if (cacheAge < VERSION_CACHE_TTL && cache.currentVersion === currentVersion) {
+        // If cache shows no update available, return cached result
+        if (!cache.hasUpdate) {
+          return { hasUpdate: false, latestVersion: cache.latestVersion, currentVersion };
+        }
+        // If cache shows update available, return cached result
+        return { hasUpdate: cache.hasUpdate, latestVersion: cache.latestVersion, currentVersion };
+      }
+    }
+  } catch {
+    // Cache read failed, continue with network request
+  }
+
+  try {
+    const { execSync } = await import('child_process');
+    const latestVersion = execSync(`npm view ${CLI_COMMAND} version`, {
+      encoding: 'utf-8',
+      timeout: 10000,
+      stdio: ['pipe', 'pipe', 'pipe']
+    }).trim();
+
+    let hasUpdate = false;
+    if (latestVersion && latestVersion !== currentVersion) {
+      // Simple semver comparison
+      const current = currentVersion.split('.').map(Number);
+      const latest = latestVersion.split('.').map(Number);
+      hasUpdate = latest[0] > current[0] ||
+        (latest[0] === current[0] && latest[1] > current[1]) ||
+        (latest[0] === current[0] && latest[1] === current[1] && latest[2] > current[2]);
+    }
+
+    // Save cache
+    try {
+      fs.writeFileSync(VERSION_CACHE_FILE, JSON.stringify({
+        timestamp: Date.now(),
+        currentVersion,
+        latestVersion,
+        hasUpdate
+      }));
+    } catch {
+      // Cache write failed, ignore
+    }
+
+    return { hasUpdate, latestVersion, currentVersion };
+  } catch {
+    // Network error or timeout, silently ignore
+    return { hasUpdate: false, latestVersion: null, currentVersion };
+  }
+}
+
+/**
+ * Perform npm global update
+ * @returns {Promise<boolean>} Whether the update succeeded
+ */
+async function performNpmUpdate() {
+  return new Promise((resolve) => {
+    const spinner = ora(`Updating ${CLI_COMMAND}...`).start();
+    const child = spawn('npm', ['install', '-g', CLI_COMMAND], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      shell: true
+    });
+
+    let stderr = '';
+    child.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        spinner.succeed(`${CLI_COMMAND} updated to latest version`);
+        resolve(true);
+      } else {
+        spinner.fail(`Update failed: ${stderr || 'Unknown error'}`);
+        resolve(false);
+      }
+    });
+
+    child.on('error', (err) => {
+      spinner.fail(`Update failed: ${err.message}`);
+      resolve(false);
+    });
+  });
+}
+
+/**
+ * Display version changelog summary
+ * @param {string} fromVersion - Current version
+ * @param {string} toVersion - Target version
+ */
+async function displayVersionChangelog(fromVersion, toVersion) {
+  try {
+    // Try to fetch CHANGELOG from GitHub
+    const { execSync } = await import('child_process');
+    const changelogUrl = `https://raw.githubusercontent.com/Darkbluelr/dev-playbooks/master/CHANGELOG.md`;
+
+    // Use curl to fetch CHANGELOG (if available)
+    let changelog = '';
+    try {
+      changelog = execSync(`curl -s -m 5 "${changelogUrl}"`, {
+        encoding: 'utf-8',
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
+    } catch {
+      // If fetch fails, show simplified info
+      console.log(chalk.cyan('📋 Version Changelog'));
+      console.log(chalk.gray('─'.repeat(60)));
+      console.log(chalk.yellow('⚠ Unable to fetch detailed changelog, please visit:'));
+      console.log(chalk.blue(`   https://github.com/Darkbluelr/dev-playbooks/releases/tag/v${toVersion}`));
+      return;
+    }
+
+    // Parse CHANGELOG, extract changes for relevant versions
+    const changes = parseChangelog(changelog, fromVersion, toVersion);
+
+    if (changes.length === 0) {
+      console.log(chalk.cyan('📋 Version Changelog'));
+      console.log(chalk.gray('─'.repeat(60)));
+      console.log(chalk.yellow('⚠ No detailed changelog found, please visit:'));
+      console.log(chalk.blue(`   https://github.com/Darkbluelr/dev-playbooks/releases/tag/v${toVersion}`));
+      return;
+    }
+
+    // Display changelog summary
+    console.log(chalk.cyan('📋 Version Changelog'));
+    console.log(chalk.gray('─'.repeat(60)));
+
+    for (const change of changes) {
+      console.log();
+      console.log(chalk.bold.green(`## ${change.version}`));
+      if (change.date) {
+        console.log(chalk.gray(`   Release date: ${change.date}`));
+      }
+      console.log();
+
+      // Display main changes (limit to first 10 lines)
+      const highlights = change.content.split('\n')
+        .filter(line => line.trim().length > 0)
+        .slice(0, 10);
+
+      for (const line of highlights) {
+        if (line.startsWith('###')) {
+          console.log(chalk.bold.yellow(line));
+        } else if (line.startsWith('####')) {
+          console.log(chalk.bold(line));
+        } else if (line.startsWith('- ✅') || line.startsWith('- ✓')) {
+          console.log(chalk.green(line));
+        } else if (line.startsWith('- ⚠️') || line.startsWith('- ❌')) {
+          console.log(chalk.yellow(line));
+        } else if (line.startsWith('- ')) {
+          console.log(chalk.white(line));
+        } else {
+          console.log(chalk.gray(line));
+        }
+      }
+
+      if (change.content.split('\n').length > 10) {
+        console.log(chalk.gray('   ... (see full changelog for more)'));
+      }
+    }
+
+    console.log();
+    console.log(chalk.gray('─'.repeat(60)));
+    console.log(chalk.blue('📖 Full changelog: ') + chalk.underline(`https://github.com/Darkbluelr/dev-playbooks/blob/master/CHANGELOG.md`));
+
+  } catch (error) {
+    // Silent failure, don't affect update process
+    console.log(chalk.gray('Note: Unable to display changelog summary'));
+  }
+}
+
+/**
+ * Parse CHANGELOG content, extract changes for specified version range
+ * @param {string} changelog - CHANGELOG content
+ * @param {string} fromVersion - Starting version
+ * @param {string} toVersion - Target version
+ * @returns {Array} - List of changes
+ */
+function parseChangelog(changelog, fromVersion, toVersion) {
+  const changes = [];
+  const lines = changelog.split('\n');
+
+  let currentVersion = null;
+  let currentDate = null;
+  let currentContent = [];
+  let inVersionBlock = false;
+  let shouldCapture = false;
+
+  // Parse version numbers (remove 'v' prefix)
+  const from = fromVersion.replace(/^v/, '');
+  const to = toVersion.replace(/^v/, '');
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Match version header: ## [2.0.0] - 2026-01-19
+    const versionMatch = line.match(/^##\s+\[?(\d+\.\d+\.\d+)\]?\s*(?:-\s*(\d{4}-\d{2}-\d{2}))?/);
+
+    if (versionMatch) {
+      // Save previous version's content
+      if (inVersionBlock && shouldCapture && currentVersion) {
+        changes.push({
+          version: currentVersion,
+          date: currentDate,
+          content: currentContent.join('\n').trim()
+        });
+      }
+
+      // Start new version
+      currentVersion = versionMatch[1];
+      currentDate = versionMatch[2] || null;
+      currentContent = [];
+      inVersionBlock = true;
+
+      // Determine if this version should be captured
+      // Capture all versions between fromVersion and toVersion
+      const versionNum = currentVersion.split('.').map(Number);
+      const fromNum = from.split('.').map(Number);
+      const toNum = to.split('.').map(Number);
+
+      const isAfterFrom = compareVersions(versionNum, fromNum) > 0;
+      const isBeforeOrEqualTo = compareVersions(versionNum, toNum) <= 0;
+
+      shouldCapture = isAfterFrom && isBeforeOrEqualTo;
+
+      continue;
+    }
+
+    // If we encounter next version header or separator, end current version
+    if (line.startsWith('---') && inVersionBlock) {
+      if (shouldCapture && currentVersion) {
+        changes.push({
+          version: currentVersion,
+          date: currentDate,
+          content: currentContent.join('\n').trim()
+        });
+      }
+      inVersionBlock = false;
+      shouldCapture = false;
+      continue;
+    }
+
+    // Collect content
+    if (inVersionBlock && shouldCapture) {
+      currentContent.push(line);
+    }
+  }
+
+  // Save last version
+  if (inVersionBlock && shouldCapture && currentVersion) {
+    changes.push({
+      version: currentVersion,
+      date: currentDate,
+      content: currentContent.join('\n').trim()
+    });
+  }
+
+  return changes;
+}
+
+/**
+ * Compare two version numbers
+ * @param {number[]} v1 - Version 1 [major, minor, patch]
+ * @param {number[]} v2 - Version 2 [major, minor, patch]
+ * @returns {number} - 1 if v1 > v2, -1 if v1 < v2, 0 if equal
+ */
+function compareVersions(v1, v2) {
+  for (let i = 0; i < 3; i++) {
+    if (v1[i] > v2[i]) return 1;
+    if (v1[i] < v2[i]) return -1;
+  }
+  return 0;
+}
+
+// ============================================================================
+// Auto-update .gitignore and .npmignore
+// ============================================================================
+
+const IGNORE_MARKERS = {
+  start: '# DevBooks managed - DO NOT EDIT',
+  end: '# End DevBooks managed'
+};
+
+/**
+ * Get entries to add to .gitignore
+ * @param {string[]} toolIds - Selected AI tool IDs
+ * @returns {string[]} - Entries to ignore
+ */
+function getGitIgnoreEntries(toolIds) {
+  const entries = [
+    '# DevBooks local config (contains user preferences, should not be committed)',
+    '.devbooks/',
+    '',
+    '# DevBooks working directory (runtime artifacts)',
+    'dev-playbooks/',
+    '',
+    '# DevBooks workflow temp files',
+    'evidence/',
+    '*.tmp',
+    '*.bak'
+  ];
+
+  // Add corresponding AI tool directories based on selected tools
+  for (const toolId of toolIds) {
+    const tool = AI_TOOLS.find(t => t.id === toolId);
+    if (!tool) continue;
+
+    // Add slash command directory
+    if (tool.slashDir) {
+      const topDir = tool.slashDir.split('/')[0];
+      if (!entries.includes(topDir + '/')) {
+        entries.push(`${topDir}/`);
+      }
+    }
+
+    // Add project-level skills directory
+    if (tool.skillsDir && !path.isAbsolute(tool.skillsDir)) {
+      const topDir = tool.skillsDir.split('/')[0];
+      if (!entries.includes(topDir + '/')) {
+        entries.push(`${topDir}/`);
+      }
+    }
+
+    // Add rules directory
+    if (tool.rulesDir) {
+      const topDir = tool.rulesDir.split('/')[0];
+      if (!entries.includes(topDir + '/')) {
+        entries.push(`${topDir}/`);
+      }
+    }
+
+    // Add agents directory (e.g., .github/instructions)
+    if (tool.instructionsDir) {
+      const topDir = tool.instructionsDir.split('/')[0];
+      if (topDir !== '.github') { // .github directory usually needs to be kept
+        if (!entries.includes(topDir + '/')) {
+          entries.push(`${topDir}/`);
+        }
+      }
+    }
+  }
+
+  return entries;
+}
+
+/**
+ * Get entries to add to .npmignore
+ * @returns {string[]} - Entries to ignore
+ */
+function getNpmIgnoreEntries() {
+  return [
+    '# DevBooks development docs (not needed at runtime)',
+    'dev-playbooks/',
+    '.devbooks/',
+    '',
+    '# AI tool config directories',
+    '.claude/',
+    '.cursor/',
+    '.factory/',
+    '.windsurf/',
+    '.gemini/',
+    '.agent/',
+    '.opencode/',
+    '.continue/',
+    '.qoder/',
+    '.code/',
+    '.codex/',
+    '.github/instructions/',
+    '.github/copilot-instructions.md',
+    '',
+    '# DevBooks instruction files',
+    'CLAUDE.md',
+    'AGENTS.md',
+    'GEMINI.md',
+    '',
+    '# DevBooks workflow temp files',
+    'evidence/',
+    '*.tmp',
+    '*.bak'
+  ];
+}
+
+/**
+ * Update ignore file, preserving user-defined content
+ * @param {string} filePath - ignore file path
+ * @param {string[]} entries - Entries to add
+ * @returns {object} - { updated: boolean, action: 'created' | 'updated' | 'unchanged' }
+ */
+function updateIgnoreFile(filePath, entries) {
+  const managedBlock = [
+    IGNORE_MARKERS.start,
+    ...entries,
+    IGNORE_MARKERS.end
+  ].join('\n');
+
+  if (!fs.existsSync(filePath)) {
+    // File doesn't exist, create new file
+    fs.writeFileSync(filePath, managedBlock + '\n');
+    return { updated: true, action: 'created' };
+  }
+
+  const content = fs.readFileSync(filePath, 'utf-8');
+  const startIdx = content.indexOf(IGNORE_MARKERS.start);
+  const endIdx = content.indexOf(IGNORE_MARKERS.end);
+
+  if (startIdx !== -1 && endIdx !== -1 && startIdx < endIdx) {
+    // Managed block exists, update it
+    const before = content.slice(0, startIdx);
+    const after = content.slice(endIdx + IGNORE_MARKERS.end.length);
+    const newContent = before + managedBlock + after;
+
+    if (newContent !== content) {
+      fs.writeFileSync(filePath, newContent);
+      return { updated: true, action: 'updated' };
+    }
+    return { updated: false, action: 'unchanged' };
+  }
+
+  // No managed block, append to end of file
+  const newContent = content.trimEnd() + '\n\n' + managedBlock + '\n';
+  fs.writeFileSync(filePath, newContent);
+  return { updated: true, action: 'updated' };
+}
+
+/**
+ * Setup project's ignore files
+ * @param {string[]} toolIds - Selected AI tool IDs
+ * @param {string} projectDir - Project directory
+ * @returns {object[]} - Results array
+ */
+function setupIgnoreFiles(toolIds, projectDir) {
+  const results = [];
+
+  // Update .gitignore
+  const gitIgnorePath = path.join(projectDir, '.gitignore');
+  const gitIgnoreEntries = getGitIgnoreEntries(toolIds);
+  const gitResult = updateIgnoreFile(gitIgnorePath, gitIgnoreEntries);
+  if (gitResult.updated) {
+    results.push({ file: '.gitignore', action: gitResult.action });
+  }
+
+  // Update .npmignore
+  const npmIgnorePath = path.join(projectDir, '.npmignore');
+  const npmIgnoreEntries = getNpmIgnoreEntries();
+  const npmResult = updateIgnoreFile(npmIgnorePath, npmIgnoreEntries);
+  if (npmResult.updated) {
+    results.push({ file: '.npmignore', action: npmResult.action });
+  }
+
+  return results;
+}
+
+function showVersion() {
+  console.log(`${CLI_COMMAND} v${getCliVersion()}`);
+}
+
+// ============================================================================
+// Skills support legend
+// ============================================================================
+
+function printSkillsSupportInfo() {
+  console.log();
+  console.log(chalk.bold('📚 Skills support levels'));
+  console.log(chalk.gray('─'.repeat(50)));
+  console.log();
+
+  console.log(chalk.green('★ Full Skills') + chalk.gray(' - Claude Code, Codex CLI, OpenCode, Qoder, Every Code'));
+  console.log(chalk.gray('   └ Standalone Skills/Agents; callable on demand, with isolated context'));
+  console.log();
+
+  console.log(chalk.blue('◆ Rules system') + chalk.gray(' - Cursor, Windsurf, Gemini, Antigravity, Continue'));
+  console.log(chalk.gray('   └ Rules are auto-applied to matching files/scenarios; close to Skills'));
+  console.log();
+
+  console.log(chalk.yellow('● Custom instructions') + chalk.gray(' - GitHub Copilot'));
+  console.log(chalk.gray('   └ Project instruction files; AI can read but cannot actively invoke them'));
+  console.log();
+  console.log(chalk.gray('─'.repeat(50)));
+  console.log();
+}
+
+// ============================================================================
+// Interactive selection (inquirer)
+// ============================================================================
+
+async function promptToolSelection(projectDir) {
+  printSkillsSupportInfo();
+
+  // Load saved config
+  const config = loadConfig(projectDir);
+  const savedTools = config.aiTools || [];
+  const hasSavedConfig = savedTools.length > 0;
+
+  const choices = AI_TOOLS.filter(t => t.available).map(tool => {
+    const isSelected = hasSavedConfig
+      ? savedTools.includes(tool.id)
+      : tool.id === 'claude'; // Default selection on first run
+
+    return {
+      name: `${tool.name} ${chalk.gray(`(${tool.description})`)} ${getSkillsSupportLabel(tool.skillsSupport)}`,
+      value: tool.id,
+      checked: isSelected
+    };
+  });
+
+  if (hasSavedConfig) {
+    console.log(chalk.blue('ℹ') + ` Detected saved configuration: ${savedTools.join(', ')}`);
+    console.log();
+  }
+
+  const selectedTools = await checkbox({
+    message: 'Select AI tools to configure (space to toggle, enter to confirm)',
+    choices,
+    pageSize: 12,
+    instructions: false
+  });
+
+  if (selectedTools.length === 0) {
+    const continueWithoutTools = await confirm({
+      message: 'No tools selected. Continue (project structure only)?',
+      default: false
+    });
+    if (!continueWithoutTools) {
+      console.log(chalk.yellow('Initialization cancelled.'));
+      process.exit(0);
+    }
+  }
+
+  return selectedTools;
+}
+
+async function promptInstallScope(projectDir, selectedTools) {
+  // Check if any tools support full Skills
+  const fullSupportTools = selectedTools.filter(id => {
+    const tool = AI_TOOLS.find(t => t.id === id);
+    return tool && tool.skillsSupport === SKILLS_SUPPORT.FULL;
+  });
+
+  if (fullSupportTools.length === 0) {
+    return INSTALL_SCOPE.PROJECT; // No full Skills support tools, default to project-level
+  }
+
+  // Load saved config
+  const config = loadConfig(projectDir);
+  const savedScope = config.installScope;
+
+  console.log();
+  console.log(chalk.bold('📦 Skills Installation Location'));
+  console.log(chalk.gray('─'.repeat(50)));
+  console.log();
+
+  const scope = await select({
+    message: 'Where should Skills be installed?',
+    choices: [
+      {
+        name: `Project-level ${chalk.gray('(.claude/skills etc., only for this project)')}`,
+        value: INSTALL_SCOPE.PROJECT,
+        description: 'Recommended: Skills stay with the project, no impact on other projects'
+      },
+      {
+        name: `Global ${chalk.gray('(~/.claude/skills etc., shared across all projects)')}`,
+        value: INSTALL_SCOPE.GLOBAL,
+        description: 'All projects share the same set of Skills'
+      }
+    ],
+    default: savedScope || INSTALL_SCOPE.PROJECT
+  });
+
+  return scope;
+}
+
+
+// ============================================================================
+// Install Skills (Claude Code, Codex CLI, Qoder)
+// ============================================================================
+
+function getSkillsDestDir(tool, scope, projectDir) {
+  // Determine destination directory based on install scope
+  if (scope === INSTALL_SCOPE.PROJECT) {
+    if (tool.skillsDir && !path.isAbsolute(tool.skillsDir)) {
+      return path.join(projectDir, tool.skillsDir);
+    }
+    // Backward-compatible hardcoded paths
+    if (tool.id === 'claude') {
+      return path.join(projectDir, '.claude', 'skills');
+    } else if (tool.id === 'codex') {
+      return path.join(projectDir, '.codex', 'skills');
+    } else if (tool.id === 'opencode') {
+      return path.join(projectDir, '.opencode', 'skill');
+    } else if (tool.id === 'code') {
+      return path.join(projectDir, '.code', 'skills');
+    }
+  }
+  // Global installation: use tool's defined global directory
+  return tool.skillsDir;
+}
+
+function installSkills(toolIds, projectDir, scope = INSTALL_SCOPE.GLOBAL, update = false) {
+  const results = [];
+
+  for (const toolId of toolIds) {
+    const tool = AI_TOOLS.find(t => t.id === toolId);
+    if (!tool || tool.skillsSupport !== SKILLS_SUPPORT.FULL) continue;
+
+    // All full-support tools share the same Skills format
+    if (tool.skillsDir) {
+      const skillsSrcDir = path.join(__dirname, '..', 'skills');
+      const skillsDestDir = getSkillsDestDir(tool, scope, projectDir);
+
+      if (!fs.existsSync(skillsSrcDir)) continue;
+
+      const skillDirs = fs.readdirSync(skillsSrcDir)
+        .filter(name => name.startsWith('devbooks-'))
+        .filter(name => fs.statSync(path.join(skillsSrcDir, name)).isDirectory());
+
+      if (skillDirs.length === 0) continue;
+      const skillNames = new Set(skillDirs);
+
+      fs.mkdirSync(skillsDestDir, { recursive: true });
+
+      // Install shared directory _shared first (if exists)
+      const sharedSrcDir = path.join(skillsSrcDir, '_shared');
+      if (fs.existsSync(sharedSrcDir)) {
+        const sharedDestDir = path.join(skillsDestDir, '_shared');
+        if (update || !fs.existsSync(sharedDestDir)) {
+          if (fs.existsSync(sharedDestDir)) {
+            fs.rmSync(sharedDestDir, { recursive: true, force: true });
+          }
+          copyDirSync(sharedSrcDir, sharedDestDir);
+        }
+      }
+
+      let installedCount = 0;
+      for (const skillName of skillDirs) {
+        const srcPath = path.join(skillsSrcDir, skillName);
+        const destPath = path.join(skillsDestDir, skillName);
+
+        if (fs.existsSync(destPath) && !update) continue;
+        if (fs.existsSync(destPath)) {
+          fs.rmSync(destPath, { recursive: true, force: true });
+        }
+
+        copyDirSync(srcPath, destPath);
+        installedCount++;
+      }
+
+      const removedCount = update ? pruneRemovedSkills(skillsDestDir, skillNames) : 0;
+
+      results.push({
+        tool: tool.name,
+        type: 'skills',
+        count: installedCount,
+        total: skillDirs.length,
+        removed: removedCount,
+        scope: scope,
+        path: skillsDestDir
+      });
+    }
+
+    // Qoder: Create agents directory structure (but don't copy Skills, different format)
+    if (toolId === 'qoder') {
+      results.push({ tool: 'Qoder', type: 'agents', count: 0, total: 0, note: 'Manual agents/ creation required' });
+    }
+  }
+
+  return results;
+}
+
+// ============================================================================
+// OpenCode: project-level command entrypoint (.opencode/command/devbooks.md)
+// ============================================================================
+
+function generateOpenCodeDevbooksCommand() {
+  return `---
+description: DevBooks workflow entrypoint (OpenCode / oh-my-opencode)
+---
+
+${DEVBOOKS_MARKERS.start}
+# DevBooks (OpenCode / oh-my-opencode)
+
+This project uses DevBooks for spec-driven development.
+
+## Quick start
+
+Single entry: type \`/devbooks:delivery\` in chat
+
+Or use natural language: \`Run devbooks-delivery-workflow skill: <your request>\`
+
+> Note: In oh-my-opencode, installed Skills are also available as Slash Commands, so you can call them directly as \`/<skill-name>\`.
+
+## Common commands (use /<skill-name>)
+
+- \`/devbooks:delivery\`: single entry (routes to the minimal sufficient closed loop)
+- \`/devbooks-impact-analysis\`: impact analysis (cross-module / external contracts)
+- \`/devbooks-proposal-author\`: proposal stage (no coding)
+- \`/devbooks-design-doc\`: design doc (What/Constraints + AC)
+- \`/devbooks-implementation-plan\`: implementation plan (tasks.md)
+- \`/devbooks-test-owner\`: acceptance tests + traceability (separate chat)
+- \`/devbooks-coder\`: implement per tasks (do not modify tests/)
+- \`/devbooks-archiver\`: archive phase (auto backfill, spec merge, doc sync check, change package move)
+
+## Hard constraints
+
+- Before answering or writing code: run config discovery and read the rules doc (\`.devbooks/config.yaml\` → \`dev-playbooks/project.md\` → \`project.md\`)
+- New features / breaking changes / architecture changes: create \`dev-playbooks/changes/<id>/\` and produce proposal/design/tasks/verification
+- Test Owner and Coder must be in separate conversations; Coder must not modify \`tests/**\`
+
+${DEVBOOKS_MARKERS.end}
+`;
+}
+
+function installOpenCodeCommands(toolIds, projectDir, update = false) {
+  const results = [];
+
+  if (!toolIds.includes('opencode')) return results;
+
+  const destDir = path.join(projectDir, '.opencode', 'command');
+  fs.mkdirSync(destDir, { recursive: true });
+
+  const destPath = path.join(destDir, 'devbooks.md');
+  const content = generateOpenCodeDevbooksCommand();
+
+  if (!fs.existsSync(destPath)) {
+    fs.writeFileSync(destPath, content);
+    results.push({ tool: 'OpenCode', type: 'command', path: destPath, action: 'created' });
+  } else if (update) {
+    const updated = updateManagedContent(destPath, content);
+    if (updated) {
+      results.push({ tool: 'OpenCode', type: 'command', path: destPath, action: 'updated' });
+    }
+  }
+
+  return results;
+}
+
+// ============================================================================
+// Install Claude Code Custom Subagents (solves built-in subagents cannot access Skills)
+// ============================================================================
+
+function installClaudeAgents(toolIds, projectDir, update = false) {
+  const results = [];
+
+  // Only Claude Code needs custom subagents
+  if (!toolIds.includes('claude')) return results;
+
+  const agentsSrcDir = path.join(__dirname, '..', 'templates', 'claude-agents');
+  const agentsDestDir = path.join(projectDir, '.claude', 'agents');
+
+  if (!fs.existsSync(agentsSrcDir)) return results;
+
+  const agentFiles = fs.readdirSync(agentsSrcDir)
+    .filter(name => name.endsWith('.md'));
+
+  if (agentFiles.length === 0) return results;
+
+  fs.mkdirSync(agentsDestDir, { recursive: true });
+
+  let installedCount = 0;
+  for (const agentFile of agentFiles) {
+    const srcPath = path.join(agentsSrcDir, agentFile);
+    const destPath = path.join(agentsDestDir, agentFile);
+
+    if (fs.existsSync(destPath) && !update) continue;
+
+    fs.copyFileSync(srcPath, destPath);
+    installedCount++;
+  }
+
+  if (installedCount > 0) {
+    results.push({
+      tool: 'Claude Code',
+      type: 'agents',
+      count: installedCount,
+      total: agentFiles.length,
+      path: agentsDestDir
+    });
+  }
+
+  return results;
+}
+
+// ============================================================================
+// Install Rules (Cursor, Windsurf, Gemini, Antigravity, OpenCode, Continue)
+// ============================================================================
+
+function installRules(toolIds, projectDir, update = false) {
+  const results = [];
+
+  for (const toolId of toolIds) {
+    const tool = AI_TOOLS.find(t => t.id === toolId);
+    if (!tool || tool.skillsSupport !== SKILLS_SUPPORT.RULES) continue;
+
+    if (tool.rulesDir) {
+      const rulesDestDir = path.join(projectDir, tool.rulesDir);
+      fs.mkdirSync(rulesDestDir, { recursive: true });
+
+      // Create devbooks.md rule file
+      const ruleContent = generateRuleContent(toolId);
+      const ruleFileName = toolId === 'gemini' ? 'GEMINI.md' : 'devbooks.md';
+      const rulePath = path.join(rulesDestDir, ruleFileName);
+
+      if (!fs.existsSync(rulePath)) {
+        fs.writeFileSync(rulePath, ruleContent);
+        results.push({ tool: tool.name, type: 'rules', path: rulePath, action: 'created' });
+      } else if (update) {
+        // Update existing file's DEVBOOKS:START/END content
+        const updated = updateManagedContent(rulePath, ruleContent);
+        if (updated) {
+          results.push({ tool: tool.name, type: 'rules', path: rulePath, action: 'updated' });
+        }
+      }
+    }
+  }
+
+  return results;
+}
+
+function generateRuleContent(toolId) {
+  const frontmatter = {
+    cursor: `---
+description: DevBooks workflow rules
+globs: ["**/*"]
+---`,
+    windsurf: `---
+trigger: model_decision
+description: DevBooks workflow rules - auto-apply during feature work and architecture changes
+---`,
+    gemini: '',
+    antigravity: `---
+description: DevBooks workflow rules
+---`,
+    opencode: '',
+    continue: `---
+name: DevBooks workflow rules
+description: DevBooks spec-driven development workflow
+---`
+  };
+
+  return `${frontmatter[toolId] || ''}
+${DEVBOOKS_MARKERS.start}
+# DevBooks workflow rules
+
+## Protocol discovery
+
+Before answering or writing any code, discover configuration in this order:
+1. \`.devbooks/config.yaml\` (if present) -> parse and follow its mapping
+2. \`dev-playbooks/project.md\` (if present) -> DevBooks protocol
+
+## Core constraints
+
+- Test Owner and Coder must work in separate conversations/instances
+- Coder must not modify \`tests/\`
+- For any new feature / breaking change / architecture change: create \`dev-playbooks/changes/<id>/\` first
+
+## Workflow Skills
+
+| Skill | Purpose |
+|------|------|
+| \`devbooks-proposal-author\` | Create a change proposal |
+| \`devbooks-design-doc\` | Create a design doc |
+| \`devbooks-test-owner / devbooks-coder\` | Execute (tests + implementation) |
+| \`devbooks-archiver\` | Archive the change package |
+
+${DEVBOOKS_MARKERS.end}
+`;
+}
+
+// ============================================================================
+// Install instruction files
+// ============================================================================
+
+function installInstructionFiles(toolIds, projectDir, update = false) {
+  const results = [];
+
+  for (const toolId of toolIds) {
+    const tool = AI_TOOLS.find(t => t.id === toolId);
+    if (!tool) continue;
+
+    // GitHub Copilot special handling
+    if (toolId === 'github-copilot') {
+      const instructionsDir = path.join(projectDir, '.github', 'instructions');
+      fs.mkdirSync(instructionsDir, { recursive: true });
+
+      const copilotInstructionPath = path.join(projectDir, '.github', 'copilot-instructions.md');
+      const copilotContent = generateCopilotInstructions();
+      if (!fs.existsSync(copilotInstructionPath)) {
+        fs.writeFileSync(copilotInstructionPath, copilotContent);
+        results.push({ tool: 'GitHub Copilot', type: 'instructions', path: copilotInstructionPath, action: 'created' });
+      } else if (update) {
+        const updated = updateManagedContent(copilotInstructionPath, copilotContent);
+        if (updated) {
+          results.push({ tool: 'GitHub Copilot', type: 'instructions', path: copilotInstructionPath, action: 'updated' });
+        }
+      }
+
+      // Create devbooks.instructions.md
+      const devbooksInstructionPath = path.join(instructionsDir, 'devbooks.instructions.md');
+      const devbooksContent = generateCopilotDevbooksInstructions();
+      if (!fs.existsSync(devbooksInstructionPath)) {
+        fs.writeFileSync(devbooksInstructionPath, devbooksContent);
+        results.push({ tool: 'GitHub Copilot', type: 'instructions', path: devbooksInstructionPath, action: 'created' });
+      } else if (update) {
+        const updated = updateManagedContent(devbooksInstructionPath, devbooksContent);
+        if (updated) {
+          results.push({ tool: 'GitHub Copilot', type: 'instructions', path: devbooksInstructionPath, action: 'updated' });
+        }
+      }
+    }
+
+    // Create AGENTS.md / CLAUDE.md / GEMINI.md
+    if (tool.instructionFile && !tool.instructionFile.includes('/')) {
+      const instructionPath = path.join(projectDir, tool.instructionFile);
+      const instructionContent = generateAgentsContent(tool.instructionFile);
+      if (!fs.existsSync(instructionPath)) {
+        fs.writeFileSync(instructionPath, instructionContent);
+        results.push({ tool: tool.name, type: 'instruction', path: instructionPath, action: 'created' });
+      } else if (update) {
+        const updated = updateManagedContent(instructionPath, instructionContent);
+        if (updated) {
+          results.push({ tool: tool.name, type: 'instruction', path: instructionPath, action: 'updated' });
+        }
+      }
+    }
+  }
+
+  return results;
+}
+
+function generateCopilotInstructions() {
+  return `${DEVBOOKS_MARKERS.start}
+# GitHub Copilot project instructions
+
+## DevBooks protocol
+
+This project uses the DevBooks workflow.
+
+### Protocol discovery
+
+Before answering or writing code, check:
+1. \`.devbooks/config.yaml\` - DevBooks configuration
+2. \`dev-playbooks/project.md\` - project rules
+
+### Core constraints
+
+- New features / architecture changes require a proposal first
+- Separate Test Owner and Coder roles
+- Do not modify \`tests/\` while acting as the Coder
+
+${DEVBOOKS_MARKERS.end}
+`;
+}
+
+function generateCopilotDevbooksInstructions() {
+  return `---
+applyTo: "dev-playbooks/**/*"
+description: "DevBooks workflow file handling rules"
+---
+${DEVBOOKS_MARKERS.start}
+# DevBooks file handling rules
+
+When editing files under \`dev-playbooks/\`:
+
+1. **proposal.md**: write Why/What/Impact only; no implementation details
+2. **design.md**: write What/Constraints + AC-xxx; no function bodies
+3. **tasks.md**: trackable tasks, bound to verification anchors
+4. **verification.md**: traceability matrix, record Red/Green evidence
+
+${DEVBOOKS_MARKERS.end}
+`;
+}
+
+function generateAgentsContent(filename) {
+  const toolHint = filename === 'CLAUDE.md' ? 'Claude Code'
+    : filename === 'GEMINI.md' ? 'Gemini CLI / Antigravity'
+    : 'AI tools compatible with AGENTS.md';
+
+  return `${DEVBOOKS_MARKERS.start}
+# DevBooks instructions
+
+These instructions apply to ${toolHint}.
+
+## DevBooks protocol discovery and constraints
+
+- **Configuration discovery**: before answering or writing any code, discover configuration in this order:
+  1. \`.devbooks/config.yaml\` (if present) -> parse and follow its mapping
+  2. \`dev-playbooks/project.md\` (if present) -> DevBooks protocol
+- After discovery, read \`agents_doc\` (rules doc) before executing any operation.
+- Test Owner and Coder must work in separate conversations/instances; Coder must not modify \`tests/\`.
+- For any new feature / breaking change / architecture change: create \`dev-playbooks/changes/<id>/\` first.
+
+## Workflow Skills
+
+| Skill | Purpose |
+|------|------|
+| \`devbooks-proposal-author\` | Create a change proposal |
+| \`devbooks-design-doc\` | Create a design doc |
+| \`devbooks-test-owner / devbooks-coder\` | Execute (test-owner/coder/reviewer roles) |
+| \`devbooks-archiver\` | Archive the change package |
+
+${DEVBOOKS_MARKERS.end}
+`;
+}
+
+// ============================================================================
+// Create project structure
+// ============================================================================
+
+function createProjectStructure(projectDir) {
+  const templateDir = path.join(__dirname, '..', 'templates');
+
+  const dirs = [
+    'dev-playbooks/specs/_meta/anti-patterns',
+    'dev-playbooks/specs/architecture',
+    'dev-playbooks/changes',
+    'dev-playbooks/scripts',
+    'dev-playbooks/docs',
+    '.devbooks'
+  ];
+
+  for (const dir of dirs) {
+    fs.mkdirSync(path.join(projectDir, dir), { recursive: true });
+  }
+
+  const templateFiles = [
+    { src: 'dev-playbooks/README.md', dest: 'dev-playbooks/README.md' },
+    { src: 'dev-playbooks/constitution.md', dest: 'dev-playbooks/constitution.md' },
+    { src: 'dev-playbooks/project.md', dest: 'dev-playbooks/project.md' },
+    { src: 'dev-playbooks/specs/_meta/project-profile.md', dest: 'dev-playbooks/specs/_meta/project-profile.md' },
+    { src: 'dev-playbooks/specs/_meta/glossary.md', dest: 'dev-playbooks/specs/_meta/glossary.md' },
+    { src: 'dev-playbooks/specs/architecture/fitness-rules.md', dest: 'dev-playbooks/specs/architecture/fitness-rules.md' },
+    { src: '.devbooks/config.yaml', dest: '.devbooks/config.yaml' }
+  ];
+
+  // Dynamically include all docs under templates/dev-playbooks/docs
+  const docsDir = path.join(templateDir, 'dev-playbooks', 'docs');
+  if (fs.existsSync(docsDir)) {
+    const docFiles = fs.readdirSync(docsDir).filter(f => f.endsWith('.md'));
+    for (const docFile of docFiles) {
+      templateFiles.push({
+        src: `dev-playbooks/docs/${docFile}`,
+        dest: `dev-playbooks/docs/${docFile}`
+      });
+    }
+  }
+
+  let copiedCount = 0;
+  for (const { src, dest } of templateFiles) {
+    const srcPath = path.join(templateDir, src);
+    const destPath = path.join(projectDir, dest);
+
+    if (fs.existsSync(srcPath) && !fs.existsSync(destPath)) {
+      fs.mkdirSync(path.dirname(destPath), { recursive: true });
+      fs.copyFileSync(srcPath, destPath);
+      copiedCount++;
+    }
+  }
+
+  return copiedCount;
+}
+
+// ============================================================================
+// Save Configuration
+// ============================================================================
+
+function saveConfig(toolIds, projectDir, installScope = INSTALL_SCOPE.PROJECT) {
+  const configPath = path.join(projectDir, '.devbooks', 'config.yaml');
+
+  // Read existing config or create new
+  let configContent = '';
+  if (fs.existsSync(configPath)) {
+    configContent = fs.readFileSync(configPath, 'utf-8');
+  }
+
+  // Update ai_tools section
+  const toolsYaml = `ai_tools:\n${toolIds.map(id => `  - ${id}`).join('\n')}`;
+
+  if (configContent.includes('ai_tools:')) {
+    // Replace existing ai_tools section
+    configContent = configContent.replace(/ai_tools:[\s\S]*?(?=\n\w|\n$|$)/, toolsYaml + '\n');
+  } else {
+    // Append ai_tools section
+    configContent = configContent.trimEnd() + '\n\n' + toolsYaml + '\n';
+  }
+
+  // Update install_scope section
+  const scopeYaml = `install_scope: ${installScope}`;
+
+  if (configContent.includes('install_scope:')) {
+    // Replace existing install_scope section
+    configContent = configContent.replace(/install_scope:.*/, scopeYaml);
+  } else {
+    // Append install_scope section
+    configContent = configContent.trimEnd() + '\n\n' + scopeYaml + '\n';
+  }
+
+  fs.writeFileSync(configPath, configContent);
+}
+
+function loadConfig(projectDir) {
+  const configPath = path.join(projectDir, '.devbooks', 'config.yaml');
+
+  if (!fs.existsSync(configPath)) {
+    return { aiTools: [], installScope: null };
+  }
+
+  const content = fs.readFileSync(configPath, 'utf-8');
+
+  // Parse ai_tools
+  // Fix: Use more robust regex that matches until next top-level key (non-indented line) or EOF
+  const toolsMatch = content.match(/ai_tools:\s*\n((?:[ \t]+-[ \t]+.+\n?)*)/);
+  const tools = toolsMatch
+    ? toolsMatch[1]
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.startsWith('-'))
+        .map(line => line.replace(/^-\s*/, '').trim())
+        .filter(line => line.length > 0)
+    : [];
+
+  // Parse install_scope
+  const scopeMatch = content.match(/install_scope:\s*(\w+)/);
+  const installScope = scopeMatch ? scopeMatch[1] : null;
+
+  return { aiTools: tools, installScope };
+}
+
+// ============================================================================
+// Init Command
+// ============================================================================
+
+async function initCommand(projectDir, options) {
+  console.log();
+  console.log(chalk.cyan('╔══════════════════════════════════════╗'));
+  console.log(chalk.cyan('║') + chalk.bold('       DevBooks Initialization        ') + chalk.cyan('║'));
+  console.log(chalk.cyan('╚══════════════════════════════════════╝'));
+  console.log();
+
+  // Determine selected tools
+  let selectedTools;
+  let installScope = INSTALL_SCOPE.PROJECT; // Default to project-level installation
+
+  if (options.tools) {
+    if (options.tools === 'all') {
+      selectedTools = AI_TOOLS.filter(t => t.available).map(t => t.id);
+    } else if (options.tools === 'none') {
+      selectedTools = [];
+    } else {
+      selectedTools = options.tools.split(',').map(t => t.trim()).filter(t =>
+        AI_TOOLS.some(tool => tool.id === t)
+      );
+    }
+    console.log(chalk.blue('ℹ') + ` Non-interactive mode: ${selectedTools.length > 0 ? selectedTools.join(', ') : 'none'}`);
+
+    // In non-interactive mode, check --scope option
+    if (options.scope) {
+      installScope = options.scope === 'global' ? INSTALL_SCOPE.GLOBAL : INSTALL_SCOPE.PROJECT;
+    }
+  } else {
+    selectedTools = await promptToolSelection(projectDir);
+
+    // Interactive scope selection
+    installScope = await promptInstallScope(projectDir, selectedTools);
+  }
+
+  // Create project structure
+  const spinner = ora('Creating project structure...').start();
+  const templateCount = createProjectStructure(projectDir);
+  spinner.succeed(`Created ${templateCount} template files`);
+
+  // Save configuration (including install scope)
+  saveConfig(selectedTools, projectDir, installScope);
+
+  if (selectedTools.length === 0) {
+    console.log();
+    console.log(chalk.green('✓') + ' DevBooks project structure created!');
+    console.log(chalk.gray(`  Run \`${CLI_COMMAND} init\` and select AI tools to configure integration.`));
+    return;
+  }
+
+  // Install Skills (only for full support tools)
+  const fullSupportTools = selectedTools.filter(id => {
+    const tool = AI_TOOLS.find(t => t.id === id);
+    return tool && tool.skillsSupport === SKILLS_SUPPORT.FULL;
+  });
+
+  if (fullSupportTools.length > 0) {
+    const skillsSpinner = ora('Installing Skills...').start();
+    const skillsResults = installSkills(fullSupportTools, projectDir, installScope);
+    skillsSpinner.succeed('Skills installed');
+
+    for (const result of skillsResults) {
+      if (result.count > 0) {
+        const scopeLabel = result.scope === INSTALL_SCOPE.PROJECT ? 'project-level' : 'global';
+        console.log(chalk.gray(`  └ ${result.tool}: ${result.count}/${result.total} ${result.type} (${scopeLabel})`));
+        if (result.path) {
+          console.log(chalk.gray(`    → ${result.path}`));
+        }
+      } else if (result.note) {
+        console.log(chalk.gray(`  └ ${result.tool}: ${result.note}`));
+      }
+    }
+
+    // Install Claude Code custom subagents (solves built-in subagents cannot access Skills)
+    const agentsResults = installClaudeAgents(fullSupportTools, projectDir);
+    for (const result of agentsResults) {
+      if (result.count > 0) {
+        console.log(chalk.gray(`  └ ${result.tool}: ${result.count} custom subagents → ${result.path}`));
+      }
+    }
+  }
+
+  // Install Rules (for Rules-like system tools)
+  const rulesTools = selectedTools.filter(id => {
+    const tool = AI_TOOLS.find(t => t.id === id);
+    return tool && tool.skillsSupport === SKILLS_SUPPORT.RULES;
+  });
+
+  if (rulesTools.length > 0) {
+    const rulesSpinner = ora('Installing Rules...').start();
+    const rulesResults = installRules(rulesTools, projectDir);
+    rulesSpinner.succeed(`Created ${rulesResults.length} rule files`);
+
+    for (const result of rulesResults) {
+      console.log(chalk.gray(`  └ ${result.tool}: ${path.relative(projectDir, result.path)}`));
+    }
+  }
+
+  // Install instruction files
+  const instructionSpinner = ora('Creating instruction files...').start();
+  const instructionResults = installInstructionFiles(selectedTools, projectDir);
+  instructionSpinner.succeed(`Created ${instructionResults.length} instruction files`);
+
+  for (const result of instructionResults) {
+    console.log(chalk.gray(`  └ ${result.tool}: ${path.relative(projectDir, result.path)}`));
+  }
+
+  // OpenCode: project-level command entrypoint (.opencode/command/devbooks.md)
+  const openCodeCmdResults = installOpenCodeCommands(selectedTools, projectDir);
+  for (const result of openCodeCmdResults) {
+    console.log(chalk.gray(`  └ ${result.tool}: ${path.relative(projectDir, result.path)}`));
+  }
+
+  // Setup ignore files
+  const ignoreSpinner = ora('Configuring ignore files...').start();
+  const ignoreResults = setupIgnoreFiles(selectedTools, projectDir);
+  if (ignoreResults.length > 0) {
+    ignoreSpinner.succeed('Ignore files configured');
+    for (const result of ignoreResults) {
+      console.log(chalk.gray(`  └ ${result.file}: ${result.action}`));
+    }
+  } else {
+    ignoreSpinner.succeed('Ignore files already up to date');
+  }
+
+  // Done
+  console.log();
+  console.log(chalk.green('══════════════════════════════════════'));
+  console.log(chalk.green('✓') + chalk.bold(' DevBooks initialization complete!'));
+  console.log(chalk.green('══════════════════════════════════════'));
+  console.log();
+
+  // Show configured tools
+  console.log(chalk.white('Configured AI tools:'));
+  for (const toolId of selectedTools) {
+    const tool = AI_TOOLS.find(t => t.id === toolId);
+    if (tool) {
+      console.log(`  ${chalk.cyan('▸')} ${tool.name} ${getSkillsSupportLabel(tool.skillsSupport)}`);
+    }
+  }
+  console.log();
+
+  // Next steps
+  console.log(chalk.bold('Next steps:'));
+  console.log(`  1. Edit ${chalk.cyan('dev-playbooks/project.md')} to add project information`);
+  console.log(`  2. Use ${chalk.cyan('devbooks-proposal-author')} to create your first change proposal`);
+  console.log();
+}
+
+// ============================================================================
+// Update Command
+// ============================================================================
+
+async function updateCommand(projectDir) {
+  console.log();
+  console.log(chalk.bold('DevBooks Update'));
+  console.log();
+
+  // 1. Check if CLI has a new version
+  const spinner = ora('Checking for CLI updates...').start();
+  const { hasUpdate, latestVersion, currentVersion } = await checkNpmUpdate();
+
+  if (hasUpdate) {
+    spinner.info(`New version available: ${currentVersion} → ${latestVersion}`);
+
+    // Display version changelog summary
+    console.log();
+    await displayVersionChangelog(currentVersion, latestVersion);
+    console.log();
+
+    const shouldUpdate = await confirm({
+      message: `Update ${CLI_COMMAND} to ${latestVersion}?`,
+      default: true
+    });
+
+    if (shouldUpdate) {
+      const success = await performNpmUpdate();
+      if (success) {
+        console.log(chalk.blue('ℹ') + ` Please run \`${CLI_COMMAND} update\` again to update project files.`);
+        return;
+      }
+      // Update failed, continue with local file updates
+    }
+  } else {
+    spinner.succeed(`CLI is up to date (v${currentVersion})`);
+  }
+
+  console.log();
+
+  // 2. Check if initialized (update project files)
+  const configPath = path.join(projectDir, '.devbooks', 'config.yaml');
+  if (!fs.existsSync(configPath)) {
+    console.log(chalk.red('✗') + ` DevBooks config not found. Please run \`${CLI_COMMAND} init\` first.`);
+    process.exit(1);
+  }
+
+  // Load config
+  const config = loadConfig(projectDir);
+  const configuredTools = config.aiTools;
+  const installScope = config.installScope || INSTALL_SCOPE.PROJECT;
+
+  if (configuredTools.length === 0) {
+    console.log(chalk.yellow('⚠') + ` No AI tools configured. Run \`${CLI_COMMAND} init\` to configure.`);
+    return;
+  }
+
+  const toolNames = configuredTools.map(id => {
+    const tool = AI_TOOLS.find(t => t.id === id);
+    return tool ? tool.name : id;
+  });
+  const scopeLabel = installScope === INSTALL_SCOPE.PROJECT ? 'project-level' : 'global';
+  console.log(chalk.blue('ℹ') + ` Detected configured tools: ${toolNames.join(', ')} (${scopeLabel} installation)`);
+
+  // Update Skills (using saved install scope from config)
+  const skillsResults = installSkills(configuredTools, projectDir, installScope, true);
+  for (const result of skillsResults) {
+    if (result.count > 0) {
+      console.log(chalk.green('✓') + ` ${result.tool} ${result.type}: updated ${result.count}/${result.total}`);
+      if (result.path) {
+        console.log(chalk.gray(`    → ${result.path}`));
+      }
+    }
+    if (result.removed && result.removed > 0) {
+      console.log(chalk.green('✓') + ` ${result.tool} ${result.type}: removed ${result.removed} obsolete skills`);
+    }
+  }
+
+  // Update Claude Code custom subagents (project directory)
+  const agentsResults = installClaudeAgents(configuredTools, projectDir, true);
+  for (const result of agentsResults) {
+    if (result.count > 0) {
+      console.log(chalk.green('✓') + ` ${result.tool}: updated ${result.count} custom subagents`);
+    }
+  }
+
+  // Update Rules (project directory)
+  const rulesTools = configuredTools.filter(id => {
+    const tool = AI_TOOLS.find(t => t.id === id);
+    return tool && tool.skillsSupport === SKILLS_SUPPORT.RULES;
+  });
+
+  if (rulesTools.length > 0) {
+    const rulesResults = installRules(rulesTools, projectDir, true);
+    for (const result of rulesResults) {
+      if (result.action === 'updated') {
+        console.log(chalk.green('✓') + ` ${result.tool}: updated rule file`);
+      }
+    }
+  }
+
+  // Update instruction files (project directory)
+  const instructionResults = installInstructionFiles(configuredTools, projectDir, true);
+  for (const result of instructionResults) {
+    if (result.action === 'updated') {
+      console.log(chalk.green('✓') + ` ${result.tool}: updated instruction file ${path.relative(projectDir, result.path)}`);
+    }
+  }
+
+  // OpenCode: update project-level command entrypoint (.opencode/command/devbooks.md)
+  const openCodeCmdResults = installOpenCodeCommands(configuredTools, projectDir, true);
+  for (const result of openCodeCmdResults) {
+    if (result.action === 'updated') {
+      console.log(chalk.green('✓') + ` ${result.tool}: updated command entrypoint ${path.relative(projectDir, result.path)}`);
+    }
+  }
+
+  console.log();
+  console.log(chalk.green('✓') + ' Update complete!');
+}
+
+// ============================================================================
+// Help Information
+// ============================================================================
+
+function showStartHelp() {
+  console.log();
+  console.log(chalk.bold('DevBooks Delivery') + ' - single entry and routing guidance');
+  console.log();
+  console.log(chalk.cyan('Usage:'));
+  console.log(`  ${CLI_COMMAND} delivery [options]`);
+  console.log();
+  console.log(chalk.cyan('Notes:'));
+  console.log('  This command provides entry guidance only (it does not run AI or call Skills).');
+  console.log('  All work starts from Delivery, which routes to the minimal sufficient closed loop.');
+  console.log();
+  console.log(chalk.cyan('Entry template:'));
+  console.log(`  ${ENTRY_TEMPLATES.delivery}`);
+  console.log();
+  console.log(chalk.cyan('Workflow doc:'));
+  console.log(`  ${ENTRY_DOC}`);
+}
+
+function showHelp() {
+  console.log();
+  console.log(chalk.bold('DevBooks') + ' - AI-agnostic spec-driven development workflow');
+  console.log();
+  console.log(chalk.cyan('Usage:'));
+  console.log(`  ${CLI_COMMAND} init [path] [options]              Initialize DevBooks`);
+  console.log(`  ${CLI_COMMAND} update [path]                      Update CLI and configured tools`);
+  console.log(`  ${CLI_COMMAND} migrate --from <legacy-id> [options] Migrate from another workflow`);
+  console.log(`  ${CLI_COMMAND} delivery [options]                Single entry guidance (does not run AI)`);
+  console.log();
+  console.log(chalk.cyan('Options:'));
+  console.log('  --tools <tools>    Non-interactive AI tool selection');
+  console.log('                     Values: all, none, or comma-separated tool IDs');
+  console.log('  --scope <scope>    Skills installation location (non-interactive mode)');
+  console.log('                     Values: project (default), global');
+  console.log('  --from <legacy-id> Migration source id');
+  console.log('                     Values: legacy-id (see scripts/legacy/)');
+  console.log('  --dry-run          Print actions without changing anything');
+  console.log('  --keep-old         Keep the old directory after migration');
+  console.log('  --force            Force overwrite existing files');
+  console.log('  -h, --help         Show this help message');
+  console.log('  -v, --version      Show version');
+  console.log();
+  console.log(chalk.cyan('Entry templates and docs:'));
+  console.log(`  Delivery template: ${ENTRY_TEMPLATES.delivery}`);
+  console.log(`  Index template:  ${ENTRY_TEMPLATES.index}`);
+  console.log(`  Workflow doc:    ${ENTRY_DOC}`);
+  console.log();
+  console.log(chalk.cyan('Supported AI Tools:'));
+
+  // Group tools by Skills support level
+  const groupedTools = {
+    [SKILLS_SUPPORT.FULL]: [],
+    [SKILLS_SUPPORT.RULES]: [],
+    [SKILLS_SUPPORT.AGENTS]: [],
+    [SKILLS_SUPPORT.BASIC]: []
+  };
+
+  for (const tool of AI_TOOLS.filter(t => t.available)) {
+    groupedTools[tool.skillsSupport].push(tool);
+  }
+
+  console.log();
+  console.log(chalk.green('  ★ Full Skills Support:'));
+  for (const tool of groupedTools[SKILLS_SUPPORT.FULL]) {
+    console.log(`    ${tool.id.padEnd(15)} ${tool.name}`);
+  }
+
+  console.log();
+  console.log(chalk.blue('  ◆ Rules System Support:'));
+  for (const tool of groupedTools[SKILLS_SUPPORT.RULES]) {
+    console.log(`    ${tool.id.padEnd(15)} ${tool.name}`);
+  }
+
+  console.log();
+  console.log(chalk.yellow('  ● Custom Instructions Support:'));
+  for (const tool of groupedTools[SKILLS_SUPPORT.AGENTS]) {
+    console.log(`    ${tool.id.padEnd(15)} ${tool.name}`);
+  }
+
+  console.log();
+  console.log();
+  console.log(chalk.cyan('Examples:'));
+  console.log(`  ${CLI_COMMAND} init                        # Interactive initialization`);
+  console.log(`  ${CLI_COMMAND} init my-project             # Initialize in my-project directory`);
+  console.log(`  ${CLI_COMMAND} init --tools claude,cursor  # Non-interactive (project-level by default)`);
+  console.log(`  ${CLI_COMMAND} init --tools claude --scope global  # Non-interactive (global installation)`);
+  console.log(`  ${CLI_COMMAND} update                      # Update CLI and Skills`);
+  console.log(`  ${CLI_COMMAND} migrate --from legacy       # Generic legacy migration (if available)`);
+  console.log(`  ${CLI_COMMAND} migrate --from <legacy-id>  # Select migration source (maps to scripts/legacy/)`);
+  console.log(`  ${CLI_COMMAND} migrate --from <legacy-id> --dry-run  # Dry-run migration`);
+  console.log(`  ${CLI_COMMAND} delivery                    # Show single entry guidance`);
+}
+
+// ============================================================================
+// Migrate Command
+// ============================================================================
+
+async function migrateCommand(projectDir, options) {
+  console.log();
+  console.log(chalk.bold('DevBooks Migration Tool'));
+  console.log();
+
+  const { from, dryRun, keepOld, force } = options;
+
+  if (!from) {
+    console.log(chalk.red('✗') + ' Please specify a legacy migration id: --from <legacy-id>');
+    console.log();
+    console.log(chalk.cyan('Examples:'));
+    console.log(`  ${CLI_COMMAND} migrate --from legacy --dry-run`);
+    console.log(`  ${CLI_COMMAND} migrate --from openspec --dry-run`);
+    process.exit(1);
+  }
+
+  // legacy-id must be a simple identifier; actual scripts are resolved under scripts/legacy/
+  if (!/^[a-z0-9][a-z0-9_-]*$/.test(from)) {
+    console.log(chalk.red('✗') + ` Invalid legacy-id: ${from}`);
+    console.log(chalk.gray('  Allowed: a-z, 0-9, "_" , "-" (must start with a letter or number)'));
+    process.exit(1);
+  }
+
+  const scriptName = `migrate-from-${from}.sh`;
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'legacy', scriptName);
+
+  if (!fs.existsSync(scriptPath)) {
+    console.log(chalk.red('✗') + ` Migration script not found: ${scriptPath}`);
+    const legacyDir = path.join(__dirname, '..', 'scripts', 'legacy');
+    if (fs.existsSync(legacyDir)) {
+      const scripts = fs
+        .readdirSync(legacyDir)
+        .filter(name => name.startsWith('migrate-from-') && name.endsWith('.sh'))
+        .sort();
+      if (scripts.length > 0) {
+        console.log(chalk.cyan('Available scripts:'));
+        for (const s of scripts) console.log(`  - ${s}`);
+      }
+    }
+    process.exit(1);
+  }
+
+  const args = ['--project-root', projectDir];
+  if (dryRun) args.push('--dry-run');
+  if (keepOld) args.push('--keep-old');
+  if (force) args.push('--force');
+
+  console.log(chalk.blue('ℹ') + ` Migration source: ${from}`);
+  console.log(chalk.blue('ℹ') + ` Project directory: ${projectDir}`);
+  if (dryRun) console.log(chalk.yellow('ℹ') + ' Mode: DRY-RUN (no changes will be made)');
+  console.log();
+
+  return new Promise((resolve, reject) => {
+    const child = spawn('bash', [scriptPath, ...args], {
+      stdio: 'inherit',
+      cwd: projectDir
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        console.log();
+        if (!dryRun) {
+          console.log(chalk.green('✓') + ' Migration complete!');
+          console.log();
+          console.log(chalk.bold('Next step:'));
+          console.log(`  Run ${chalk.cyan(`${CLI_COMMAND} init`)} to install DevBooks Skills`);
+        }
+        resolve();
+      } else {
+        reject(new Error(`Migration script exited with code: ${code}`));
+      }
+    });
+
+    child.on('error', (err) => {
+      reject(new Error(`Failed to run migration script: ${err.message}`));
+    });
+  });
+}
+
+// ============================================================================
+// Main Entry
+// ============================================================================
+
+async function startCommand() {
+  showStartHelp();
+}
+
+async function main() {
+  const args = process.argv.slice(2);
+
+  // Parse arguments
+  let command = null;
+  let projectPath = null;
+  const options = { help: false };
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    if (arg === '-h' || arg === '--help') {
+      options.help = true;
+    } else if (arg === '-v' || arg === '--version') {
+      showVersion();
+      process.exit(0);
+    } else if (arg === '--tools') {
+      options.tools = args[++i];
+    } else if (arg === '--scope') {
+      options.scope = args[++i];
+    } else if (arg === '--from') {
+      options.from = args[++i];
+    } else if (arg === '--dry-run') {
+      options.dryRun = true;
+    } else if (arg === '--keep-old') {
+      options.keepOld = true;
+    } else if (arg === '--force') {
+      options.force = true;
+    } else if (!arg.startsWith('-')) {
+      if (!command) {
+        command = arg;
+      } else if (!projectPath) {
+        projectPath = arg;
+      }
+    }
+  }
+
+  // Resolve project directory
+  const projectDir = projectPath ? path.resolve(projectPath) : process.cwd();
+
+  // Execute command
+  try {
+    if (options.help) {
+      if (command === 'delivery') {
+        showStartHelp();
+        return;
+      }
+      showHelp();
+      return;
+    }
+    if (command === 'init' || !command) {
+      await initCommand(projectDir, options);
+    } else if (command === 'update') {
+      await updateCommand(projectDir);
+    } else if (command === 'migrate') {
+      await migrateCommand(projectDir, options);
+    } else if (command === 'delivery') {
+      await startCommand();
+    } else {
+      console.log(chalk.red(`Unknown command: ${command}`));
+      showHelp();
+      process.exit(1);
+    }
+  } catch (error) {
+    if (error.name === 'ExitPromptError') {
+      console.log(chalk.yellow('\nCancelled.'));
+      process.exit(0);
+    }
+    throw error;
+  }
+}
+
+main().catch(error => {
+  console.error(chalk.red('✗'), error.message);
+  process.exit(1);
+});

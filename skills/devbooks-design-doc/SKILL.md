@@ -24,12 +24,7 @@ Evidence: reference artifact paths and the AC list.
 Use when you need: option sets, boundary cases, dependency/architecture deltas.
 
 ### Extended (Optional)
-Use when you need: faster search/impact via optional MCP capabilities.
-
-## Recommended MCP Capability Types
-- Code search (code-search)
-- Reference tracking (reference-tracking)
-- Impact analysis (impact-analysis)
+Use when you need: faster search/impact via code intelligence or reference tools.
 
 ## Workflow Position Awareness
 
@@ -120,7 +115,7 @@ The following change types **require** updating corresponding documentation:
 
 Design documents **must** include an "Architecture Impact" section declaring the impact of this change on system architecture. This is a key mechanism to ensure architecture changes go through verification closed-loops.
 
-> **Design Decision**: C4 architecture changes are no longer written directly to the truth directory by a standalone `devbooks-c4-map` skill. Instead, they are part of design.md and merged into truth by `devbooks-archiver` after change acceptance.
+> **Design Decision**: C4 architecture changes are no longer written directly to the truth directory by a standalone skill. Instead, they are part of design.md and merged into truth by `devbooks-archiver` after change acceptance.
 
 ### Template
 

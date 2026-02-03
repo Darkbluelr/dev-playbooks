@@ -2,19 +2,24 @@
 .DS_Store
 
 # Local runtime data (do not commit)
+.ci-index/
 .ckb/
 .claude/
+.codex/
+.gemini/
+.code/
 CLAUDE.md
+GEMINI.md
 
 # DevBooks local config (keep template, ignore user-specific)
 .devbooks/embeddings/
 .devbooks/backup/
 .devbooks/*.log
 
-# DevBooks internal playbooks for this repo (do not publish)
-/dev-playbooks/
+# DevBooks internal playbooks for this repo
+# Keep documentation and specs, ignore only temporary/local files
 
-# Project self-test artifacts (not part of the npm package)
+# Project self-test artifacts (not part of the library)
 AGENTS.md
 openspec/
 tests/
@@ -32,6 +37,9 @@ node_modules/
 # Logs
 *.log
 
+# Maintainer-only scripts (not user-facing)
+/scripts/english-sync*.sh
+
 # IDEs
 .idea/
 .vscode/
@@ -41,3 +49,28 @@ node_modules/
 # Env
 .env
 .env.*
+
+# DevBooks managed - DO NOT EDIT
+# DevBooks local config (includes user preferences; do not commit)
+.devbooks/
+.claude/
+# End DevBooks managed
+.cursor/skills
+.factory/skills
+/dev-playbooks/
+
+# Root-level symlink guards (local convenience links)
+/_shared
+/specs
+/changes
+/*-check.sh
+/spec-*.sh
+/verify-*.sh
+/prototype-promote.sh
+/change-scaffold.sh
+/config-discovery.sh
+/progress-dashboard.sh
+/devbooks-entropy-viz.sh
+/devbooks-complexity.sh
+/audit-scope.sh
+/migrate-to-v2-gates.sh

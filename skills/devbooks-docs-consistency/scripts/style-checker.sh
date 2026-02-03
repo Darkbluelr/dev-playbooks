@@ -114,7 +114,7 @@ PY
 fi
 
 if [[ "$use_fancy" == "false" ]]; then
-  if grep -qE "(strongest mind|world-class|best-in-class|revolutionary|disruptive|perfect|powerful|highly efficient)" "$INPUT_PATH"; then
+  if grep -qE "(最强大脑|智能|高效|强大|优雅|完美|革命性|颠覆性)" "$INPUT_PATH"; then
     echo "fancy words detected in $INPUT_PATH"
     exit_code=1
   fi

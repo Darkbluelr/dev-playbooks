@@ -1,7 +1,7 @@
 ---
 name: devbooks-explorer
 description: DevBooks Explorer subagent: Explores codebase, analyzes impact scope, finds reference relationships.
-skills: devbooks-impact-analysis, devbooks-router
+skills: devbooks-impact-analysis
 ---
 
 # DevBooks Explorer Subagent

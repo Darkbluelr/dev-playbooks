@@ -14,7 +14,7 @@ usage: migrate-to-v2-gates.sh <change-id> [options]
 
 Migrate a change package to comply with v2 quality gates:
 1. Creates evidence/red-baseline/ and evidence/green-final/ directories if missing
-2. Adds a "Test Environment" section to verification.md if missing
+2. Adds "Test Environment Declaration" section to verification.md if missing
 3. Reports migration status
 
 Options:
@@ -148,28 +148,28 @@ if [[ ! -f "$verification_file" ]]; then
   issues_found=$((issues_found + 1))
 else
   # Check for test environment declaration section
-  if ! grep -qi "Test Environment" "$verification_file" 2>/dev/null; then
-    echo "  [MISSING] Test Environment section"
+  if ! grep -q "Test Environment Declaration" "$verification_file" 2>/dev/null; then
+    echo "  [MISSING] Test Environment Declaration section"
     if [[ "$dry_run" == false ]]; then
       # Add section before last heading or at end
       cat >> "$verification_file" << 'EOF'
 
-## Test Environment
+## Test Environment Declaration
 
-> Auto-added by migrate-to-v2-gates.sh. Fill in the actual environment details.
+> Automatically added by migrate-to-v2-gates.sh, please fill in actual environment info
 
 - Runtime: <macOS / Linux / Windows / CI>
 - Database: <N/A / MySQL / PostgreSQL / ...>
-- External dependencies: <none / service names>
-- Special configuration: <none / details>
+- External Dependencies: <None / specific service names>
+- Special Configuration: <None / specific configuration>
 EOF
-      echo "  [ADDED] Test Environment section to verification.md"
+      echo "  [ADDED] Test Environment Declaration section to verification.md"
       changes_made=$((changes_made + 1))
     else
-      echo "  [DRY-RUN] Would add Test Environment section"
+      echo "  [DRY-RUN] Would add Test Environment Declaration section"
     fi
   else
-    echo "  [OK] Test Environment section exists"
+    echo "  [OK] Test Environment Declaration section exists"
   fi
 fi
 
@@ -194,7 +194,7 @@ if [[ $changes_made -gt 0 || "$dry_run" == true ]]; then
   echo "Next steps:"
   echo "  1. Add actual Red baseline evidence to evidence/red-baseline/"
   echo "  2. After tests pass, add Green evidence to evidence/green-final/"
-  echo "  3. Update the Test Environment section in verification.md with actual environment"
+  echo "  3. Update Test Environment Declaration section in verification.md with actual environment"
   echo "  4. Run 'change-check.sh ${change_id} --mode archive' to verify compliance"
 fi
 

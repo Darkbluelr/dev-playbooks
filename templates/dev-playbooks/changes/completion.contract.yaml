@@ -1,0 +1,84 @@
+# Completion Contract Template
+#
+# Goal: Compile "user intent" into an enumerated obligation set and bind checks/evidence locations to prevent "passing the form but missing the semantics".
+# Constraints:
+# - This is a template file: replace example values with real values in your change package.
+# - To avoid strict placeholder scans: this template avoids angle-bracket placeholders; it uses comments + example values to indicate required fields.
+#
+# Reference: Patch Doc §3.2 (minimal contract fields)
+
+schema_version: 1.0.0
+
+# Change package id (must match the change package directory name)
+change_id: CHANGE_ID
+
+intent:
+  # One-line goal (must be concrete)
+  summary: "Describe the goal of this change in one sentence"
+
+  # Deliverable quality level (Delivery must freeze this explicitly; scaffold defaults to outline until clarified)
+  # enum: outline | draft | complete | operational
+  deliverable_quality: outline
+
+deliverables:
+  # Each deliverable must have a stable id and point to a repo-relative path
+  - id: D-001
+    # enum: markdown | code | config | data | spec | other
+    kind: other
+    # repo-relative path
+    path: path/to/deliverable
+    # enum: inherit | outline | draft | complete | operational
+    quality: inherit
+
+obligations:
+  # Each obligation must be covered by checks (see checks[].covers)
+  - id: O-001
+    describes: "A verifiable obligation description (judgeable Pass/Fail)"
+    applies_to:
+      - D-001
+    # enum: must | should
+    severity: must
+
+checks:
+  # Checks must be executable or reproducible (invocation_ref may point to scripts/commands/config keys/runbooks)
+  - id: C-001
+    # enum: test | build | lint | security | perf | manual | custom
+    type: custom
+    # enum: local | ci | both
+    runner: local
+    invocation_ref: "Describe how to run this check (e.g., script path/command/entrypoint)"
+    # MUST: timeout is failure (must be positive)
+    timeout_seconds: 600
+    # MUST: default false; when true, explicitly mark risks and alternatives
+    requires_network: false
+    covers:
+      - O-001
+    artifacts:
+      # Prefer placing outputs under evidence/gates/ for archive and audit
+      - evidence/gates/C-001.log
+    # MUST: machine-checkable success criteria summary
+    success_criteria: "exit code == 0 and required artifacts exist"
+    # MUST: next action on failure (enum)
+    # enum: Void | Bootstrap | Knife | DevBooks
+    failure_next_action: DevBooks
+
+# Optional: upstream claims (only add when you need to assert completion of an upstream obligation set)
+#
+# upstream_claims:
+#   - set_ref: truth://ssot/requirements.index.yaml
+#     claim: complete
+#     covered:
+#       - R-001
+#       - R-002
+#
+#   - set_ref: truth://ssot/requirements.index.yaml
+#     claim: subset
+#     covered:
+#       - R-001
+#     deferred:
+#       - R-002
+#     next_action_ref: change://20260101-0000-next-change/proposal.md
+
+decision_locks:
+  # Anti-weakening: any change that lowers quality/removes obligations/moves semantic acceptance out of verification must trigger an explicit decision and re-validation.
+  forbid_weakening_without_decision: true

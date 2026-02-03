@@ -93,9 +93,9 @@ mkdir -p "$(dirname "$spec_file")"
 cat >"$spec_file" <<EOF
 # Spec Delta: ${capability} (${change_id})
 
-> Output path: \`${change_root}/${change_id}/specs/${capability}/spec.md\`
+> Output location: \`${change_root}/${change_id}/specs/${capability}/spec.md\`
 >
-> Note: you only need a spec delta when external behavior/contracts/data invariants change.
+> Note: Spec delta is only required when "external behavior/contracts/data invariants" change.
 
 ## ADDED Requirements
 
@@ -133,3 +133,4 @@ EOF
 
 echo "wrote: ${spec_file}"
 echo "ok: scaffolded spec delta for ${change_id} (${capability})"
+

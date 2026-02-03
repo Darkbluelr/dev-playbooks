@@ -6,7 +6,7 @@ skills:
   - devbooks-reviewer
 ---
 
-# DevBooks: Apply (backward compatible)
+# DevBooks: Apply
 
 Runs the apply stage as a multi-skill combo: Test Owner → Coder → Reviewer.
 
@@ -20,8 +20,7 @@ $ARGUMENTS
 
 ## Notes
 
-This is a backward compatible command. Prefer direct commands when possible:
+This is a combo command that triggers multiple skills. Prefer direct commands when you want full control:
 - `/devbooks:test` - acceptance tests
 - `/devbooks:code` - implementation
 - `/devbooks:review` - review
-

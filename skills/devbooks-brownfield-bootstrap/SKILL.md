@@ -64,6 +64,18 @@ Generate in `<truth-root>/_meta/`:
 | Documentation maintenance metadata | `_meta/docs-maintenance.md` | Documentation style and maintenance configuration |
 | Domain concepts | `_meta/key-concepts.md` | Concept extraction based on code semantics (optional) |
 
+### 2.5 Project SSOT (must create when upstream SSOT is absent)
+
+To solve “SSOT is huge + changes often → humans can’t reliably tell what’s done vs not done”, this skill MUST scaffold a **minimal, addressable Project SSOT pack** when the project does not have an upstream SSOT library:
+
+| Artifact | Path (relative to `<truth-root>`) | Description |
+|----------|----------------------------------|-------------|
+| Project SSOT | `ssot/SSOT.md` | Human-readable system truth skeleton (requirements/contracts/ops constraints/open questions) |
+| Requirements Set (machine-readable) | `ssot/requirements.index.yaml` | Stable ID → anchor → statement; used by `upstream_claims` and archive adjudication |
+| Requirements Ledger (derived cache) | `ssot/requirements.ledger.yaml` | Progress view; safe to delete and regenerate (derived from archived change packages) |
+
+If the project already has an upstream SSOT (e.g., a separate `SSOT docs/` folder), do **not** copy long documents. Instead, keep pointers/links in `ssot/SSOT.md` and establish stable IDs + anchors in `requirements.index.yaml`.
+
 ### 3. Architecture Analysis Artifacts
 
 Generate in `<truth-root>/architecture/`:
@@ -231,8 +243,3 @@ Use when you need to refine strategy, boundaries, or risk notes.
 
 ### Extended (Optional)
 Use when you need to coordinate with external systems or optional tools.
-
-## Recommended MCP Capability Types
-- Code search (code-search)
-- Reference tracking (reference-tracking)
-- Impact analysis (impact-analysis)

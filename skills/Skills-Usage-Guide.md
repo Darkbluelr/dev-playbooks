@@ -20,39 +20,53 @@ In SKILL.md prompts, the `~/.claude/skills/_shared/` path should be replaced wit
 
 ---
 
-## `devbooks-router` (Router)
+## `devbooks-delivery-workflow` (Delivery / Single entrypoint)
 
-- Purpose: route your natural-language request into which `devbooks-*` Skills to run next (in order) + where each artifact should be written.
-- Graph index health check: calls `mcp__ckb__getStatus` before routing; if SCIP is unavailable it suggests generating an index.
+- Purpose: the single entrypoint. Routes by `request_kind` and orchestrates the minimal sufficient closed loop, materializing auditable on-disk artifacts (`RUNBOOK.md`, `inputs/index.md`, proposal metadata, evidence, gate reports).
+- Key constraint: if the user did not explicitly specify `deliverable_quality`, Delivery MUST ask and freeze one of `outline|draft|complete|operational`, and write the final value to `completion.contract.yaml#intent.deliverable_quality` (avoid “skeleton mistaken as done”).
 - When to use:
-  - You are not sure whether you are in proposal/apply/review/archive
-  - You are not sure whether to write proposal/design/spec/tasks/tests first
-  - You want the shortest closed loop, not a long checklist
-  - You want **Prototype mode** (technical approach is uncertain; validate quickly)
+  - Always: debug, feature work, refactors, epics, governance changes, bootstrap, high-entropy uncertainty
 - Copy-paste prompt:
   ```text
-  You are Router. Explicitly use `devbooks-router`.
-  First read: `dev-playbooks/project.md`
-  Ask me 2 questions first: what is `<change-id>`? what are `<truth-root>/<change-root>` in this project?
-  Then provide: the next Skills to use (in order) + the exact file paths for each output.
+  You are Delivery. Explicitly use `devbooks-delivery-workflow`.
+  First read: `dev-playbooks/project.md`.
+  Ask the minimal questions to decide:
+  - request_kind (debug|change|epic|void|bootstrap|governance)
+  - risk_level (low|medium|high)
+  - change_type
+  - deliverable_quality (outline|draft|complete|operational)
+  Then materialize the scaffold (if missing) and write the routing decision into RUNBOOK.
+  Finally, orchestrate the minimal sufficient loop and drive it to archive (or explicitly route to Void/Bootstrap when prerequisites are missing).
 
   My request:
-  <one sentence describing what to do + constraints/boundaries>
+  <one-sentence request + constraints/boundaries>
   ```
-- Prototype-mode prompt:
+
+---
+
+## `devbooks-knife` (Knife / Epic slicing)
+
+- Purpose: slice an Epic into a topologically-sortable Slice queue, and write a machine-readable Knife Plan (mandatory G3 input for `request_kind=epic` or `risk_level=high`).
+- When to use:
+  - `risk_level=high` (MUST)
+  - `request_kind=epic` (MUST)
+  - The request is too large and needs to be split into a queue of change packages (recommended)
+- Copy-paste prompt:
   ```text
-  You are Router. Explicitly use `devbooks-router` and enable Prototype mode.
-  First read: `dev-playbooks/project.md`
+  You are Knife Planner. Explicitly use `devbooks-knife`.
+  First read: `dev-playbooks/project.md`, `dev-playbooks/specs/knife/spec.md`, `dev-playbooks/specs/_meta/epics/README.md`
 
-  I want a throwaway prototype to validate feasibility (Plan to Throw One Away).
-  Route me through the prototype track:
-  1) Create the prototype scaffold: `change-scaffold.sh <change-id> --prototype ...`
-  2) Test Owner produces characterization tests (no Red baseline required)
-  3) Coder implements under `prototype/src/` (allowed to bypass gates; must not touch repo `src/`)
-  4) After verification, tell me how to promote to production (`prototype-promote.sh`) or discard
+  My Epic:
+  - epic_id: <EPIC-...>
+  - goal/scope: <one sentence>
+  - request_kind: epic
+  - risk_level: <low|medium|high>
+  - AC set (or acceptance set): <list or reference>
 
-  My request:
-  <one sentence describing what to validate + technical questions/assumptions>
+  Write and output:
+  - `dev-playbooks/specs/_meta/epics/<epic_id>/knife-plan.yaml`
+  It must include: epic_id, slice_id (if known), slices[] (each slice includes change_id/ac_subset/verification_anchors/depends_on).
+  Finally, output the shortest next-step routing + upgrade conditions.
   ```
 
 ---
@@ -203,12 +217,13 @@ In SKILL.md prompts, the `~/.claude/skills/_shared/` path should be replaced wit
 - Purpose: implement strictly according to `tasks.md` and run quality gates; must not modify `tests/**`; completion is defined only by tests/static checks/build.
 - When to use:
   - Implementation stage: implement tasks, fix failing tests, make gates green
-- Hotspot awareness: before starting, call `mcp__ckb__getHotspots` to identify high-risk files and produce a hotspot report:
+- Hotspot awareness: before starting, use a hotspot report to identify high-risk files:
   - Critical: top 5 hotspots + core logic changes → refactor first, then modify; must add tests
   - High: top 10 hotspots → increase test coverage; focus review
   - Normal: not a hotspot → standard workflow
 - Resume support: after interruption, Coder should detect completed tasks in `tasks.md` and continue from the checkpoint
 - Output control: if command output exceeds 50 lines, keep first/last 10 lines + a summary; write full logs to `evidence/`.
+- Evidence paths: strict mode must emit gate reports under `evidence/gates/` (e.g., `evidence/gates/G0-<mode>.report.json`, G0–G6) and write risk evidence under `evidence/risks/` (e.g., `dependency-audit.log`, `rollback-plan.md`).
 - Copy-paste prompt (must be a new conversation/instance):
   ```text
   You are Coder (must be a separate conversation/instance). Explicitly use `devbooks-coder` and follow the DevBooks apply stage.
@@ -223,7 +238,7 @@ In SKILL.md prompts, the `~/.claude/skills/_shared/` path should be replaced wit
 ## `devbooks-reviewer` (Reviewer)
 
 - Purpose: review readability/consistency/dependency health/code smells; output actionable suggestions only; do not judge business correctness.
-- Hotspot-first review: call `mcp__ckb__getHotspots` before reviewing; prioritize by risk:
+- Hotspot-first review: use a hotspot report before reviewing; prioritize by risk:
   - Top 5 hotspots: deep review (test coverage, cyclomatic complexity delta, dependency delta)
   - Top 10 hotspots: focus
   - Not a hotspot: standard review
@@ -240,17 +255,20 @@ In SKILL.md prompts, the `~/.claude/skills/_shared/` path should be replaced wit
 
 ---
 
-## `devbooks-design-backport` (Design Doc Editor / Backport)
+## `devbooks-design-doc` (Design Doc Update / Writeback)
 
-- Purpose: backport constraints/conflicts/gaps discovered during implementation into `design.md` (keep design as the golden truth), and record decisions and impact.
+- Archive phase: `devbooks-archiver` performs design writeback automatically.
+- If you need writeback before archive: use `devbooks-design-doc` to update `dev-playbooks/changes/<change-id>/design.md` and record reasons + impact.
+- After writeback: Planner must rerun tasks; Test Owner may need to add tests / rerun the Red baseline.
+- Deprecated name: `devbooks-design-backport`.
 - When to use:
   - You discovered “design gap / conflicts with implementation / temporary decision with non-local impact”
   - You need to stop and update design before continuing
 - Copy-paste prompt:
   ```text
-  You are Design Doc Editor. Explicitly use `devbooks-design-backport`.
+  You are Design Owner. Explicitly use `devbooks-design-doc`.
   Trigger: implementation discovered a design gap/conflict/temporary decision.
-  Backport design-level updates into: `dev-playbooks/changes/<change-id>/design.md` (explain reasons and impact), then stop.
+  Write back design-level updates into: `dev-playbooks/changes/<change-id>/design.md` (explain reasons and impact), then stop.
   Explicitly tell me that Planner must rerun tasks, and Test Owner may need to add tests / rerun the Red baseline.
   ```
 
@@ -305,9 +323,9 @@ In SKILL.md prompts, the `~/.claude/skills/_shared/` path should be replaced wit
 
 - Purpose: bootstrap an existing project: when `<truth-root>` is empty/missing, generate project profile, glossary, baseline specs, and minimal verification anchors to avoid “editing specs while changing behavior”.
 - COD-style outputs (“code map” artifacts):
-  - Module dependency map: `<truth-root>/architecture/module-graph.md` (from `mcp__ckb__getArchitecture`)
-  - Tech-debt hotspots: `<truth-root>/architecture/hotspots.md` (from `mcp__ckb__getHotspots`)
-  - Domain concepts: `<truth-root>/_meta/key-concepts.md` (from `mcp__ckb__listKeyConcepts`)
+  - Module dependency map: `<truth-root>/architecture/module-graph.md` (from code-structure analysis)
+  - Tech-debt hotspots: `<truth-root>/architecture/hotspots.md` (from change history and complexity indicators)
+  - Domain concepts: `<truth-root>/_meta/key-concepts.md` (from code and docs extraction)
   - Project profile template: three layers (syntax/semantics/context)
 - When to use:
   - An existing project wants to adopt DevBooks but has no truth/spec baseline
@@ -420,6 +438,3 @@ scip-python index . --output index.scip
 go install github.com/sourcegraph/scip-go@latest
 scip-go --output index.scip
 ```
-
-See `docs/Recommended-MCP.md` for more details on configuring CKB.
-

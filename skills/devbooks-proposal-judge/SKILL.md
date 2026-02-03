@@ -85,7 +85,3 @@ Use when you need to refine strategy, boundaries, or risk notes.
 ### Extended (Optional)
 Use when you need to coordinate with external systems or optional tools.
 
-## Recommended MCP Capability Types
-- Code search (code-search)
-- Reference tracking (reference-tracking)
-- Impact analysis (impact-analysis)

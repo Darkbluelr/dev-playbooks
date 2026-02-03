@@ -24,12 +24,7 @@ Evidence: reference the generated `tasks.md` path and AC coverage.
 Use when you need: parallelization strategy, risk hotspots, breakpoint hints.
 
 ### Extended (Optional)
-Use when you need: faster search/impact via optional MCP capabilities.
-
-## Recommended MCP Capability Types
-- Code search (code-search)
-- Reference tracking (reference-tracking)
-- Impact analysis (impact-analysis)
+Use when you need: faster search/impact via code intelligence or reference tools.
 
 ## Workflow Position Awareness
 

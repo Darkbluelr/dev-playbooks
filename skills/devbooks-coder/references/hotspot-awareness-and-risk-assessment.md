@@ -1,37 +1,30 @@
 # Hotspot Awareness and Risk Assessment
 
-## MCP Enhancement
+## Hotspot Sources
 
-This Skill supports MCP runtime enhancement, automatically detecting and enabling advanced features.
+Aggregate hotspots from these signals:
+- Change history (commit frequency, recent churn)
+- Complexity indicators (cyclomatic complexity, function length, nesting depth)
+- Dependency entropy and coupling
+- Incidents, rollbacks, or high-alert areas
 
-MCP enhancement rules reference: `~/.claude/skills/_shared/mcp-enhancement-template.md`
+## Suggested Flow
 
-## Dependent MCP Services
+1. Generate or obtain a hotspot report (history stats, complexity report, dependency entropy report).
+2. Compare target files with the hotspot list and assign risk levels.
+3. Adjust implementation and review strategy based on risk level.
 
-| Service | Purpose | Timeout |
-|---------|---------|---------|
-| `mcp__ckb__getHotspots` | Detect hotspot files, output warnings | 2s |
-| `mcp__ckb__getStatus` | Detect CKB index availability | 2s |
+## Risk Level Guidance
 
-## Detection Flow
+| Level | Example Criteria | Guidance |
+|------|-----------------|----------|
+| Critical | Top 5 hotspots and core logic changes | Refactor first, then change; add tests |
+| High | Top 10 hotspots | Increase test coverage; prioritize review |
+| Normal | Not in hotspots | Standard flow |
 
-1. Call `mcp__ckb__getStatus` (2s timeout)
-2. If CKB available → Call `mcp__ckb__getHotspots` to get hotspot files
-3. If timeout or failure → Degrade to basic mode (no hotspot warnings)
+## If Hotspot Data Is Unavailable
 
-## Enhanced Mode vs Basic Mode
-
-| Feature | Enhanced Mode | Basic Mode |
-|---------|---------------|------------|
-| Hotspot file warnings | CKB real-time analysis | Not available |
-| Risk file identification | Auto-highlight high-hotspot changes | Manual identification |
-| Code navigation | Symbol-level jumping | File-level search |
-
-## Degradation Prompt
-
-When MCP unavailable, output this prompt:
-
-```
-⚠️ CKB unavailable, skipping hotspot detection.
-To enable hotspot warnings, manually generate SCIP index.
-```
+If hotspot data is not available, record the risk assumptions and prioritize checks for:
+- Core paths and edge cases
+- Cross-module calls and public interfaces
+- Frequently changed files in the last cycle

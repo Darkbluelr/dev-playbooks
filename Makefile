@@ -48,11 +48,24 @@ test: check-deps
 # Note: Full lint runs via lint-all target
 SCRIPTS_DIR := skills/devbooks-delivery-workflow/scripts
 CHANGE_SCRIPTS := $(SCRIPTS_DIR)/change-check.sh \
+                  $(SCRIPTS_DIR)/archive-decider.sh \
+                  $(SCRIPTS_DIR)/runbook-derive.sh \
                   $(SCRIPTS_DIR)/handoff-check.sh \
                   $(SCRIPTS_DIR)/env-match-check.sh \
                   $(SCRIPTS_DIR)/audit-scope.sh \
                   $(SCRIPTS_DIR)/progress-dashboard.sh \
-                  $(SCRIPTS_DIR)/migrate-to-v2-gates.sh
+                  $(SCRIPTS_DIR)/migrate-to-v2-gates.sh \
+                  $(SCRIPTS_DIR)/change-metadata-check.sh \
+                  $(SCRIPTS_DIR)/reference-integrity-check.sh \
+                  $(SCRIPTS_DIR)/check-completion-contract.sh \
+                  $(SCRIPTS_DIR)/extension-pack-integrity-check.sh \
+                  $(SCRIPTS_DIR)/required-gates-derive.sh \
+                  $(SCRIPTS_DIR)/required-gates-check.sh \
+                  $(SCRIPTS_DIR)/verification-anchors-check.sh \
+                  $(SCRIPTS_DIR)/state-audit-check.sh \
+                  $(SCRIPTS_DIR)/void-protocol-check.sh \
+                  $(SCRIPTS_DIR)/knife-correctness-check.sh \
+                  $(SCRIPTS_DIR)/epic-alignment-check.sh
 
 lint: check-deps
 	@echo "=== Running shellcheck (change package scripts) ==="

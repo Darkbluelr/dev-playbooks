@@ -21,15 +21,28 @@ AI coding assistants are powerful, but often **unpredictable**:
 | **Writing tests and code in the same chat** | Tests turn into “pass tests” instead of spec verification |
 | **No verification gates** | False completion silently ships |
 | **Only works for greenfield (0→1)** | Brownfield repos have no on-ramp |
-| **Too few commands** | Complex changes are not just "spec/apply/archive" |
+| **Too few commands** | Complex changes need more phases, roles, and verification anchors |
 
 **DevBooks provides**:
 - **Evidence-based done**: completion is defined by tests/build/evidence, not AI self-evaluation
 - **Enforced role isolation**: Test Owner and Coder must work in separate conversations
 - **Multiple quality gates**: green evidence checks, task completion, role boundary checks
-- **18 Skills**: proposal, design, review, entropy metrics, and full workflow coverage
+- **21 Skills**: proposal, design, debate, review, entropy metrics, and full workflow coverage
 
 ---
+
+## DevBooks comparison overview
+
+| Dimension | DevBooks | Lightweight 3-command spec workflow | Toolkit-style spec process | no spec |
+|------|----------|----------|----------|--------|
+| Spec-driven workflow | Yes | Yes | Yes | No |
+| Traceability of change artifacts | Change package archived in one place (proposal/design/spec/tasks/verification/evidence) | Organized mostly by folders/files | Document + planning oriented | None |
+| Role & responsibility boundaries | **Enforced isolation** (Test Owner / Coder) | Convention-based (not enforced) | Convention-based (not enforced) | None |
+| Definition of done (DoD) | **Evidence-driven + gates** (tests/build/audit) | Manual definition/manual checks | Manual definition/manual checks | Often subjective |
+| Code quality assurance | Gates + metrics (entropy/hotspots) + Reviewer role | External tooling + manual review | External tooling + manual review | Unstable |
+| Impact analysis | CKB graph capabilities (graceful fallback to grep) | Text search/manual reasoning | Text search/manual reasoning | Easy to miss changes |
+| Brownfield on-ramp | Auto baseline specs/glossary/min verification anchors | Manual | Limited | - |
+| Automation coverage | 21 Skills (proposal → implement → archive) | 3 core commands | Toolkit (more 0→1) | - |
 
 ## How It Works
 
@@ -76,6 +89,10 @@ npx dev-playbooks@latest init
 **From source (contributors):**
 
 ```bash
+# From repo root:
+./scripts/install-skills.sh
+
+# Or from inside dev-playbooks/:
 ../scripts/install-skills.sh
 ```
 
@@ -96,19 +113,17 @@ DevBooks uses two directory roots:
 | `<truth-root>` | Current specs (read-only truth) | `dev-playbooks/specs/` |
 | `<change-root>` | Change packages (workspace) | `dev-playbooks/changes/` |
 
-See `docs/devbooks-setup-guide.md`, or use the "Quick Start" prompt in that guide to let your assistant configure it automatically.
-
 ---
 
 ## Day-to-Day Change Workflow
 
-### Use Router (recommended)
+### Use Delivery (single entry)
 
 ```
-Run devbooks-router skill: <your request>
+Run devbooks-delivery-workflow skill: <your request>
 ```
 
-Router analyzes your request and outputs an execution plan (which skill to run next).
+Delivery classifies your request (by `request_kind`) and runs the minimal sufficient closed loop. It will ask targeted questions when inputs are missing, and may escalate gates/roles based on `risk_level` and evidence requirements.
 
 ### Direct skill invocation
 
@@ -157,7 +172,6 @@ Run devbooks-archiver skill for change add-oauth2
 
 | Skill | Description |
 |-------|-------------|
-| devbooks-router | Route to the right Skill |
 | devbooks-proposal-author | Create a change proposal |
 | devbooks-impact-analysis | Cross-module impact analysis |
 | devbooks-proposal-challenger | Challenge a proposal |
@@ -172,7 +186,7 @@ Run devbooks-archiver skill for change add-oauth2
 |-------|-------------|
 | devbooks-test-owner | Test Owner role (separate chat required) |
 | devbooks-coder | Coder role (separate chat required) |
-| devbooks-design-backport | Backport discoveries to design |
+| devbooks-design-doc | Backport discoveries to design |
 
 ### Review stage
 
@@ -199,49 +213,46 @@ Run devbooks-archiver skill for change add-oauth2
 
 ## DevBooks Comparisons
 
-### vs. OpenSpec
+### vs. Lightweight 3-command spec workflow
 
-[OpenSpec](https://github.com/Fission-AI/OpenSpec) is a lightweight spec-driven framework with three core commands (proposal/apply/archive), organizing changes by feature folders.
+A lightweight 3-command spec workflow typically aligns humans and AI with a small fixed set of phases (e.g., propose/apply/archive), which works well for small, low-risk changes.
 
-**OpenSpec limitations:**
-- No role isolation between test writing and implementation
-- No quality gates to block false completion
-- Only 3 commands (proposal/apply/archive)
+**DevBooks adds:**
+- **Role isolation**: hard boundary between Test Owner and Coder (separate conversations)
+- **Quality gates**: 5+ verification gates block false completion
+- **21 Skills**: proposal, debate, review, entropy metrics, and full workflow coverage
+- **Evidence-based done**: tests/build define “done”, not AI self-evaluation
 
-**DevBooks solves these with:**
-- Hard boundary between Test Owner and Coder (separate chats)
-- 5+ verification gates to block false completion
-- 18 Skills for complete workflow coverage
-- Evidence-based done: tests/build define "done", not self-evaluation
+**Choose a lightweight workflow**: simple spec-driven changes, want minimal ceremony.
 
-### vs. spec-kit
+**Choose DevBooks**: large changes, need enforced role boundaries and verifiable quality gates.
 
-[GitHub spec-kit](https://github.com/github/spec-kit) is a spec-driven toolkit with a constitution file, multi-step refinement, and structured planning.
+### vs. Toolkit-style spec process
 
-**spec-kit limitations:**
-- Primarily designed for greenfield projects
-- No runtime verification gates
-- No brownfield project support
+A toolkit-style spec process typically provides more templates and structured documents (e.g., constitution, requirements, design, tasks), and is often used for greenfield (0→1) standardization.
 
-**DevBooks solves these with:**
-- Brownfield-first: generates baseline specs for existing repos
-- Role isolation: test authoring and implementation are separated
-- Quality gates: runtime verification, not just workflow guidance
-- Prototype mode: safe experiments without polluting main `src/`
+**DevBooks adds:**
+- **Brownfield first**: generate baseline specs for existing codebases
+- **Role isolation**: enforced separation between tests and implementation
+- **Quality gates**: executable verification, not just workflow guidance
+- **Prototype mode**: safe experiments without polluting main src
+
+**Choose a toolkit-style process**: greenfield (0→1) projects where you want structured templates and multi-step guidance.
+
+**Choose DevBooks**: brownfield repos or when you need enforced quality gates.
 
 ### vs. Kiro.dev
 
 [Kiro](https://kiro.dev/) is an AWS agentic IDE with a three-phase workflow (EARS requirements, design, tasks), but stores specs separately from implementation artifacts.
 
-**Kiro limitations:**
-- Stores specs separately from implementation artifacts
-- No role isolation between Test Owner and Coder
-- Task completion as the only verification
+**DevBooks differences:**
+- **Change package**: proposal/design/spec/plan/verification/evidence in one place for lifecycle traceability
+- **Role isolation**: Test Owner and Coder are separated
+- **Quality gates**: verified through gates, not just task completion
 
-**DevBooks solves these with:**
-- Change package: proposal/design/spec/plan/verification/evidence in one place for lifecycle traceability
-- Role isolation: Test Owner and Coder are separated
-- Quality gates: verified through gates, not just task completion
+**Choose Kiro**: want an IDE-first experience integrated with AWS ecosystem.
+
+**Choose DevBooks**: want change packages bundling artifacts and enforced role boundaries.
 
 ### vs. no spec
 
@@ -281,8 +292,11 @@ DevBooks uses quality gates to block “false done”:
 | Test failure block | archive, strict | no failures in green evidence |
 | P0 skip approval | strict | P0 skips require an approval record |
 | Role boundary | apply --role | Coder cannot modify tests/, Test Owner cannot modify src/ |
+| Gate report on disk | strict, archive | `evidence/gates/G0-<mode>.report.json` (G0–G6) |
+| Protocol coverage report | strict, archive | `evidence/gates/protocol-v1.1-coverage.report.json` and `uncovered=0` |
+| Risk evidence block | strict, archive | `evidence/risks/rollback-plan.md` + `evidence/risks/dependency-audit.log` |
 
-Core scripts (in `../skills/devbooks-delivery-workflow/scripts/`):
+Core scripts (bundled with the installed `devbooks-delivery-workflow` skill under `devbooks-delivery-workflow/scripts/`):
 - `change-check.sh --mode proposal|apply|archive|strict`
 - `handoff-check.sh` - handoff boundary checks
 - `audit-scope.sh` - full audit scan
@@ -302,7 +316,7 @@ When the technical approach is uncertain:
 
 Prototype mode prevents experimental code from polluting the main tree.
 
-Scripts live in `../skills/devbooks-delivery-workflow/scripts/`.
+Scripts are bundled with the installed `devbooks-delivery-workflow` skill under `devbooks-delivery-workflow/scripts/`.
 
 </details>
 
@@ -320,7 +334,7 @@ DevBooks tracks four dimensions of system entropy:
 
 Use `devbooks-entropy-monitor` skill to generate reports and identify refactor opportunities.
 
-Scripts (in `../skills/devbooks-entropy-monitor/scripts/`): `entropy-measure.sh`, `entropy-report.sh`
+Scripts (bundled with the installed `devbooks-entropy-monitor` skill under `devbooks-entropy-monitor/scripts/`): `entropy-measure.sh`, `entropy-report.sh`
 
 </details>
 
@@ -345,28 +359,26 @@ Generates:
 <details>
 <summary><strong>MCP auto-detection</strong></summary>
 
-DevBooks Skills support graceful MCP (Model Context Protocol) degradation: you can run the full workflow without MCP/CKB; when CKB (Code Knowledge Base) is detected, DevBooks automatically enables graph-based capabilities for more accurate “scope/reference/call chain” analysis.
+DevBooks Skills support graceful MCP (Model Context Protocol) degradation: everything still works without MCP/CKB; once CKB (Code Knowledge Base) is available, graph-based capabilities are enabled automatically to improve scope/reference/call-chain analysis.
 
-### What is it for?
+### What does it help with?
 
-- **More accurate impact analysis**: upgrades from “file-level guesses” to “symbol references + call graphs”
-- **More focused reviews**: automatically pulls hotspots and prioritizes high-risk areas (tech debt/high churn)
-- **Less manual grep**: reduces noise and repeated confirmation in large repos
+- **More accurate impact analysis**: from “file-level guesses” to “symbol-level references + call graph”, reducing missed changes
+- **More focused reviews**: auto-fetch hotspots and prioritize high-risk areas (tech debt / high-churn)
+- **Less pain on large repos**: reduce grep noise and repeated confirmation
 
-### MCP status and behavior
+### MCP state and behavior
 
-| MCP status | Behavior |
+| MCP state | Behavior |
 |----------|------|
-| CKB available | Enhanced mode: symbol-level impact/references/call graph/hotspots (`mcp__ckb__analyzeImpact`, `mcp__ckb__findReferences`, `mcp__ckb__getCallGraph`, `mcp__ckb__getHotspots`) |
-| CKB unavailable | Basic mode: Grep + Glob text search (full functionality, lower precision) |
+| CKB available | Enhanced mode: symbol-level impact analysis / reference search / call graph / hotspots |
+| CKB unavailable | Basic mode: grep + glob text search (full functionality, lower precision) |
 
 ### Auto detection
 
-- Skills that depend on MCP call `mcp__ckb__getStatus` first (2s timeout)
-- Timeout/failure → silently falls back to basic mode (non-blocking)
-- No manual “basic/enhanced” switch required
-
-To enable enhanced mode: configure CKB per `docs/Recommended-MCP.md` and manually generate `index.scip`.
+- Skills that can use MCP probe availability first (2s timeout)
+- Timeout/failure → silently fall back to basic mode (do not block execution)
+- No need to manually pick “basic/enhanced” mode
 
 </details>
 
@@ -385,76 +397,43 @@ Decision: `Approved`, `Revise`, `Rejected`
 
 ---
 
-## Migration from Other Frameworks
+## Migration from other frameworks
 
-DevBooks provides migration scripts to help you transition from other spec-driven development tools.
+DevBooks provides migration scripts to help move from a legacy layout into DevBooks.
 
-### Migrate from OpenSpec
-
-If you're currently using [OpenSpec](https://github.com/Fission-AI/OpenSpec) with an `openspec/` directory:
-
-```bash
-# Using CLI (recommended)
-dev-playbooks migrate --from openspec
-
-# Preview changes first
-dev-playbooks migrate --from openspec --dry-run
-
-# Keep original directory after migration
-dev-playbooks migrate --from openspec --keep-old
-```
-
-**What gets migrated:**
-- `openspec/specs/` → `dev-playbooks/specs/`
-- `openspec/changes/` → `dev-playbooks/changes/`
-- `openspec/project.md` → `dev-playbooks/project.md`
-- All path references are automatically updated
-- AI tool command directories are cleaned up (`.claude/commands/openspec/`, etc.)
-
-### Migrate from GitHub spec-kit
-
-If you're using [GitHub spec-kit](https://github.com/github/spec-kit) with `specs/` and `memory/` directories:
+Migration sources are identified by a `legacy-id`, which maps to a script at `scripts/legacy/migrate-from-<legacy-id>.sh`.
+(To avoid enumerating legacy source names in user-facing output, the CLI does not list available ids; inspect `scripts/legacy/` yourself.)
 
 ```bash
-# Using CLI (recommended)
-dev-playbooks migrate --from speckit
+# Use CLI (recommended)
+dev-playbooks migrate --from <legacy-id>
 
 # Preview changes first
-dev-playbooks migrate --from speckit --dry-run
+dev-playbooks migrate --from <legacy-id> --dry-run
 
-# Keep original directories after migration
-dev-playbooks migrate --from speckit --keep-old
+# Keep the old directory after migration
+dev-playbooks migrate --from <legacy-id> --keep-old
 ```
 
-**Mapping rules:**
+**Notes:**
+- Mapping rules are defined by the selected migration script. Scripts typically map legacy specs/change artifacts into `dev-playbooks/specs/` and `dev-playbooks/changes/`, and update doc references (script is the source of truth).
 
-| Spec-Kit | DevBooks |
-|----------|----------|
-| `memory/constitution.md` | `dev-playbooks/specs/_meta/constitution.md` |
-| `specs/[feature]/spec.md` | `changes/[feature]/design.md` |
-| `specs/[feature]/plan.md` | `changes/[feature]/proposal.md` |
-| `specs/[feature]/tasks.md` | `changes/[feature]/tasks.md` |
-| `specs/[feature]/quickstart.md` | `changes/[feature]/verification.md` |
-| `specs/[feature]/contracts/` | `changes/[feature]/specs/` |
+### Migration features
 
-### Migration Features
+Migration scripts support:
 
-Both migration scripts support:
+- **Idempotent runs**: safe to rerun
+- **Resume support**: can continue after interruption
+- **Dry-run mode**: preview before applying
+- **Automatic backups**: backups live under `.devbooks/backup/`
+- **Reference updates**: doc path references are updated automatically
 
-- **Idempotent execution**: Safe to run multiple times
-- **Checkpoints**: Resume from where you left off if interrupted
-- **Dry-run mode**: Preview changes before applying
-- **Automatic backup**: Original files are backed up to `.devbooks/backup/`
-- **Reference updates**: Path references in documents are automatically updated
+### After migration
 
-### Post-Migration Steps
-
-After migration:
-
-1. Run `dev-playbooks init` to set up DevBooks Skills
-2. Review migrated files in `dev-playbooks/`
-3. Update `verification.md` files with proper AC mappings
-4. Run `devbooks-brownfield-bootstrap` skill if you need baseline specs
+1. Run `dev-playbooks init` to install DevBooks Skills
+2. Review migrated files under `dev-playbooks/`
+3. Update AC mapping inside `verification.md` as needed
+4. If you need baseline specs, run `devbooks-brownfield-bootstrap`
 
 ---
 
@@ -471,17 +450,14 @@ dev-playbooks/
 ├── changes/               # Change packages (workspace)
 ├── scripts/               # Helper scripts
 └── docs/                  # Documentation
-    ├── devbooks-setup-guide.md   # Configuration guide
-    ├── workflow-diagram.svg      # Workflow visualization
-    └── Recommended-MCP.md        # MCP configuration
+    └── workflow-diagram.svg      # Workflow visualization
 ```
 
 ---
 
 ## Documentation
 
-- [Setup guide](docs/devbooks-setup-guide.md)
-- [MCP configuration recommendations](docs/Recommended-MCP.md)
+- [Workflow diagram](docs/workflow-diagram.svg)
 
 ---
 

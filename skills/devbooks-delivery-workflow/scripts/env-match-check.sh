@@ -14,7 +14,7 @@ usage: env-match-check.sh <change-id> [options]
 
 Verify test environment declaration exists in verification.md:
 1. Checks verification.md exists
-2. Verifies a "Test Environment" (or equivalent) section exists
+2. Verifies "Test Environment Declaration" or "Test Environment" section exists
 3. Returns exit code based on verification status
 
 Options:
@@ -106,7 +106,7 @@ fi
 
 # Check for environment declaration section
 # Accept both Chinese and English section names
-env_section_pattern="Test Environment|Environment Declaration|Runtime Environment"
+env_section_pattern="Test Environment Declaration|Test Environment|Environment Declaration|Runtime Environment|测试环境声明|测试环境|环境声明|运行环境"
 
 if grep -qE "^#+ *(${env_section_pattern})" "$verification_file" 2>/dev/null; then
   echo "ok: environment declaration section found"
@@ -114,8 +114,8 @@ if grep -qE "^#+ *(${env_section_pattern})" "$verification_file" 2>/dev/null; th
 fi
 
 # Also check for environment content without explicit heading
-# Pattern: lines starting with "- Runtime:" or "- Database:" etc.
-env_content_pattern="^- *(Runtime|Environment|Database|External):"
+# Pattern: lines starting with "- Runtime:" or "- Environment:" etc.
+env_content_pattern="^- *((Runtime|Environment|Database|External)[:：]|(运行环境|环境|数据库|外部依赖)[:：])"
 
 if grep -qE "${env_content_pattern}" "$verification_file" 2>/dev/null; then
   echo "ok: environment declaration content found"
@@ -124,5 +124,5 @@ fi
 
 # No environment declaration found
 echo "error: verification.md missing test environment declaration section" >&2
-echo "hint: add a '## Test Environment' section with runtime, database, and external dependency info" >&2
+echo "hint: add a '## Test Environment Declaration' / '## 测试环境声明' section with runtime, database, and external dependency info" >&2
 exit 1

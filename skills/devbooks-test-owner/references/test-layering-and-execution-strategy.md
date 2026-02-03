@@ -29,9 +29,9 @@
 Timeline example:
 T1: Coder completes implementation, triggers @full async test → Status = Implementation Done
 T2: Coder can start next change (not blocked)
-T3: @full tests pass → Status = Ready for Phase 2
-T4: Test Owner audits evidence + checks off → Status = Verified
-T5: Code Review → Status = Done
+T3: @full tests pass → Test Owner proceeds to Phase 2 evidence audit (verification Status stays Ready)
+T4: Test Owner audits evidence + checks off AC matrix → Status stays Ready
+T5: Code Review → Status = Done (Reviewer only)
 T6: Archive (at this point @full has definitely passed)
 ```
 

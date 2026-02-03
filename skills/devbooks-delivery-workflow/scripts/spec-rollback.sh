@@ -1,17 +1,17 @@
 #!/bin/bash
 # skills/devbooks-delivery-workflow/scripts/spec-rollback.sh
-# Spec rollback script
+# Spec Rollback Script
 #
-# Rolls back spec staging operations.
+# Rolls back spec sync operations.
 #
 # Usage:
 #   ./spec-rollback.sh <change-id> [options]
 #   ./spec-rollback.sh --help
 #
 # Exit codes:
-#   0 - success
-#   1 - failure
-#   2 - usage error
+#   0 - Rollback successful
+#   1 - Rollback failed
+#   2 - Usage error
 
 set -euo pipefail
 
@@ -31,22 +31,22 @@ NC='\033[0m'
 
 show_help() {
     cat << 'EOF'
-Spec rollback script (spec-rollback.sh)
+Spec Rollback Script (spec-rollback.sh)
 
-usage:
+Usage:
   ./spec-rollback.sh <change-id> [options]
 
-options:
-  --project-root DIR  Project root
-  --truth-root DIR    Truth root
-  --change-root DIR   Change root
-  --target TARGET     Target: staged | draft
-  --dry-run           Dry run
+Options:
+  --project-root DIR  Project root directory
+  --truth-root DIR    Truth source directory
+  --change-root DIR   Change package directory
+  --target TARGET     Rollback target: staged | draft
+  --dry-run           Simulate run
   --help, -h          Show help
 
-targets:
-  staged - clear the staging layer (keep spec deltas in the change package)
-  draft  - roll back to change-package state (clear staging; do not touch specs)
+Rollback targets:
+  staged - Clean up staging layer (preserve spec delta in change package)
+  draft  - Roll back to change package state (clean up staging layer, do not touch specs)
 
 EOF
 }
@@ -80,40 +80,40 @@ main() {
 
     case "$target" in
         staged|draft) ;;
-        *) log_error "Invalid target: $target"; exit 2 ;;
+        *) log_error "Invalid rollback target: $target"; exit 2 ;;
     esac
 
     local staged_dir="${project_root}/${truth_root}/_staged/${change_id}"
 
-    log_info "rolling back change: ${change_id}"
-    log_info "target: ${target}"
+    log_info "Rolling back change package: ${change_id}"
+    log_info "Rollback target: ${target}"
 
     case "$target" in
         staged)
-            # Clear staging layer
+            # Clean up staging layer
             if [[ -d "$staged_dir" ]]; then
                 if [[ "$dry_run" == true ]]; then
-                    log_info "[DRY-RUN] would remove: ${staged_dir}"
+                    log_info "[DRY-RUN] Would delete: ${staged_dir}"
                 else
                     rm -rf "$staged_dir"
-                    log_pass "cleared staging: ${staged_dir}"
+                    log_pass "Cleaned up staging layer: ${staged_dir}"
                 fi
             else
-                log_info "staging is empty; nothing to do"
+                log_info "Staging layer is empty, no cleanup needed"
             fi
             ;;
 
         draft)
-            # Roll back to change-package state (clear staging)
+            # Roll back to change package state (clean up staging layer)
             if [[ -d "$staged_dir" ]]; then
                 if [[ "$dry_run" == true ]]; then
-                    log_info "[DRY-RUN] would remove: ${staged_dir}"
+                    log_info "[DRY-RUN] Would delete: ${staged_dir}"
                 else
                     rm -rf "$staged_dir"
-                    log_pass "rolled back to draft state"
+                    log_pass "Rolled back to draft state"
                 fi
             else
-                log_info "already in draft state"
+                log_info "Already in draft state"
             fi
             ;;
     esac

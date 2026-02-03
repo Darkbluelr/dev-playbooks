@@ -1,17 +1,17 @@
 #!/bin/bash
 # skills/devbooks-delivery-workflow/scripts/constitution-check.sh
-# Constitution compliance check script
+# Constitution Compliance Check Script
 #
-# Checks whether constitution.md exists and has the required structure.
+# Checks if the project's constitution.md exists and is correctly formatted.
 #
 # Usage:
 #   ./constitution-check.sh [project-root]
 #   ./constitution-check.sh --help
 #
 # Exit codes:
-#   0 - constitution exists and is valid
-#   1 - constitution missing or invalid
-#   2 - usage error
+#   0 - Constitution exists and is valid
+#   1 - Constitution missing or invalid
+#   2 - Usage error
 
 set -euo pipefail
 
@@ -24,47 +24,47 @@ NC='\033[0m' # No Color
 # Version
 VERSION="1.0.0"
 
-# Help
+# Show help
 show_help() {
     cat << 'EOF'
-Constitution compliance check (constitution-check.sh)
+Constitution Compliance Check Script (constitution-check.sh)
 
-usage:
+Usage:
   ./constitution-check.sh [options] [project-root]
 
-options:
-  --help, -h       Show this help
-  --version, -v    Show version
-  --quiet, -q      Quiet mode (errors only)
+Options:
+  --help, -h       Show this help message
+  --version, -v    Show version information
+  --quiet, -q      Quiet mode, only output errors
 
-args:
-  project-root     Project root (default: current directory)
+Arguments:
+  project-root     Project root directory, defaults to current directory
 
-checks:
-  1. constitution.md exists
-  2. Contains a "Part Zero" section
-  3. Contains at least one "GIP-" rule heading
-  4. Contains an "Escape Hatch(es)" section
+Checks:
+  1. constitution.md file exists
+  2. Contains "Part Zero" section
+  3. Contains "GIP-" prefixed rules (at least 1)
+  4. Contains "Escape Hatches" section
 
-exit codes:
-  0 - constitution exists and is valid
-  1 - constitution missing or invalid
-  2 - usage error
+Exit codes:
+  0 - Constitution exists and is valid
+  1 - Constitution missing or invalid
+  2 - Usage error
 
-examples:
-  ./constitution-check.sh                    # check current directory
-  ./constitution-check.sh /path/to/project   # check a specific directory
-  ./constitution-check.sh --quiet            # quiet mode
+Examples:
+  ./constitution-check.sh                    # Check current directory
+  ./constitution-check.sh /path/to/project   # Check specified directory
+  ./constitution-check.sh --quiet            # Quiet mode
 
 EOF
 }
 
-# Version output
+# Show version
 show_version() {
     echo "constitution-check.sh v${VERSION}"
 }
 
-# Logging helpers
+# Log functions
 log_info() {
     [[ "$QUIET" == "false" ]] && echo -e "${GREEN}[INFO]${NC} $*"
 }
@@ -81,12 +81,12 @@ log_pass() {
     [[ "$QUIET" == "false" ]] && echo -e "${GREEN}[PASS]${NC} $*"
 }
 
-# Resolve truth root
-# Prefer dev-playbooks/, fallback to devbooks/
+# Resolve truth root directory
+# Prioritize checking dev-playbooks/, fallback to devbooks/
 resolve_truth_root() {
     local root="$1"
 
-    # Check root mapping from .devbooks/config.yaml
+    # Check root configuration in .devbooks/config.yaml
     if [[ -f "${root}/.devbooks/config.yaml" ]]; then
         local config_root
         config_root=$(grep "^root:" "${root}/.devbooks/config.yaml" 2>/dev/null | sed 's/root: *//' | tr -d "'" | tr -d '"' | tr -d '/' || true)
@@ -96,13 +96,13 @@ resolve_truth_root() {
         fi
     fi
 
-    # Prefer dev-playbooks/
+    # Prioritize new path dev-playbooks/
     if [[ -d "${root}/dev-playbooks" ]]; then
         echo "${root}/dev-playbooks"
         return 0
     fi
 
-    # Fallback to devbooks/
+    # Fallback to old path devbooks/
     if [[ -d "${root}/devbooks" ]]; then
         echo "${root}/devbooks"
         return 0
@@ -120,39 +120,39 @@ check_constitution() {
     local checks_passed=0
     local total_checks=4
 
-    # Resolve truth root
+    # Resolve truth root directory
     local config_root
     config_root=$(resolve_truth_root "$root") || {
-        log_error "cannot locate truth root (dev-playbooks/ or devbooks/)"
+        log_error "Cannot find configuration root directory (dev-playbooks/ or devbooks/)"
         return 1
     }
 
     local constitution="${config_root}/constitution.md"
 
-    log_info "checking constitution file: $constitution"
+    log_info "Checking constitution file: $constitution"
 
-    # Check 1: file exists
+    # Check 1: File exists
     if [[ -f "$constitution" ]]; then
         log_pass "constitution.md exists"
         ((checks_passed++))
     else
-        log_error "constitution.md not found: $constitution"
+        log_error "constitution.md does not exist: $constitution"
         ((errors++))
     fi
 
-    # If file is missing, return early
+    # If file does not exist, return immediately
     if [[ ! -f "$constitution" ]]; then
         echo ""
-        log_error "constitution check failed: $errors error(s)"
+        log_error "Constitution check failed: $errors errors"
         return 1
     fi
 
     # Check 2: Part Zero section
     if grep -qE "^#+ *Part Zero" "$constitution" 2>/dev/null; then
-        log_pass "contains 'Part Zero' section"
+        log_pass "Contains 'Part Zero' section"
         ((checks_passed++))
     else
-        log_error "missing 'Part Zero' section"
+        log_error "Missing 'Part Zero' section"
         ((errors++))
     fi
 
@@ -160,39 +160,39 @@ check_constitution() {
     local gip_count
     gip_count=$(grep -cE "^#+ *GIP-[0-9]+" "$constitution" 2>/dev/null || echo "0")
     if [[ "$gip_count" -gt 0 ]]; then
-        log_pass "contains GIP rules (${gip_count})"
+        log_pass "Contains GIP rules (${gip_count} rules)"
         ((checks_passed++))
     else
-        log_error "missing GIP rules (need at least 1 GIP-xxx heading)"
+        log_error "Missing GIP rules (need at least 1 GIP-xxx)"
         ((errors++))
     fi
 
-    # Check 4: Escape Hatch(es) section
-    if grep -qE "^#+ *Escape Hatches?" "$constitution" 2>/dev/null; then
-        log_pass "contains 'Escape Hatch(es)' section"
+    # Check 4: Escape Hatches section
+    if grep -qE "^#+ *(Escape Hatches?)" "$constitution" 2>/dev/null; then
+        log_pass "Contains 'Escape Hatches' section"
         ((checks_passed++))
     else
-        log_error "missing 'Escape Hatch(es)' section"
+        log_error "Missing 'Escape Hatches' section"
         ((errors++))
     fi
 
-    # Summary
+    # Output summary
     echo ""
     if [[ "$errors" -eq 0 ]]; then
-        log_info "constitution checks passed: ${checks_passed}/${total_checks}"
+        log_info "Constitution check passed: ${checks_passed}/${total_checks} checks passed"
         return 0
     else
-        log_error "constitution checks failed: ${checks_passed}/${total_checks} passed, ${errors} error(s)"
+        log_error "Constitution check failed: ${checks_passed}/${total_checks} checks passed, ${errors} errors"
         return 1
     fi
 }
 
-# Main
+# Main function
 main() {
     QUIET="false"
     local project_root="."
 
-    # Parse args
+    # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --help|-h)
@@ -208,8 +208,8 @@ main() {
                 shift
                 ;;
             -*)
-                log_error "unknown option: $1"
-                echo "hint: use --help" >&2
+                log_error "Unknown option: $1"
+                echo "Use --help to see help" >&2
                 exit 2
                 ;;
             *)
@@ -219,13 +219,13 @@ main() {
         esac
     done
 
-    # Validate project root
+    # Check project root directory
     if [[ ! -d "$project_root" ]]; then
-        log_error "project root not found: $project_root"
+        log_error "Project root directory does not exist: $project_root"
         exit 2
     fi
 
-    # Run checks
+    # Execute check
     if check_constitution "$project_root"; then
         exit 0
     else
@@ -233,5 +233,5 @@ main() {
     fi
 }
 
-# Run
+# Run main function
 main "$@"

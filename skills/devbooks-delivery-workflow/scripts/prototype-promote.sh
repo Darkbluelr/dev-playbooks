@@ -12,7 +12,7 @@ set -euo pipefail
 # 3. Production verification.md exists (Test Owner has produced acceptance tests)
 # 4. All quality gates pass before promotion
 #
-# Reference: The Mythical Man-Month, Ch. 11 “Plan to Throw One Away”
+# Reference: "The Mythical Man-Month" Chapter 11 "Plan to Throw One Away"
 # ============================================================================
 
 usage() {
@@ -157,14 +157,14 @@ else
   # Check 3: Promotion checklist is complete (no unchecked items in promotion section)
   echo "checking: promotion checklist is complete"
 
-  # Extract lines between "Prototype promotion checklist" and the next "## " or "Prototype drop checklist"
+  # Extract lines between "Promotion Checklist" and next "## " or "Discard Checklist"
   # and check for unchecked items "- [ ]"
-  if grep -A 20 -i "prototype promotion checklist" "$prototype_md" 2>/dev/null | \
-     grep -B 20 -i -E "(^## |prototype drop checklist)" 2>/dev/null | \
+  if grep -A 20 "Promotion Checklist" "$prototype_md" 2>/dev/null | \
+     grep -B 20 -E "(^## |Discard Checklist)" 2>/dev/null | \
      grep -q "^\- \[ \]"; then
     err "unchecked items in promotion checklist"
-    err "hint: complete all items in the 'Prototype promotion checklist' section of PROTOTYPE.md"
-    grep -A 20 -i "prototype promotion checklist" "$prototype_md" | grep "^\- \[ \]" | head -5 >&2
+    err "hint: complete all items in 'Promotion Checklist' section of PROTOTYPE.md"
+    grep -A 20 "Promotion Checklist" "$prototype_md" | grep "^\- \[ \]" | head -5 >&2
     ((errors++))
   else
     ok "promotion checklist complete"
@@ -262,7 +262,7 @@ if [[ $errors -gt 0 ]]; then
   err "${errors} error(s) found"
   echo ""
   echo "Required before promotion:"
-  echo "  1. Complete all items in PROTOTYPE.md 'Prototype promotion checklist'"
+  echo "  1. Complete all items in PROTOTYPE.md 'Promotion Checklist'"
   echo "  2. Create production design.md with AC-xxx items"
   echo "  3. Have Test Owner create verification.md with acceptance tests"
   exit 1
@@ -323,7 +323,7 @@ cat > "${change_dir}/evidence/prototype-promotion.md" <<EOF
 - Production track: active
 
 ---
-Reference: The Mythical Man-Month, Ch. 11 “Plan to Throw One Away”
+Reference: "The Mythical Man-Month" Chapter 11 - "The first system built is not suitable...plan to throw one away"
 EOF
 ok "created: ${change_dir}/evidence/prototype-promotion.md"
 

@@ -20,7 +20,9 @@ This document defines the design principles and constraints you must follow when
 |---|---|---|
 | **Verification / checks** | Must be idempotent (must not modify files) | `change-check.sh`, `guardrail-check.sh`, `devbooks-reviewer` |
 | **Generators** | Must explicitly define “overwrite vs incremental” behavior | `change-scaffold.sh`, `devbooks-design-doc`, `devbooks-proposal-author` |
-| **Editors** | Must be safe to rerun | `devbooks-archiver`, `devbooks-design-backport` |
+| **Editors** | Must be safe to rerun | `devbooks-archiver` (writes back `design.md` during archive) |
+
+Note: if you need design writeback before archive, use `devbooks-design-doc` to update `design.md`.
 
 **Verification/check Skills MUST**:
 - [ ] Not modify any files (read-only)
@@ -83,6 +85,14 @@ fi
 # 4) Only proceed after verification passes
 echo "ok: verification passed"
 ```
+
+### 1.3.1 Gate reports and evidence paths
+
+For scripts that enforce gates or block workflow stages, Gate Reports must be written under `evidence/gates/`, and risk evidence must be written under `evidence/risks/`:
+
+- Gate report: `evidence/gates/G0-<mode>.report.json` (G0–G6)
+- Dependency audit: `evidence/risks/dependency-audit.log`
+- Rollback plan: `evidence/risks/rollback-plan.md`
 
 ### 1.4 Long-Running Task Output Monitoring
 

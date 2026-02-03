@@ -21,7 +21,7 @@ Each skill must identify and declare its current status upon completion:
 | Code | Status | Meaning | Next Step |
 |:----:|--------|---------|-----------|
 | ✅ | COMPLETED | Completed normally, no deviations | Enter next skill |
-| ⚠️ | COMPLETED_WITH_DEVIATION | Completed but with deviations/additions | design-backport first, then next step |
+| ⚠️ | COMPLETED_WITH_DEVIATION | Completed but with deviations/additions | Write back design decisions first (use `devbooks-design-doc` if needed before archive; otherwise Archiver will handle during archive), then proceed |
 | 🔄 | HANDOFF | Needs another role to handle | Return to specified skill |
 | ❌ | BLOCKED | Blocked, needs external input | Record breakpoint, wait |
 | 💥 | FAILED | Failed, gates not passed | Fix and retry |
@@ -70,7 +70,7 @@ If all tasks completed and no deviations
 
 ## Completed Backport Records
 
-(Move here after design-backport completes)
+(Move here after design writeback completes)
 
 | Time | Type | Description | Backported To |
 |------|------|-------------|---------------|
@@ -123,11 +123,11 @@ deviation-log.md is a **persistent file** unaffected by compact. Even if convers
 
 | Current Skill | Completion Status | Next Step |
 |---------------|-------------------|-----------|
-| Any | COMPLETED_WITH_DEVIATION | `devbooks-design-backport` |
+| Any | COMPLETED_WITH_DEVIATION | `devbooks-design-doc` |
 | coder | COMPLETED | `devbooks-reviewer` |
 | coder | HANDOFF (test issue) | `devbooks-test-owner` |
 | test-owner | COMPLETED | `devbooks-coder` |
-| test-owner | HANDOFF (design issue) | `devbooks-design-backport` |
+| test-owner | HANDOFF (design issue) | `devbooks-design-doc` |
 | code-review | COMPLETED (has spec delta) | `devbooks-archiver` |
 | code-review | COMPLETED (no spec delta) | Archive complete |
 | Any | BLOCKED | Record breakpoint, wait for user |
@@ -156,15 +156,17 @@ Run devbooks-xxx skill for change <change-id>
 
 ---
 
-## Interaction with design-backport
+## Interaction with design writeback
+
+Archiver performs automatic design writeback during archive. If you need writeback before archive, use `devbooks-design-doc`. Deprecated alias: `devbooks-design-backport`.
 
 ### Trigger Conditions
 
-When deviation-log.md has **pending records** (Backported=❌), must execute design-backport first.
+When deviation-log.md has **pending records** (Backported=❌), you must ensure design writeback happens first. If you need to do it before archive, use `devbooks-design-doc`; otherwise Archiver will auto-writeback during archive.
 
 ### Backport Completion Marking
 
-After design-backport completes:
+After design writeback completes:
 1. Move record from "Pending" to "Completed"
 2. Update "Backported" column to ✅
 3. Record specific location backported to

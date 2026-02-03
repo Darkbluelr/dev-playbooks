@@ -1,0 +1,11 @@
+---
+description: DevBooks project rules (Cursor)
+globs:
+  - "**/*"
+---
+
+When the request involves proposal/spec/change/plan or architecture/external contract changes:
+
+1) Read `AGENTS.md` first and follow DevBooks protocol discovery and constraints.
+2) Default to English output.
+3) Enforce role isolation: Test Owner and Coder must be in separate sessions; Coder must not modify `tests/`.

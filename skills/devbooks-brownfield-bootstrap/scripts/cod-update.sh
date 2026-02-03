@@ -181,8 +181,6 @@ EOF
 
     echo "" >> "$temp_file"
     echo "---" >> "$temp_file"
-    echo "" >> "$temp_file"
-    echo "> Tip: Manually generate SCIP index for more precise dependency analysis (see docs/Recommended-MCP.md)" >> "$temp_file"
 
     # 只在内容变化时更新
     if [ -f "$output" ]; then

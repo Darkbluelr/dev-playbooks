@@ -1,17 +1,17 @@
 #!/bin/bash
 # skills/devbooks-delivery-workflow/scripts/spec-promote.sh
-# Spec promotion script
+# Spec Promotion Script
 #
-# Promotes staged spec deltas into the truth root.
+# Promotes the spec delta from the staging layer to the truth layer.
 #
 # Usage:
 #   ./spec-promote.sh <change-id> [options]
 #   ./spec-promote.sh --help
 #
 # Exit codes:
-#   0 - success
-#   1 - failure
-#   2 - usage error
+#   0 - Promotion successful
+#   1 - Promotion failed
+#   2 - Usage error
 
 set -euo pipefail
 
@@ -29,21 +29,21 @@ NC='\033[0m'
 
 show_help() {
     cat << 'EOF'
-Spec promotion script (spec-promote.sh)
+Spec Promotion Script (spec-promote.sh)
 
-usage:
+Usage:
   ./spec-promote.sh <change-id> [options]
 
-options:
-  --project-root DIR  Project root
-  --truth-root DIR    Truth root
-  --dry-run           Dry run
+Options:
+  --project-root DIR  Project root directory
+  --truth-root DIR    Truth source directory
+  --dry-run           Simulate run
   --help, -h          Show help
 
-flow:
-  1. Verify preconditions (already staged)
-  2. Copy _staged/<change-id>/ into specs/
-  3. Remove _staged/<change-id>/
+Process:
+  1. Check prerequisites (already staged)
+  2. Move _staged/<change-id>/ contents to specs/
+  3. Clean up _staged/<change-id>/ directory
 
 EOF
 }
@@ -76,12 +76,12 @@ main() {
     local staged_dir="${project_root}/${truth_root}/_staged/${change_id}"
     local specs_dir="${project_root}/${truth_root}"
 
-    log_info "promoting change: ${change_id}"
+    log_info "Promoting change package: ${change_id}"
 
-    # Preconditions
+    # Check prerequisites
     if [[ ! -d "$staged_dir" ]]; then
-        log_error "staged content not found: ${staged_dir}"
-        log_error "run spec-stage.sh first"
+        log_error "Staged content not found: ${staged_dir}"
+        log_error "Please run spec-stage.sh first"
         exit 1
     fi
 
@@ -104,14 +104,14 @@ main() {
         promoted=$((promoted + 1))
     done < <(find "$staged_dir" -type f 2>/dev/null)
 
-    # Cleanup staged directory
+    # Clean up staging directory
     if [[ "$dry_run" == true ]]; then
-        log_info "[DRY-RUN] would remove: ${staged_dir}"
+        log_info "[DRY-RUN] Would delete: ${staged_dir}"
     else
         rm -rf "$staged_dir"
     fi
 
-    log_pass "promoted ${promoted} file(s) into truth root"
+    log_pass "Promoted ${promoted} file(s) to truth layer"
     exit 0
 }
 

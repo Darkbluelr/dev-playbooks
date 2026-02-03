@@ -1,8 +1,8 @@
 ---
-skill: devbooks-router
+skill: devbooks-delivery-workflow
 ---
 
-# DevBooks: Index
+# DevBooks: Command Index
 
 A quick index of common DevBooks commands.
 
@@ -16,7 +16,5 @@ $ARGUMENTS
 
 ## Notes
 
-- Default entrypoint: `/devbooks:start`
-- Routing and phase detection: `/devbooks:router`
-- Full loop orchestrator: `/devbooks:delivery`
-
+- Single entry (routes by `request_kind`): `/devbooks:delivery`
+- Epic slicing (epic queue / Knife Plan): `/devbooks:knife`

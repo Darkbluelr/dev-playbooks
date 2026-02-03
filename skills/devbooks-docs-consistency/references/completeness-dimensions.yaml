@@ -1,31 +1,25 @@
-- name: Environment dependencies
+- name: 环境依赖
   patterns:
     - "Node.js"
     - "Python"
-    - "Dependencies"
-    - "Requirements"
-- name: Security and permissions
+    - "依赖"
+- name: 安全权限
   patterns:
-    - "Security"
-    - "Permissions"
-    - "API key"
-    - "Token"
-    - "Secret"
-- name: Troubleshooting
+    - "权限"
+    - "安全"
+    - "密钥"
+- name: 故障排查
   patterns:
+    - "故障"
+    - "排查"
     - "Troubleshooting"
-    - "FAQ"
-    - "Common issues"
-    - "Error"
-- name: Configuration
+- name: 配置说明
   patterns:
-    - "Configuration"
+    - "配置"
     - "config"
-    - ".env"
-    - "Environment variables"
-- name: API documentation
+    - "配置文件"
+- name: API 文档
   patterns:
     - "API"
+    - "接口"
     - "Endpoint"
-    - "Request"
-    - "Response"

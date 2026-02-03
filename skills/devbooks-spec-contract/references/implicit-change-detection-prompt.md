@@ -173,8 +173,8 @@ cat <change-root>/<change-id>/evidence/implicit-changes.json | jq '.'
 If implicit changes are detected but not declared in `design.md`:
 
 1. **Small change**: add a note in the “Data and contracts” section of `design.md`
-2. **Large change**: use `devbooks-design-backport` to backport decisions to design
-3. **Testable change**: use `devbooks-spec-contract` to add contract tests
+2. **Large change**: backport design decisions (use `devbooks-design-doc` if you need it before archive; Archiver will also auto-writeback during archive)
+3. **Testable change**: use `devbooks-spec-contract` to add contract tests (Contract Tests)
 
 ## Hard constraints
 

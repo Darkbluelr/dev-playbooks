@@ -4,28 +4,24 @@
 
 ---
 
-## Quick Start: Don't know how to use it?
+## Quick Start: Don't know where to start?
 
 **If you are unsure how to use DevBooks, the simplest way is:**
 
 ```bash
-/devbooks-delivery-workflow
+/devbooks:delivery
 ```
 
-This skill automatically orchestrates the complete development loop, from proposal to archival, executing the entire process in one go.
+Delivery is the **single entrypoint**: it routes by `request_kind` and runs the **minimal sufficient closed loop**, escalating gates and evidence only when required.
 
-### What does delivery-workflow do?
+### What does Delivery do?
 
-`devbooks-delivery-workflow` is a full-loop orchestrator that automatically executes the following steps:
+Delivery will:
+1. Ask the minimal questions to determine `request_kind`, `change_type`, `risk_level`, and `deliverable_quality`.
+2. Materialize auditable on-disk artifacts (`RUNBOOK.md`, `inputs/index.md`, `proposal.md` front matter) and derive required gates.
+3. Orchestrate the minimal loop (debug/change/epic/void/bootstrap/governance) and drive it to archive (or explicitly route to Void/Bootstrap when prerequisites are missing).
 
-1. **Proposal** - Analyze requirements and draft a change proposal.
-2. **Design** - Define functional requirements and acceptance criteria.
-3. **Spec** - Define external behavior contracts.
-4. **Plan** - Create an implementation plan and breakdown tasks.
-5. **Test** - Write acceptance tests (in a separate conversation).
-6. **Implement** - Implement features (in a separate conversation).
-7. **Review** - Code review.
-8. **Archive** - Archive the change package.
+> High-risk or epic: when `risk_level=high` or `request_kind=epic`, Knife Plan is mandatory (G3). Delivery will route you to `/devbooks:knife` when required.
 
 **Applicable Scenarios**:
 - New feature development
@@ -35,7 +31,17 @@ This skill automatically orchestrates the complete development loop, from propos
 
 **Note**: Requires AI tools that support sub-agents (e.g., Claude Code).
 
+### P3-3 Action Norms (must read)
+
+To avoid multi-change cross-contamination, missing on-disk artifacts, and end-step amnesia (“forgot to archive”), read:
+
+- `skills/devbooks-delivery-workflow/references/orchestration-bans-and-stage-table.md` (includes **P3-3 Action Norms**)
+
 ---
+
+## Single entrypoint: Delivery (no Start/Router)
+
+DevBooks uses **Delivery as the single entrypoint**. If you want to start lighter, keep `risk_level=low` and let Delivery choose the minimal loop.
 
 ## Table of Contents
 
@@ -51,7 +57,7 @@ This skill automatically orchestrates the complete development loop, from propos
 
 ## Positioning and Text Specifications
 
-DevBooks itself is a non-MCP tool but provides optional MCP integration points to access external capabilities as needed, while retaining a few self-check scripts as guardrails.
+DevBooks is a local workflow tool and retains a small set of self-check scripts as guardrails.
 DevBooks focuses on the unified description of protocols, workflows, and text specifications, emphasizing traceability and verifiability of processes.
 
 **Constraint**: Guidance content needs to remain scannable and reusable.
@@ -131,35 +137,35 @@ Required Evidence:
 
 ```bash
 # 1. Create Proposal
-/devbooks-proposal-author
+/devbooks:proposal
 
 # 2. Write Design
-/devbooks-design-doc
+/devbooks:design
 
 # 3. Define Spec
-/devbooks-spec-contract
+/devbooks:spec
 
 # 4. Create Plan
-/devbooks-implementation-plan
+/devbooks:plan
 
 # 5. Write Tests (Independent Conversation)
-/devbooks-test-owner
+/devbooks:test
 
 # 6. Implement (Independent Conversation)
-/devbooks-coder
+/devbooks:code
 
 # 7. Code Review
-/devbooks-reviewer
+/devbooks:review
 
 # 8. Archive Change
-/devbooks-archiver
+/devbooks:archive
 ```
 
 ### Brownfield Initialization
 
 ```bash
 # Generate project profile, glossary, and baseline specs
-/devbooks-brownfield-bootstrap
+/devbooks:bootstrap
 ```
 
 ---
@@ -176,13 +182,13 @@ Required Evidence:
 
 ```bash
 # 1. Draft Proposal
-/devbooks-proposal-author
+/devbooks:proposal
 
 # 2. Challenge Proposal
-/devbooks-proposal-challenger
+/devbooks:challenger
 
 # 3. Adjudicate Proposal
-/devbooks-proposal-judge
+/devbooks:judge
 ```
 
 **Proposal Structure Key Points**
@@ -224,7 +230,7 @@ Spec documents should contain:
 
 ```bash
 # In an independent conversation
-/devbooks-test-owner
+/devbooks:test
 
 # Verify Red Baseline
 npm test  # Should fail
@@ -243,7 +249,7 @@ npm test  # Should fail
 
 ```bash
 # In an independent conversation
-/devbooks-coder
+/devbooks:code
 
 # Verify Green Evidence
 npm test  # Should pass
@@ -261,7 +267,7 @@ npm run build  # Should succeed
 **Reviewer only reviews maintainability.**
 
 ```bash
-/devbooks-reviewer
+/devbooks:review
 ```
 
 **Review Dimensions**
@@ -279,7 +285,7 @@ npm run build  # Should succeed
 **Automated Loop Closure**
 
 ```bash
-/devbooks-archiver
+/devbooks:archive
 ```
 
 Archive Process:
@@ -287,6 +293,48 @@ Archive Process:
 2. Spec Merge to Truth.
 3. Docs Consistency Check.
 4. Move Change Package to Archive.
+
+#### Release preflight checks (packlist / entrypoint)
+
+Before publishing the npm package (or doing a release audit), run the entrypoint and packlist checks and store the outputs as auditable evidence:
+
+```bash
+# One-shot verification (slash commands + npm metadata)
+bash skills/devbooks-delivery-workflow/scripts/verify-all.sh --project-root "/path/to/dev-playbooks"
+
+# Release boundary (packlist is the final truth)
+npm pack --dry-run
+```
+
+To write the packlist output into the change package (recommended):
+
+```bash
+bash skills/devbooks-delivery-workflow/scripts/change-evidence.sh <change-id> \
+  --project-root "/path/to/dev-playbooks" \
+  --change-root dev-playbooks/changes \
+  --out gates/npm-pack-dry-run.log -- npm pack --dry-run
+```
+
+#### Protocol coverage report and risk evidence
+
+In `strict/archive`, the coverage report and risk evidence are blocking items:
+
+```bash
+# Coverage report (v1.1)
+bash scripts/generate-protocol-v1.1-coverage-report.sh \
+  --project-root "/path/to/dev-playbooks" \
+  --change-id <change-id> \
+  --change-root dev-playbooks/changes
+
+# Dependency audit log
+bash scripts/dependency-audit.sh \
+  --project-root "/path/to/dev-playbooks" \
+  --output dev-playbooks/changes/<change-id>/evidence/risks/dependency-audit.log
+```
+
+Evidence paths:
+- `evidence/gates/protocol-v1.1-coverage.report.json`
+- `evidence/risks/dependency-audit.log`
 
 ---
 
@@ -296,79 +344,79 @@ Archive Process:
 
 ```bash
 # 1. Proposal
-/devbooks-proposal-author
+/devbooks:proposal
 
 # 2. Design
-/devbooks-design-doc
+/devbooks:design
 
 # 3. Spec
-/devbooks-spec-contract
+/devbooks:spec
 
 # 4. Plan
-/devbooks-implementation-plan
+/devbooks:plan
 
 # 5. Test (Independent)
-/devbooks-test-owner
+/devbooks:test
 
 # 6. Implement (Independent)
-/devbooks-coder
+/devbooks:code
 
 # 7. Review
-/devbooks-reviewer
+/devbooks:review
 
 # 8. Archive
-/devbooks-archiver
+/devbooks:archive
 ```
 
 ### Scenario 2: Bug Fix
 
 ```bash
 # 1. Impact Analysis
-/devbooks-impact-analysis
+/devbooks:impact
 
 # 2. Design Fix
-/devbooks-design-doc
+/devbooks:design
 
 # 3. Supplement Tests (Independent)
-/devbooks-test-owner
+/devbooks:test
 
 # 4. Implement Fix (Independent)
-/devbooks-coder
+/devbooks:code
 
 # 5. Archive
-/devbooks-archiver
+/devbooks:archive
 ```
 
 ### Scenario 3: Refactoring
 
 ```bash
 # 1. Proposal (Describe Refactoring Scope)
-/devbooks-proposal-author
+/devbooks:proposal
 
 # 2. Design (Define Refactoring Goals)
-/devbooks-design-doc
+/devbooks:design
 
 # 3. Impact Analysis
-/devbooks-impact-analysis
+/devbooks:impact
 
 # 4. Implement (Keep Tests Unchanged)
-/devbooks-coder
+/devbooks:code
 
 # 5. Review
-/devbooks-reviewer
+/devbooks:review
 
 # 6. Archive
-/devbooks-archiver
+/devbooks:archive
 ```
 
 ### Scenario 4: Brownfield Project Adoption
 
 ```bash
 # 1. Initialize
-/devbooks-brownfield-bootstrap
+/devbooks:bootstrap
 
 # 2. Start First Change
-/devbooks-proposal-author
+/devbooks:proposal
 ```
 
 ### Scenario 5: Evaluate Workflow Convergence
@@ -377,7 +425,7 @@ When you have run a few change package loops and want to assess if there is real
 
 ```bash
 # Assess if change packages are effectively progressing
-/devbooks-convergence-audit
+devbooks-convergence-audit
 ```
 
 This skill checks for:
@@ -399,6 +447,33 @@ DevBooks provides multiple quality gates:
 4. **Architectural Constraint Check**: Fitness Rules verification.
 5. **Docs Consistency Check**: Code and docs synchronization.
 
+### Completion Contract and upstream claims (G6)
+
+To avoid “tests are green but the claimed upstream obligations were not actually delivered”, use `upstream_claims` in `completion.contract.yaml`:
+
+- Provide a machine-readable `requirements.index.yaml` in truth (`schema_version: 1.0.0`).
+- If the project has no upstream SSOT library, first scaffold a minimal Project SSOT pack: `<truth-root>/ssot/SSOT.md` + `<truth-root>/ssot/requirements.index.yaml` (you can generate a skeleton via `skills/devbooks-delivery-workflow/scripts/ssot-scaffold.sh`).
+- If the project has an upstream SSOT library (e.g., `SSOT docs/`), configure it in `.devbooks/config.yaml`:
+  - `truth_mapping: { ssot_root: "SSOT docs/" }` (index/anchor only; do not copy long docs into change packages)
+- After you edit/sync SSOT, use `devbooks-ssot-maintainer` to keep the index/ledger aligned:
+  - Write delta: `<change-root>/<change-id>/inputs/ssot.delta.yaml`
+  - Run: `skills/devbooks-ssot-maintainer/scripts/ssot-index-sync.sh --delta <path> --apply --refresh-ledger`
+- Declare whether you claim `complete` or `subset` coverage in `completion.contract.yaml`.
+- During archival, G6 emits `evidence/gates/G6-archive-decider.json` and evaluates each claim into `upstream_claims_evaluation[]` (must coverage, uncovered list, deferred, and `next_action` resolvability).
+
+Example (block list to avoid YAML-subset pitfalls):
+
+```yaml
+upstream_claims:
+  - set_ref: truth://ssot/requirements.index.yaml
+    claim: subset
+    covered:
+      - R-001
+    deferred:
+      - R-002
+    next_action_ref: change://20260101-0000-next-change/proposal.md
+```
+
 ### Fitness Functions
 
 ```bash
@@ -406,14 +481,14 @@ DevBooks provides multiple quality gates:
 # dev-playbooks/specs/architecture/fitness-rules.md
 
 # Verify Constraints
-/devbooks-convergence-audit
+devbooks-convergence-audit
 ```
 
 ### Entropy Metrics
 
 ```bash
 # Monitor System Entropy
-/devbooks-entropy-monitor
+/devbooks:entropy
 ```
 
 Metric Dimensions:
@@ -450,10 +525,10 @@ Metric Dimensions:
 **Solution**:
 ```bash
 # Run Docs Consistency Check
-/devbooks-docs-consistency
+/devbooks:gardener
 
 # Or automatically check during archival
-/devbooks-archiver
+/devbooks:archive
 ```
 
 ### Issue 4: Change Package Confusion
@@ -461,7 +536,7 @@ Metric Dimensions:
 **Symptom**: Multiple change packages modified crossing over.
 
 **Solution**:
-1. Use `devbooks-router` to determine current state.
+1. Use `/devbooks:delivery` to determine current state and route the next step.
 2. Handle only one change package at a time.
 3. Archive immediately upon completion.
 
@@ -472,7 +547,7 @@ Metric Dimensions:
 **Solution**:
 ```bash
 # Run Brownfield Initialization
-/devbooks-brownfield-bootstrap
+/devbooks:bootstrap
 ```
 
 ---
@@ -515,8 +590,8 @@ global_cleanup:
 ### 3. Full Loop Automation
 
 ```bash
-# Run Complete Workflow
-/devbooks-delivery-workflow
+# Run via the single entrypoint
+/devbooks:delivery
 ```
 
 ---

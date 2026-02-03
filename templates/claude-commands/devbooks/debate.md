@@ -6,7 +6,7 @@ skills:
   - devbooks-proposal-judge
 ---
 
-# DevBooks: Proposal Debate (backward compatible)
+# DevBooks: Proposal Debate
 
 Runs the full proposal debate loop: Author → Challenger → Judge.
 
@@ -20,8 +20,7 @@ $ARGUMENTS
 
 ## Notes
 
-This is a backward compatible command that triggers a multi-skill combo. You can also use the direct commands:
+This is a combo command that triggers multiple skills. You can also use the direct commands:
 - `/devbooks:proposal`
 - `/devbooks:challenger`
 - `/devbooks:judge`
-

@@ -1,23 +1,23 @@
 #!/bin/bash
 # skills/devbooks-delivery-workflow/scripts/ac-trace-check.sh
-# AC-ID trace coverage checker
+# AC-ID Traceability Coverage Check Script
 #
-# Checks trace coverage of AC-IDs from design to tests.
+# Checks the traceability coverage of AC-IDs from design to tests.
 #
 # Usage:
 #   ./ac-trace-check.sh <change-id> [options]
 #   ./ac-trace-check.sh --help
 #
 # Options:
-#   --threshold N       Coverage threshold (default: 80)
-#   --output FORMAT     Output format (text|json, default: text)
-#   --project-root DIR  Project root
-#   --change-root DIR   Change root
+#   --threshold N       Coverage threshold (default 80)
+#   --output FORMAT     Output format (text|json, default text)
+#   --project-root DIR  Project root directory
+#   --change-root DIR   Change package directory
 #
 # Exit codes:
-#   0 - coverage meets threshold
-#   1 - coverage below threshold
-#   2 - usage error
+#   0 - Coverage meets threshold
+#   1 - Coverage below threshold
+#   2 - Usage error
 
 set -euo pipefail
 
@@ -37,49 +37,49 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Help
+# Show help
 show_help() {
     cat << 'EOF'
-AC-ID trace coverage checker (ac-trace-check.sh)
+AC-ID Traceability Coverage Check Script (ac-trace-check.sh)
 
-usage:
+Usage:
   ./ac-trace-check.sh <change-id> [options]
 
-options:
-  --threshold N       Coverage threshold, default 80 (percent)
+Options:
+  --threshold N       Coverage threshold, default 80 (percentage)
   --output FORMAT     Output format: text | json, default text
-  --project-root DIR  Project root, default: current directory
-  --change-root DIR   Change root, default: changes
-  --help, -h          Show help
-  --version, -v       Show version
+  --project-root DIR  Project root directory, default is current directory
+  --change-root DIR   Change package directory, default is changes
+  --help, -h          Show this help message
+  --version, -v       Show version information
 
-algorithm:
+Algorithm:
   1. Extract all AC-xxx from design.md
-  2. Extract referenced AC-xxx from tasks.md
-  3. Extract AC-xxx from tests/
-  4. Coverage = (covered AC count) / (total AC count) × 100%
-  5. Compare to threshold and return exit code
+  2. Extract AC-xxx referenced in tasks.md
+  3. Extract AC-xxx marked in tests/
+  4. Calculate: Coverage = (traced AC count) / (total AC count) x 100%
+  5. Compare against threshold, return exit code
 
-exit codes:
-  0 - coverage meets threshold
-  1 - coverage below threshold
-  2 - usage error
+Exit codes:
+  0 - Coverage meets threshold
+  1 - Coverage below threshold
+  2 - Usage error
 
-examples:
-  ./ac-trace-check.sh my-feature                     # default threshold
-  ./ac-trace-check.sh my-feature --threshold 90      # 90% threshold
-  ./ac-trace-check.sh my-feature --output json       # JSON output
+Examples:
+  ./ac-trace-check.sh my-feature                     # Default check
+  ./ac-trace-check.sh my-feature --threshold 90     # 90% threshold
+  ./ac-trace-check.sh my-feature --output json      # JSON output
   ./ac-trace-check.sh my-feature --change-root dev-playbooks/changes
 
 EOF
 }
 
-# Version output
+# Show version
 show_version() {
     echo "ac-trace-check.sh v${VERSION}"
 }
 
-# Logging helpers
+# Log functions
 log_info() {
     [[ "$output_format" == "text" ]] && echo -e "${BLUE}[INFO]${NC} $*" >&2
 }
@@ -102,7 +102,7 @@ extract_ac_ids() {
     grep -oE "AC-[A-Z0-9]+" "$file" 2>/dev/null | sort -u || true
 }
 
-# Extract AC-IDs from a directory
+# Extract AC-IDs from directory
 extract_ac_ids_from_dir() {
     local dir="$1"
     local pattern="${2:-*.test.*}"
@@ -117,7 +117,7 @@ calculate_coverage() {
     local tasks_acs="$2"
     local test_acs="$3"
 
-    # Build AC lists
+    # Get AC lists
     local design_list=()
     local tasks_list=()
     local test_list=()
@@ -139,12 +139,12 @@ calculate_coverage() {
     local total=${#design_list[@]}
 
     if [[ $total -eq 0 ]]; then
-        # No ACs: treat as 100% coverage
+        # No ACs, count as 100% coverage
         echo "100 0 0"
         return
     fi
 
-    # Count covered ACs
+    # Calculate covered ACs
     local covered=0
     for ac in "${design_list[@]}"; do
         local in_test=false
@@ -175,11 +175,11 @@ calculate_coverage() {
     fi
 }
 
-# Main
+# Main function
 main() {
     local change_id=""
 
-    # Parse args
+    # Parse arguments
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --help|-h)
@@ -218,7 +218,7 @@ main() {
         esac
     done
 
-    # Validate args
+    # Validate arguments
     if [[ -z "$change_id" ]]; then
         echo "error: missing change-id" >&2
         echo "Use --help for usage" >&2
@@ -237,17 +237,17 @@ main() {
     local tasks_file="${change_dir}/tasks.md"
     local tests_dir="${project_root}/tests"
 
-    log_info "checking change: ${change_id}"
-    log_info "design file: ${design_file}"
-    log_info "tasks file: ${tasks_file}"
-    log_info "tests dir: ${tests_dir}"
+    log_info "Checking change package: ${change_id}"
+    log_info "Design file: ${design_file}"
+    log_info "Tasks file: ${tasks_file}"
+    log_info "Tests directory: ${tests_dir}"
 
-    # Check file existence
+    # Check file exists
     if [[ ! -f "$design_file" ]]; then
         if [[ "$output_format" == "json" ]]; then
             echo '{"error": "design.md not found", "coverage": 0}'
         else
-            log_fail "design.md not found: ${design_file}"
+            log_fail "design.md does not exist: ${design_file}"
         fi
         exit 1
     fi
@@ -274,7 +274,7 @@ main() {
     # Output results
     if [[ "$output_format" == "json" ]]; then
         local uncovered_json="[]"
-        # Recompute uncovered list
+        # Recalculate uncovered list
         local uncovered_acs=""
         while IFS= read -r ac; do
             [[ -z "$ac" ]] && continue
@@ -300,25 +300,25 @@ main() {
 EOF
     else
         echo ""
-        echo "AC trace coverage report"
-        echo "================"
-        echo "change: ${change_id}"
-        echo "total ACs: ${total}"
-        echo "covered: ${covered}"
-        echo "coverage: ${rate}%"
-        echo "threshold: ${threshold}%"
+        echo "AC Traceability Coverage Report"
+        echo "================================"
+        echo "Change package: ${change_id}"
+        echo "Total ACs: ${total}"
+        echo "Covered: ${covered}"
+        echo "Coverage: ${rate}%"
+        echo "Threshold: ${threshold}%"
         echo ""
 
         if [[ $rate -ge $threshold ]]; then
-            log_pass "coverage ${rate}% >= ${threshold}%: pass"
+            log_pass "Coverage ${rate}% >= ${threshold}%, check passed"
             exit 0
         else
-            log_fail "coverage ${rate}% < ${threshold}%: fail"
+            log_fail "Coverage ${rate}% < ${threshold}%, check failed"
             exit 1
         fi
     fi
 
-    # Exit code (json mode)
+    # Exit code for JSON mode
     if [[ $rate -ge $threshold ]]; then
         exit 0
     else
@@ -326,5 +326,5 @@ EOF
     fi
 }
 
-# Run
+# Run main function
 main "$@"

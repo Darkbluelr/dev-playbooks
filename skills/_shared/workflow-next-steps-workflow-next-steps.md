@@ -48,8 +48,9 @@ This document defines the canonical next step recommendations for each skill. Al
 | `devbooks-reviewer` | `devbooks-archiver` | If spec deltas exist |
 | `devbooks-reviewer` | Archive complete | If no spec deltas |
 | `devbooks-test-reviewer` | `devbooks-coder` | If test issues found, hand back |
-| `devbooks-design-backport` | `devbooks-implementation-plan` | Rerun plan after design update |
 | `devbooks-archiver` | Archive complete | Always |
+
+Note: If you discover a design gap/conflict during implementation, use `devbooks-design-doc` to update `<change-root>/<change-id>/design.md`, then return to `devbooks-implementation-plan` to rerun the plan. Deprecated alias: `devbooks-design-backport`.
 
 ## Critical Constraints
 
