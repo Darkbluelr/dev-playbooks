@@ -1,6 +1,6 @@
 {
   "name": "dev-playbooks",
-  "version": "4.0.4",
+  "version": "4.0.6",
   "description": "AI-driven spec-based development workflow",
   "keywords": [
     "devbooks",
@@ -23,7 +23,7 @@
     "url": "https://github.com/Darkbluelr/dev-playbooks/issues"
   },
   "bin": {
-    "dev-playbooks": "bin/devbooks"
+    "dev-playbooks": "bin/devbooks.mjs"
   },
   "files": [
     "LICENSE",
